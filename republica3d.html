@@ -1,0 +1,3285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>REPÚBLICA 3D — Le jeu de la junte</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0d0f14; font-family:'Segoe UI', Arial, sans-serif; color:#e8e2d0; }
+
+  #layout { display:flex; width:100%; height:100%; }
+  #boardWrap { flex:1.5; position:relative; min-width:0; }
+  #board { width:100%; height:100%; display:block; }
+
+  #side {
+    flex:1; max-width:440px; min-width:340px; background:#14171f;
+    border-left:2px solid #2a2f3d; display:flex; flex-direction:column; overflow:hidden;
+  }
+  #topbar {
+    padding:10px 14px; background:#1a1e29; border-bottom:1px solid #2a2f3d;
+    display:flex; justify-content:space-between; align-items:center; font-size:13px;
+  }
+  #topbar b { color:#ffd166; }
+  #phaseBanner {
+    padding:8px 14px; background:#221c10; color:#ffd166; font-weight:bold;
+    letter-spacing:2px; font-size:13px; border-bottom:1px solid #3d3620; text-transform:uppercase;
+  }
+
+  #players { padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .pl {
+    background:#1b1f2b; border:1px solid #2a2f3d; border-radius:8px; padding:7px 10px;
+    display:flex; align-items:center; gap:8px; font-size:12.5px; position:relative;
+    transition: box-shadow .3s;
+  }
+  .pl.me { border-color:#ffd166; }
+  .pl.dead { opacity:.45; }
+  .pl.president::before {
+    content:'★ PRESIDENTE'; position:absolute; top:-7px; right:8px; font-size:9px;
+    background:#ffd166; color:#221c10; padding:1px 6px; border-radius:4px; font-weight:bold;
+  }
+  .pl .dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,.3); }
+  .pl .pname { font-weight:bold; min-width:82px; }
+  .pl .prole { color:#8fa3c7; font-size:11px; flex:1; }
+  .pl .pmoney { text-align:right; font-size:11.5px; line-height:1.4; }
+  .pl .pocket { color:#ffd166; }
+  .pl .bank { color:#7bed9f; }
+
+  #log {
+    flex:1; overflow-y:auto; padding:10px 14px; font-size:12.5px; line-height:1.55;
+    background:#10131a; border-top:1px solid #2a2f3d;
+  }
+  #log p { margin-bottom:6px; }
+  #log .sys { color:#8fa3c7; }
+  #log .gold { color:#ffd166; }
+  #log .red { color:#ff6b6b; }
+  #log .green { color:#7bed9f; }
+  #log .turnhdr { color:#ffd166; font-weight:bold; letter-spacing:1px; border-top:1px dashed #333; padding-top:8px; margin-top:6px;}
+
+  #coupSides {
+    position:absolute; top:10px; left:10px; z-index:65;
+    background:#14171fee; border:2px solid #8b2f2f; border-radius:10px;
+    padding:9px 13px; font-size:12px; line-height:1.7; box-shadow:0 8px 24px #000a;
+    max-width:220px;
+  }
+  #coupSides.hidden { display:none; }
+  #coupSides b { letter-spacing:1px; }
+
+  #deployBar {
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    background:#1a1e29ee; border:2px solid #ffd166; border-radius:10px;
+    padding:10px 18px; z-index:70; text-align:center; font-size:13px;
+    box-shadow:0 10px 30px #000a; max-width:92%;
+  }
+  #deployBar.hidden { display:none; }
+  #deployBar b { color:#ffd166; }
+  #deployBar .dep-hint { font-size:11px; color:#9ab; margin-top:3px; }
+  #deployBar .mbtn { margin-top:8px; padding:7px 18px; font-size:14px; }
+
+  #handBoard {
+    position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    z-index:60; text-align:center; max-width:92%;
+  }
+  #handBoard .hlabel { font-size:10px; color:#cbb87a; letter-spacing:2px; display:block; margin-bottom:4px; text-shadow:0 1px 3px #000; }
+  #handCards { display:flex; gap:6px; justify-content:center; align-items:flex-end; overflow-x:auto; padding:4px 6px 2px; }
+  #handCards .gcard { width:92px; min-height:104px; box-shadow:0 6px 16px #000a; }
+  #handCards .gcard .gc-desc { font-size:9px; }
+  /* cartes de jeu visuelles */
+  .gcard {
+    width:104px; min-height:118px; background:linear-gradient(180deg,#222939,#1a2030);
+    border:2px solid #3a4358; border-radius:9px; padding:0 0 6px; cursor:pointer;
+    display:flex; flex-direction:column; transition:transform .12s, box-shadow .12s, border-color .12s;
+    position:relative; flex-shrink:0; user-select:none;
+  }
+  .gcard:hover { transform:translateY(-8px) scale(1.04); z-index:5; box-shadow:0 10px 22px #000a; }
+  .gcard.selected { border-color:#7bed9f; box-shadow:0 0 0 2px #7bed9f66, 0 10px 22px #000a; }
+  .gcard.unplayable { opacity:.55; }
+  .gcard .gc-band {
+    border-radius:6px 6px 0 0; font-size:9px; font-weight:bold; letter-spacing:2px;
+    color:#10131a; text-align:center; padding:3px 0;
+  }
+  .gcard .gc-name { font-size:11px; font-weight:bold; color:#ffeecb; text-align:center; padding:5px 6px 3px; line-height:1.25; }
+  .gcard .gc-desc { font-size:9.5px; color:#9aa8c0; text-align:center; padding:0 7px; line-height:1.35; flex:1; }
+  #hand { overflow-x:auto; flex-wrap:nowrap; padding:12px 10px 14px; }
+
+  /* plateau de dés */
+  #diceTray {
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#20351f,#152415); border:6px solid #6b4f26; border-radius:18px;
+    padding:18px 28px; z-index:90; display:flex; flex-direction:column; gap:16px; align-items:center;
+    box-shadow:0 24px 60px #000c, inset 0 0 40px #0007;
+  }
+  #diceRow { display:flex; gap:36px; align-items:center; }
+  #diceTray.hidden { display:none; }
+  .dice-side { text-align:center; }
+  .dice-side .ds-label { font-size:12px; font-weight:bold; letter-spacing:2px; margin-bottom:8px; }
+  .dice-side .ds-dice { display:flex; gap:10px; justify-content:center; }
+  .die {
+    width:52px; height:52px; background:#f4efe2; border-radius:9px; color:#1a1a1a;
+    font-size:40px; line-height:52px; text-align:center; box-shadow:0 4px 0 #b9b2a0, inset 0 -4px 6px #0002;
+  }
+  .die.rolling { animation:diceShake .12s infinite; }
+  @keyframes diceShake {
+    0%{ transform:rotate(-8deg) translateY(-2px);} 50%{ transform:rotate(8deg) translateY(2px);} 100%{ transform:rotate(-8deg) translateY(-2px);}
+  }
+  .dice-side .ds-total { margin-top:8px; font-size:15px; font-weight:bold; color:#ffd166; min-height:20px; }
+  #diceVS { font-size:26px; font-weight:bold; color:#e8e2d0; text-shadow:0 2px 4px #000; }
+
+  /* -------- modals -------- */
+  #modal {
+    position:absolute; inset:0; background:rgba(5,7,10,.72); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  #modal.hidden { display:none; }
+  .hidden { display:none !important; }
+  #modalBox {
+    background:#1a1e29; border:2px solid #3a4358; border-radius:12px;
+    max-width:560px; width:100%; padding:22px; max-height:88vh; overflow-y:auto;
+    box-shadow:0 20px 60px #000;
+  }
+  #modalBox h3 { color:#ffd166; margin-bottom:10px; letter-spacing:1px; font-size:18px; }
+  #modalBox .mtext { font-size:13.5px; color:#cbd3e1; line-height:1.55; margin-bottom:14px; }
+  .mbtns { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+  .mbtn {
+    background:#ffd166; color:#221c10; border:none; padding:10px 18px; font-size:14px;
+    font-weight:bold; border-radius:6px; cursor:pointer; box-shadow:0 3px 0 #b8942f;
+  }
+  .mbtn.alt { background:#3a4358; color:#dde; box-shadow:0 3px 0 #232a3a; }
+  .mbtn.danger { background:#c0392b; color:#fff; box-shadow:0 3px 0 #7c241b; }
+  .mbtn:active { transform:translateY(2px); box-shadow:none; }
+  .mbtn:disabled { opacity:.4; cursor:not-allowed; }
+
+  .alloc-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; }
+  .alloc-row .dot { width:12px; height:12px; border-radius:50%; }
+  .alloc-row input[type=range] { flex:1; }
+  .alloc-row .val { width:48px; text-align:right; color:#ffd166; font-weight:bold; }
+
+  .opt-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+  .opt {
+    background:#232a3a; border:2px solid #3a4358; border-radius:10px; padding:12px;
+    cursor:pointer; text-align:center; font-size:13px; transition:all .15s;
+  }
+  .opt:hover { border-color:#ffd166; }
+  .opt.selected { border-color:#ffd166; background:#2e2a1c; }
+  .opt .oicon { font-size:26px; display:block; margin-bottom:5px; }
+  .opt .odesc { font-size:11px; color:#9ab; margin-top:3px; display:block; }
+
+  .card-select {
+    background:#232a3a; border:2px solid #3a4358; border-radius:8px; padding:9px 12px;
+    cursor:pointer; font-size:12.5px; margin-bottom:6px;
+  }
+  .card-select:hover { border-color:#ffd166; }
+  .card-select.selected { border-color:#7bed9f; background:#1c2e24; }
+  .card-select .cdesc { font-size:11px; color:#9ab; display:block; margin-top:2px; }
+
+  /* écran titre / fin */
+  .bigscreen {
+    position:fixed; inset:0; z-index:200; background:radial-gradient(ellipse at 50% 30%, #23283a, #0b0d12);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;
+  }
+  .bigscreen.hidden { display:none; }
+  .bigscreen h1 { font-size:52px; color:#ffd166; letter-spacing:8px; text-shadow:0 4px 0 #7a5c1e, 0 8px 30px #000; }
+  .bigscreen .tagline { color:#8fa3c7; letter-spacing:3px; margin:8px 0 18px; font-size:14px; }
+  .bigscreen p { max-width:620px; color:#cbd3e1; font-size:14px; line-height:1.6; margin-bottom:10px; }
+  .rules { text-align:left; background:#151926cc; border:1px solid #2a2f3d; border-radius:10px; padding:16px 20px; margin:10px 0; font-size:13px; line-height:1.7; max-width:640px;}
+  .rules b { color:#ffd166; }
+
+  #toast {
+    position:fixed; top:18px; left:50%; transform:translateX(-50%);
+    background:#000c; border:1px solid #ffd166; color:#ffd166; padding:10px 22px;
+    border-radius:8px; font-weight:bold; letter-spacing:1px; z-index:150; font-size:15px;
+    opacity:0; transition:opacity .3s; pointer-events:none; text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div id="layout">
+  <div id="boardWrap">
+    <canvas id="board"></canvas>
+    <div id="modal" class="hidden"><div id="modalBox"></div></div>
+    <div id="deployBar" class="hidden"></div>
+    <div id="coupSides" class="hidden"></div>
+    <div id="handBoard"><span class="hlabel">VOTRE MAIN</span><div id="handCards"></div></div>
+  </div>
+  <div id="side">
+    <div id="topbar">
+      <span>Tour <b id="turnNum">1</b>/<b id="turnMax">8</b></span>
+      <span>Aide : <b id="aidPool">—</b> M$</span>
+      <button id="helpBtn" style="background:#3a4358; color:#ffd166; border:1px solid #ffd166; border-radius:5px; padding:3px 10px; cursor:pointer; font-size:12px;">ℹ️ Rôles</button>
+    </div>
+    <div id="phaseBanner">Bienvenue en República</div>
+    <div id="players"></div>
+    <div id="log"></div>
+    <div id="chatRow" style="display:flex; gap:6px; padding:8px 10px; border-top:1px solid #2a2f3d; background:#171b25;">
+      <input id="chatInput" maxlength="140" placeholder="💬 Parler au cabinet… (Entrée)"
+        style="flex:1; background:#10131a; border:1px solid #3a4358; border-radius:6px; color:#e8e2d0; font-size:12.5px; padding:7px 10px; outline:none;">
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="helpOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(5,7,10,.85); z-index:180; display:flex; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#1a1e29; border:2px solid #ffd166; border-radius:12px; max-width:620px; width:100%; padding:22px; max-height:88vh; overflow-y:auto;">
+    <h3 style="color:#ffd166; letter-spacing:1px; margin-bottom:10px;">Les postes du cabinet</h3>
+    <div id="helpRoles" style="font-size:13px; line-height:1.7; color:#cbd3e1;"></div>
+    <div style="margin-top:12px; font-size:12px; color:#9ab; line-height:1.6;">
+      Rappel du tour : ① budget proposé par El Presidente → ② vote → ③ nuit (planque / assassinats / banque) → ④ événement radio → ⑤ coup d'État éventuel (3 manches, déploiement sur la carte, dés).
+      Seul <b style="color:#7bed9f">l'argent en banque</b> compte à la fin.
+    </div>
+    <div class="mbtns"><button class="mbtn" id="helpClose">Fermer</button></div>
+  </div>
+</div>
+
+<div id="diceTray" class="hidden">
+  <div id="diceSite" style="font-size:15px; font-weight:bold; color:#ffd166; letter-spacing:2px; text-shadow:0 1px 3px #000;">—</div>
+  <div id="diceRow">
+    <div class="dice-side">
+      <div class="ds-label" style="color:#ff6b6b">⚔️ REBELLES</div>
+      <div class="ds-dice"><div class="die" id="dr1">⚀</div><div class="die" id="dr2">⚀</div></div>
+      <div class="ds-total" id="drTotal"></div>
+    </div>
+    <div id="diceVS">VS</div>
+    <div class="dice-side">
+      <div class="ds-label" style="color:#4da3ff">🛡 LOYALISTES</div>
+      <div class="ds-dice"><div class="die" id="dl1">⚀</div><div class="die" id="dl2">⚀</div></div>
+      <div class="ds-total" id="dlTotal"></div>
+    </div>
+  </div>
+  <button class="mbtn" id="diceBtn">🎲 LANCER LES DÉS</button>
+</div>
+
+<div id="lobbyScreen" class="bigscreen">
+  <h1>REPÚBLICA</h1>
+  <div class="tagline">JOUER EN LIGNE AVEC SES COMPLICES — OU EN SOLO CONTRE LES IA</div>
+  <div class="rules" style="max-width:460px; text-align:center;">
+    <input id="lobbyName" maxlength="16" placeholder="Votre nom, Ministre…"
+      style="background:#10131a; border:2px solid #3a4358; border-radius:8px; color:#ffd166; font-size:16px; font-weight:bold; padding:10px 14px; text-align:center; width:90%; outline:none; margin-bottom:10px;">
+    <input id="lobbyServer" placeholder="Adresse du serveur (wss://…)"
+      style="background:#10131a; border:1px solid #3a4358; border-radius:8px; color:#9ab; font-size:12px; padding:8px 12px; text-align:center; width:90%; outline:none; margin-bottom:12px;">
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="mbtn" id="lobbyCreate">Créer un salon</button>
+      <input id="lobbyCode" maxlength="5" placeholder="CODE"
+        style="background:#10131a; border:2px solid #3a4358; border-radius:8px; color:#e8e2d0; font-size:16px; font-weight:bold; padding:8px; text-align:center; width:90px; outline:none; text-transform:uppercase;">
+      <button class="mbtn alt" id="lobbyJoin">Rejoindre</button>
+    </div>
+    <div id="lobbyStatus" style="margin-top:10px; font-size:12px; color:#ff9b9b; min-height:16px;"></div>
+    <div id="lobbyRoom" class="hidden" style="margin-top:10px; text-align:left;">
+      <div style="text-align:center; margin-bottom:8px;">Salon <b id="lobbyRoomCode" style="color:#ffd166; letter-spacing:4px; font-size:20px;"></b></div>
+      <div id="lobbyPlayers" style="font-size:14px; line-height:1.9;"></div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:10px; flex-wrap:wrap;">
+        <button class="mbtn alt" id="voiceBtn">🎙 Activer le vocal</button>
+        <button class="mbtn hidden" id="lobbyStart">Lancer la partie</button>
+      </div>
+      <div id="lobbyWait" style="text-align:center; font-size:12px; color:#8fa3c7; margin-top:8px;">Les manquants seront remplacés par des IA. L'hôte lance la partie.</div>
+    </div>
+  </div>
+  <button class="mbtn alt" id="lobbySolo" style="margin-top:6px;">🎮 Jouer en solo contre les IA</button>
+</div>
+
+<div id="titleScreen" class="bigscreen hidden">
+  <h1>REPÚBLICA</h1>
+  <div class="tagline">CORRUPTION · TRAHISON · COUPS D'ÉTAT · EN 3D — inspiré des grands classiques de la république bananière</div>
+  <div class="rules">
+    <b>Le but :</b> être le ministre le plus riche… <b>en banque suisse</b> à la fin des 8 tours d'aide étrangère.<br>
+    <b>Chaque tour :</b> ① El Presidente répartit l'aide étrangère → ② le cabinet <b>vote</b> le budget →
+    ③ la <b>nuit</b>, chacun choisit sa planque, envoie des assassins, ou va déposer son magot à la banque →
+    ④ un <b>événement</b> secoue le pays → ⑤ si le régime vacille, c'est le <b>COUP D'ÉTAT</b> : batailles pour le Palais, la Radio, la Caserne…<br>
+    <b>Attention :</b> l'argent en poche peut être volé sur votre cadavre. Seule la banque compte. Une balle n'est jamais loin.<br>
+    <b>Les cartes</b> (21 types : votes, argent, assassins, protections, renforts) s'affichent devant vous et se jouent d'un clic au bon moment. <b>Les coups d'État se jouent comme sur le plateau</b> : 3 manches, vous déployez vos unités sur les 5 sites (le Palais compte double), chaque bataille se résout aux dés (unités + 1d6) avec des pertes définitives.
+  </div>
+  <div class="rules">
+    <b>Les 5 postes du cabinet</b> (attribués au hasard, redistribués après chaque coup réussi) :<br>
+    👑 <b>El Presidente</b> — répartit l'aide étrangère comme il l'entend (le non-alloué file dans sa poche). Garde présidentielle : 3 unités. Toujours loyaliste pendant un coup.<br>
+    🎖 <b>Général de Brigade</b> — la force brute : 4 unités, la plus grosse armée du pays. Son camp pèse lourd dans un coup.<br>
+    ✈️ <b>Colonel de l'Air</b> — 2 unités, mais sa frappe aérienne ajoute +2 de force à son camp pendant un coup.<br>
+    🕶 <b>Chef de la Police Secrète</b> — 2 unités, et surtout <b>un assassinat gratuit chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
+    🗳 <b>Ministre de l'Intérieur</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier.<br>
+    ⚓ <b>Amiral de la Flotte</b> <i>(à 6+)</i> — 2 unités, et sa canonnière bombarde le port : +2 de force au coup.<br>
+    🎖 <b>Général de la 2e Brigade</b> <i>(à 7)</i> — 3 unités de troupes fraîches. Deux généraux dans une junte, c'est un de trop…
+  </div>
+  <p>Vous jouez contre 4 ministres IA aux personnalités bien trempées. Ils négocient mal, trahissent bien.</p>
+  <div style="margin:4px 0 10px;">
+    <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">VOTRE NOM, MINISTRE</div>
+    <input id="playerName" maxlength="16" placeholder="ex : Comandante Zoé"
+      style="background:#10131a; border:2px solid #3a4358; border-radius:8px; color:#ffd166; font-size:16px; font-weight:bold; padding:10px 14px; text-align:center; width:260px; outline:none;">
+  </div>
+  <div style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center; margin:6px 0 4px;">
+    <div>
+      <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">NOMBRE DE MINISTRES</div>
+      <div style="display:flex; gap:8px;">
+        <button class="mbtn alt selopt sel-count selected-opt" data-count="5" style="border:2px solid #ffd166;">5</button>
+        <button class="mbtn alt selopt sel-count" data-count="6" style="border:2px solid transparent;">6</button>
+        <button class="mbtn alt selopt sel-count" data-count="7" style="border:2px solid transparent;">7</button>
+      </div>
+      <div style="font-size:10px; color:#667; margin-top:4px;">6 = + Amiral ⚓ · 7 = + 2e Brigade 🎖</div>
+    </div>
+    <div>
+      <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">DIFFICULTÉ DES IA</div>
+      <div style="display:flex; gap:8px;">
+        <button class="mbtn alt selopt sel-diff" data-diff="easy" style="border:2px solid transparent;">Facile</button>
+        <button class="mbtn alt selopt sel-diff selected-opt" data-diff="normal" style="border:2px solid #ffd166;">Normal</button>
+        <button class="mbtn alt selopt sel-diff" data-diff="hard" style="border:2px solid transparent;">Difficile</button>
+      </div>
+      <div style="font-size:10px; color:#667; margin-top:4px;">Difficile : elles complotent mieux… et vous ciblent.</div>
+    </div>
+  </div>
+  <button class="mbtn" id="startGameBtn" style="font-size:18px; padding:14px 34px;">Prendre ses fonctions</button>
+</div>
+
+<div id="endScreen" class="bigscreen hidden">
+  <h1 id="endTitle">FIN DE PARTIE</h1>
+  <div class="tagline" id="endTag"></div>
+  <div class="rules" id="endBoard"></div>
+  <button class="mbtn" onclick="location.reload()">Nouvelle république</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   REPÚBLICA — jeu de junte, solo contre 4 IA
+   Plateau canvas animé : ville, palmiers, drapeau, jour/nuit,
+   pluie de billets, fusillades de coup d'État.
+   ===================================================================== */
+
+// ---------------------------------------------------------------------
+// DONNÉES DE JEU
+// ---------------------------------------------------------------------
+const TURNS = 8;
+const NAMES = ['Vous', 'Gén. Morales', 'Col. Vásquez', 'Doña Ferreira', 'Dr Ocampo', 'Amiral Bautista', 'Sra Quintero'];
+const COLORS = ['#ffd166', '#ff6b6b', '#74b9ff', '#a29bfe', '#55efc4', '#fd9644', '#f78fb3'];
+const PERSONALITIES = [null, 'brutal', 'opportuniste', 'cupide', 'prudent', 'brutal', 'opportuniste'];
+
+const ROLES = [
+  { id:'presidente', name:'El Presidente',        units:3, desc:'Répartit le budget. Garde présidentielle (3 unités).' },
+  { id:'general',    name:'Général 1re Brigade',  units:4, desc:'La 1re Brigade (4 unités). Le bras armé du régime.' },
+  { id:'colonel',    name:'Colonel de l\'Air',    units:2, desc:'2 unités + frappe aérienne : +2 de force au coup.' },
+  { id:'policia',    name:'Chef de la Police',    units:2, desc:'2 unités. Un assassinat gratuit chaque nuit.' },
+  { id:'interior',   name:'Ministre de l\'Intérieur', units:1, desc:'1 unité. +1 voix au vote, pioche 1 carte de plus.' },
+  { id:'amiral',     name:'Amiral de la Flotte',  units:2, desc:'2 unités + la canonnière bombarde le port : +2 de force au coup. (6+ joueurs)' },
+  { id:'brigade2',   name:'Général 2e Brigade',   units:3, desc:'La 2e Brigade : 3 unités de troupes fraîches. (7 joueurs)' },
+];
+let ROLES_ACTIVE = ROLES.slice(0,5);   // défini au lancement selon le nombre de joueurs
+
+const LOCATIONS = [
+  { id:'residence', icon:'🏠', name:'Résidence',   desc:'Votre bureau et vos dossiers : +1 carte piochée en fin de tour. Mais tout le monde connaît l\'adresse.' },
+  { id:'banque',    icon:'🏦', name:'Banque',      desc:'Déposez votre argent de poche en Suisse. Très prévisible : les tueurs adorent.' },
+  { id:'planque',   icon:'🌙', name:'Chez l\'amante', desc:'Discret : les assassins la trouvent rarement. Aucun bonus, mais on dort tranquille.' },
+  { id:'ambassade', icon:'🏛', name:'Ambassade',   desc:'Intouchable. Mais ni dépôt, ni carte bonus : une nuit perdue.' },
+];
+
+const COUP_SITES = [
+  { id:'palais',  name:'Palais Présidentiel', x:0.50, y:0.46 },
+  { id:'radio',   name:'Radio Nationale',     x:0.24, y:0.30 },
+  { id:'banqueC', name:'Banque Centrale',     x:0.76, y:0.30 },
+  { id:'caserne', name:'Caserne',             x:0.24, y:0.66 },
+  { id:'aeroport',name:'Aéroport',            x:0.76, y:0.66 },
+];
+
+const CARD_CATS = {
+  vote:   { label:'VOTE',   color:'#4da3ff' },
+  argent: { label:'ARGENT', color:'#ffd166' },
+  nuit:   { label:'NUIT',   color:'#a29bfe' },
+  passif: { label:'PASSIF', color:'#55efc4' },
+  coup:   { label:'COUP',   color:'#ff6b6b' },
+};
+
+const CARD_TYPES = [
+  // ---- VOTE ----
+  { id:'fraude',    cat:'vote', name:'Fraude électorale',       phase:'vote',  desc:'+2 voix lors d\'un vote du budget.' },
+  { id:'ambassade', cat:'vote', name:'Soutien de l\'Ambassade',  phase:'vote',  desc:'+3 voix. L\'étranger veille sur ses intérêts.' },
+  { id:'syndicat',  cat:'vote', name:'Syndicat acheté',          phase:'vote',  desc:'+2 voix. Les dockers votent bien.' },
+  { id:'eveque',    cat:'vote', name:'Bénédiction de l\'Évêque', phase:'vote',  desc:'+2 voix. Dieu est avec vous (moyennant don).' },
+  { id:'scandale',  cat:'vote', name:'Scandale de presse',       phase:'vote',  desc:'Le Presidente perd 2 voix sur ce vote.' },
+  { id:'dossier',   cat:'vote', name:'Dossier compromettant',    phase:'vote',  desc:'Forcez un ministre à voter comme vous.' },
+  // ---- ARGENT ----
+  { id:'potdevin',  cat:'argent', name:'Pot-de-vin',             phase:'vote',  desc:'+2 M$ dans votre poche, immédiatement.' },
+  { id:'racket',    cat:'argent', name:'Racket des commerçants', phase:'vote',  desc:'+3 M$ dans votre poche. Le marché « participe ».' },
+  { id:'detour',    cat:'argent', name:'Détournement',           phase:'vote',  desc:'Prenez 2 M$ de la poche du Presidente.' },
+  { id:'offshore',  cat:'argent', name:'Compte offshore',        phase:'nuit',  desc:'Déposez votre poche en banque depuis n\'importe quelle planque.' },
+  { id:'valise',    cat:'argent', name:'Valise diplomatique',    phase:'passif',desc:'Si vous êtes tué, votre poche n\'est pas pillée.' },
+  // ---- NUIT (attaques) ----
+  { id:'assassin',  cat:'nuit', name:'Assassin à gages',         phase:'nuit',  desc:'Tentez d\'éliminer un ministre (devinez sa planque).' },
+  { id:'bombe',     cat:'nuit', name:'Bombe artisanale',         phase:'nuit',  desc:'Tue et DÉTRUIT tout l\'argent de la cible. Brutal et mal vu.' },
+  { id:'poison',    cat:'nuit', name:'Empoisonneuse',            phase:'nuit',  desc:'Ignore les gardes du corps, mais échoue une fois sur deux.' },
+  { id:'espion',    cat:'nuit', name:'Espion infiltré',          phase:'nuit',  desc:'La planque exacte de la cible est connue : attaque à coup sûr (sauf Ambassade).' },
+  // ---- PASSIF (protections) ----
+  { id:'garde',     cat:'passif', name:'Garde du corps',         phase:'passif',desc:'Annule automatiquement le prochain assassinat contre vous.' },
+  { id:'doublure',  cat:'passif', name:'Doublure',               phase:'passif',desc:'Un sosie dort à votre place : 50% de survivre à un assassinat.' },
+  { id:'passeport', cat:'passif', name:'Faux passeport',         phase:'passif',desc:'Échappez au peloton d\'exécution (une fois).' },
+  // ---- NOUVELLES (façon grands classiques) ----
+  { id:'cigare',    cat:'nuit', name:'Cigare explosif',          phase:'nuit',  desc:'Livré à domicile : ne fonctionne que si la cible dort à sa Résidence. Boum.' },
+  { id:'embuscade', cat:'nuit', name:'Embuscade à la banque',    phase:'nuit',  desc:'Vos hommes guettent le coffre : ne touche que si la cible va à la Banque.' },
+  { id:'cheque',    cat:'argent', name:'Chèque de Miami',        phase:'vote',  desc:'+4 M$ dans votre poche. Un ami là-bas vous veut du bien.' },
+  { id:'chantage',  cat:'argent', name:'Chantage',               phase:'vote',  desc:'Le ministre le plus riche vous verse 2 M$ de sa poche. Les photos restent au coffre.' },
+  { id:'cousinage', cat:'vote', name:'Cousinage politique',      phase:'vote',  desc:'+2 voix. La famille, c\'est sacré.' },
+  { id:'sabotage',  cat:'coup', name:'Sabotage des arsenaux',    phase:'coup',  desc:'+2 de force : les armes ennemies s\'enrayent mystérieusement.' },
+  // ---- COUP ----
+  { id:'mercenaires',cat:'coup', name:'Mercenaires',             phase:'coup',  desc:'+3 de force pendant un coup d\'État.' },
+  { id:'foule',     cat:'coup', name:'Foule en colère',          phase:'coup',  desc:'+2 de force pendant un coup d\'État.' },
+  { id:'garnison',  cat:'coup', name:'Garnison retournée',       phase:'coup',  desc:'+3 de force : une caserne change de camp.' },
+  { id:'cia',       cat:'coup', name:'Appui de la CIA',          phase:'coup',  desc:'+4 de force… mais tout le monde saura qui vous sert (rancunes +1).' },
+  { id:'barricades',cat:'coup', name:'Barricades',               phase:'coup',  desc:'+2 de force. Le peuple des faubourgs vous couvre.' },
+];
+const COUP_CARD_POWER = { mercenaires:3, foule:2, garnison:3, cia:4, barricades:2, sabotage:2 };
+
+const EVENTS = [
+  { id:'secheresse', text:'🌵 Sécheresse ! L\'aide du prochain tour est réduite de 3 M$.', fx:(g)=>{ g.aidPenalty += 3; } },
+  { id:'fmi',        text:'💼 Le FMI double sa confiance : +4 M$ d\'aide au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
+  { id:'greve',      text:'✊ Grève générale ! Le climat est insurrectionnel : un coup d\'État devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; } },
+  { id:'purge',      text:'🕵️ La police secrète fouille les résidences : tout ministre resté à sa Résidence perd 1 M$ de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 M$ dans la purge.', 'red'); } }); } },
+  { id:'carnaval',   text:'🎉 Carnaval ! Le peuple oublie tout. Aucun coup d\'État possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
+  { id:'audit',      text:'📋 Audit international : chaque ministre avec plus de 6 M$ en poche en perd 2 (saisis).', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait saisir 2 M$.', 'red'); } }); } },
+  { id:'don',        text:'🎁 Don anonyme : le Presidente reçoit 2 M$ en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 M$ « anonymes ».','gold'); } } },
+  { id:'cyclone',    text:'🌀 Cyclone tropical : la nuit prochaine, la Banque sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
+];
+
+// ---------------------------------------------------------------------
+// ÉTAT GLOBAL
+// ---------------------------------------------------------------------
+const G = {
+  players: [], turn: 1, presidentIdx: 0,
+  aidPenalty: 0, coupJustified: false, coupBlocked: false, bankClosed: false,
+  siteOwners: {}, // pendant un coup
+};
+let deck = [];
+
+function rand(a,b){ return Math.random()*(b-a)+a; }
+function randInt(a,b){ return Math.floor(rand(a,b+1)); }
+function pick(arr){ return arr[randInt(0,arr.length-1)]; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function makeDeck(){
+  deck = [];
+  CARD_TYPES.forEach(c=>{ for(let i=0;i<3;i++) deck.push({...c}); });
+  for (let i=deck.length-1;i>0;i--){ const j=randInt(0,i); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+}
+function draw(p, n=1){
+  for(let i=0;i<n;i++){
+    if (deck.length===0) makeDeck();
+    p.hand.push(deck.pop());
+  }
+}
+
+const DIFF_SETTINGS = {
+  easy:   { label:'Facile',    killThresh:1.6, yesBias:+0.12, depositProb:0.45, selfShareMult:0.75, humanHate:0 },
+  normal: { label:'Normal',    killThresh:1.0, yesBias:0,     depositProb:0.65, selfShareMult:1.0,  humanHate:0 },
+  hard:   { label:'Difficile', killThresh:0.7, yesBias:-0.07, depositProb:0.85, selfShareMult:1.15, humanHate:0.8 },
+};
+function DIFF(){ return DIFF_SETTINGS[G.difficulty || 'normal']; }
+
+function initPlayers(count){
+  count = count || 5;
+  ROLES_ACTIVE = ROLES.slice(0, count);
+  const roleOrder = [...ROLES_ACTIVE];
+  const idxs = roleOrder.map((_,i)=>i);
+  for (let i=idxs.length-1;i>0;i--){ const j=randInt(0,i); [idxs[i],idxs[j]]=[idxs[j],idxs[i]]; }
+  G.players = NAMES.slice(0, count).map((name,i)=>({
+    id:i, name, color:COLORS[i], ai:PERSONALITIES[i],
+    role: roleOrder[idxs[i]],
+    pocket:0, bank:0, hand:[], alive:true,
+    night:null, guarded:false, valise:false,
+    grudge: new Array(count).fill(0),   // rancunes envers les autres
+  }));
+  G.presidentIdx = G.players.findIndex(p=>p.role.id==='presidente');
+  makeDeck();
+  G.players.forEach(p=>{
+    draw(p, p.role.id==='interior' ? 3 : 2);
+    p.hand.forEach(c=>applyPassive(p,c));
+  });
+}
+
+function applyPassive(p, c){
+  if (c.id==='garde') p.guarded = true;
+  if (c.id==='valise') p.valise = true;
+  if (c.id==='doublure') p.doublure = true;
+  if (c.id==='passeport') p.passeport = true;
+}
+function consumeCard(p, cardId){
+  const i = p.hand.findIndex(c=>c.id===cardId);
+  if (i>=0){ p.hand.splice(i,1); }
+  p.guarded = p.hand.some(c=>c.id==='garde');
+  p.valise = p.hand.some(c=>c.id==='valise');
+  p.doublure = p.hand.some(c=>c.id==='doublure');
+  p.passeport = p.hand.some(c=>c.id==='passeport');
+  renderHand();
+}
+
+// ---------------------------------------------------------------------
+// UI HELPERS
+// ---------------------------------------------------------------------
+const logEl = document.getElementById('log');
+function log(txt, cls='sys'){
+  const p = document.createElement('p');
+  p.className = cls;
+  p.innerHTML = txt;
+  logEl.appendChild(p);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function setPhase(t){ document.getElementById('phaseBanner').textContent = t; }
+function toast(t, ms=1800){
+  const el = document.getElementById('toast');
+  el.innerHTML = t; el.style.opacity = 1;
+  setTimeout(()=> el.style.opacity = 0, ms);
+}
+
+function renderPlayers(){
+  const wrap = document.getElementById('players');
+  wrap.innerHTML = '';
+  G.players.forEach((p,i)=>{
+    const d = document.createElement('div');
+    d.className = 'pl' + (i===MYSEAT?' me':'') + (p.alive?'':' dead') + (i===G.presidentIdx&&p.alive?' president':'');
+    d.innerHTML =
+      '<div class="dot" style="background:'+p.color+'"></div>' +
+      '<div class="pname">'+p.name+'</div>' +
+      '<div class="prole" title="'+p.role.desc.replace(/"/g,'&quot;')+'">'+p.role.name+(p.alive?'':' — 💀 éliminé ce tour')+'</div>' +
+      '<div class="pmoney"><span class="pocket">💵 '+(i===MYSEAT ? p.pocket+'M' : '?')+'</span><br><span class="bank">🏦 '+p.bank+'M</span></div>';
+    wrap.appendChild(d);
+  });
+  document.getElementById('turnNum').textContent = G.turn;
+  document.getElementById('turnMax').textContent = TURNS;
+}
+function cardHTML(c, extraClass){
+  const cat = CARD_CATS[c.cat] || CARD_CATS.vote;
+  return '<div class="gcard '+(extraClass||'')+'" data-cid="'+c.id+'">'
+    + '<div class="gc-band" style="background:'+cat.color+'">'+cat.label+'</div>'
+    + '<div class="gc-name">'+c.name+'</div>'
+    + '<div class="gc-desc">'+c.desc+'</div>'
+    + '</div>';
+}
+const PHASE_HINT = { vote:'pendant un vote du budget', nuit:'pendant la nuit', coup:'pendant un coup d\'État', passif:'automatiquement (carte passive)' };
+function renderHand(){
+  const h = document.getElementById('handCards');
+  h.innerHTML = '';
+  const mine = G.players[MYSEAT] || G.players[0];
+  if (!mine) return;
+  mine.hand.forEach(c=>{
+    const wrap = document.createElement('div');
+    wrap.innerHTML = cardHTML(c);
+    const el = wrap.firstChild;
+    el.onclick = ()=> toast('« '+c.name+' » se joue '+PHASE_HINT[c.phase]+'.', 2200);
+    h.appendChild(el);
+  });
+}
+
+// modal générique : renvoie une promesse résolue par le choix
+const modalEl = document.getElementById('modal');
+const modalBox = document.getElementById('modalBox');
+function modal(html){
+  modalBox.innerHTML = html;
+  modalEl.classList.remove('hidden');
+}
+function closeModal(){ modalEl.classList.add('hidden'); }
+
+function ask(html, buttons){
+  return new Promise(res=>{
+    modal(html + '<div class="mbtns" id="mb"></div>');
+    const mb = document.getElementById('mb');
+    buttons.forEach(b=>{
+      const btn = document.createElement('button');
+      btn.className = 'mbtn' + (b.cls?' '+b.cls:'');
+      btn.textContent = b.label;
+      btn.onclick = ()=>{ closeModal(); res(b.value); };
+      mb.appendChild(btn);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------
+// PHASE 1 : AIDE ÉTRANGÈRE + BUDGET
+// ---------------------------------------------------------------------
+async function phaseBudget(){
+  const pres = G.players[G.presidentIdx];
+  let aid = randInt(8, 14) - G.aidPenalty;
+  G.aidPenalty = 0;
+  aid = Math.max(4, aid);
+  const humanIsPres = (G.presidentIdx === 0 && pres.alive);
+  document.getElementById('aidPool').textContent = humanIsPres ? aid : '???';
+  NET.event({ kind:'aid', v:'???' });
+  if (pres.remote && pres.alive) NET.event({ kind:'aid', v:aid, only:pres.id });
+
+  setPhase('☀️ Jour — Arrivée de l\'aide étrangère');
+  fx.setDay();
+  fx.pawnsDay();
+  log('<span class="turnhdr">— TOUR '+G.turn+' —</span>', 'turnhdr');
+  if (humanIsPres){
+    log('✈️ L\'avion de l\'aide atterrit : <b>'+aid+' M$</b>. Vous seul connaissez le montant… à vous d\'en « redistribuer » une partie.', 'gold');
+  } else {
+    log('✈️ L\'avion de l\'aide étrangère atterrit. Le montant ? <b>Secret d\'État</b> — seul El Presidente ouvre la valise.', 'gold');
+  }
+  fx.planeDrop(aid);
+  await sleep(3200);
+
+  setPhase('🏛 Conseil des ministres — Budget');
+  let alloc;
+  if (G.presidentIdx === 0 && pres.alive){
+    alloc = await humanBudget(aid);
+  } else if (pres.remote && pres.alive){
+    const ans = await NET.prompt(pres, 'budget', {
+      aid,
+      players: G.players.map((p,i)=>({ seat:i, name:p.name, color:p.color, alive:p.alive })).filter(o=>o.alive),
+    });
+    alloc = new Array(G.players.length).fill(0);
+    let sum = 0, valid = true;
+    Object.entries(ans || {}).forEach(([k, v])=>{
+      k = +k; v = Math.max(0, Math.floor(+v || 0));
+      if (G.players[k] && G.players[k].alive){ alloc[k] = v; sum += v; }
+    });
+    if (sum > aid) valid = false;
+    if (!valid) alloc = aiBudget(pres, aid);
+    else alloc[pres.id] += (aid - sum);
+  } else {
+    alloc = aiBudget(pres, aid);
+  }
+  if (G.presidentIdx === 0){
+    const detail = G.players.map((p,i)=> p.alive ? p.name+': '+alloc[i]+'M' : null).filter(Boolean).join(' · ');
+    log('📜 Vous proposez : '+detail+' (vous seul voyez le tableau complet).');
+  } else if (G.players[0].alive){
+    log('📜 '+pres.name+' distribue les enveloppes une par une, à l\'oreille. La vôtre : <b>'+alloc[0]+' M$</b>. Ce que touchent les autres ? Motus.');
+  } else {
+    log('📜 '+pres.name+' distribue ses enveloppes en catimini.');
+  }
+
+  // vote
+  setPhase('🗳 Vote du budget');
+  const result = await voteBudget(alloc);
+  if (result.passed){
+    log('✅ Budget adopté ('+result.yes+' voix pour, '+result.no+' contre). L\'argent est distribué.', 'green');
+    G.players.forEach((p,i)=>{ if(p.alive){ p.pocket += alloc[i]; } });
+    fx.moneyRain();
+  } else {
+    log('❌ Budget REJETÉ ('+result.yes+' pour, '+result.no+' contre) ! L\'aide repart... et la rue gronde.', 'red');
+    G.coupJustified = true;
+    fx.angryCrowd();
+    G.players.forEach((p,i)=>{ if(i!==G.presidentIdx && alloc[i]<2) p.grudge[G.presidentIdx]+=1; });
+  }
+  renderPlayers();
+  await sleep(1200);
+}
+
+async function humanBudget(aid){
+  return new Promise(res=>{
+    const alive = G.players.map((p,i)=>({p,i})).filter(o=>o.p.alive);
+    let html = '<h3>Vous êtes El Presidente</h3><div class="mtext">Répartissez les <b>'+aid+' M$</b> de l\'aide. Un cabinet mal payé vote contre… ou pire.</div>';
+    alive.forEach(o=>{
+      html += '<div class="alloc-row"><div class="dot" style="background:'+o.p.color+'"></div>'
+        + '<span style="min-width:110px">'+o.p.name+'</span>'
+        + '<input type="range" min="0" max="'+aid+'" value="0" data-i="'+o.i+'" class="alloc">'
+        + '<span class="val" id="val'+o.i+'">0M</span></div>';
+    });
+    html += '<div class="mtext" style="margin-top:8px">Reste à allouer : <b id="rest">'+aid+'</b> M$ (le reste est « perdu » dans les frais de dossier… c\'est-à-dire dans votre poche)</div>';
+    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer ce budget</button></div>';
+    modal(html);
+    const sliders = [...document.querySelectorAll('.alloc')];
+    const upd = ()=>{
+      let sum = 0;
+      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+'M'; });
+      const rest = aid - sum;
+      document.getElementById('rest').textContent = rest;
+      document.getElementById('okBudget').disabled = rest < 0;
+    };
+    sliders.forEach(s=> s.oninput = upd);
+    upd();
+    document.getElementById('okBudget').onclick = ()=>{
+      const alloc = new Array(5).fill(0);
+      let sum = 0;
+      sliders.forEach(s=>{ alloc[+s.dataset.i] = +s.value; sum += +s.value; });
+      alloc[0] += (aid - sum); // le reste va au président (vous)
+      closeModal();
+      res(alloc);
+    };
+  });
+}
+
+function aiBudget(pres, aid){
+  const alloc = new Array(5).fill(0);
+  const alive = G.players.filter(p=>p.alive);
+  const persona = pres.ai;
+  let selfShare;
+  if (persona==='cupide') selfShare = Math.ceil(aid*0.5*DIFF().selfShareMult);
+  else if (persona==='prudent') selfShare = Math.ceil(aid*0.3*DIFF().selfShareMult);
+  else selfShare = Math.ceil(aid*0.4*DIFF().selfShareMult);
+  selfShare = Math.min(selfShare, aid);
+  let rest = aid - selfShare;
+  // répartir le reste, en privilégiant les gens rancuniers/militaires
+  const others = G.players.map((p,i)=>({p,i})).filter(o=>o.p.alive && o.i!==pres.id);
+  others.sort((a,b)=> (b.p.role.units + b.p.grudge[pres.id]) - (a.p.role.units + a.p.grudge[pres.id]));
+  others.forEach((o,rank)=>{
+    const share = Math.max(0, Math.round(rest * (others.length-rank) / ((others.length*(others.length+1))/2)));
+    alloc[o.i] = Math.min(share, rest);
+    rest -= alloc[o.i];
+  });
+  alloc[pres.id] = selfShare + rest;
+  return alloc;
+}
+
+function applyVoteCard(p, cid, choiceYes, ctx){
+  if (cid==='fraude') return 2;
+  if (cid==='ambassade') return 3;
+  if (cid==='syndicat' || cid==='eveque' || cid==='cousinage') return 2;
+  if (cid==='scandale'){ ctx.presMalusRef.v += 2; log('📰 Scandale de presse ! '+ctx.pres.name+' perd 2 voix.', 'red'); return 0; }
+  if (cid==='dossier'){
+    const targets = G.players.filter(t=>t.alive && t.id!==p.id);
+    if (targets.length){ const t = pick(targets); ctx.forced[t.id] = choiceYes ? 'yes' : 'no';
+      log('🗂 Dossier compromettant : '+t.name+' votera comme '+p.name+'.', 'gold'); }
+    return 0;
+  }
+  if (cid==='potdevin'){ p.pocket += 2; log('💵 '+p.name+' encaisse un pot-de-vin (+2 M$).', 'gold'); return 0; }
+  if (cid==='racket'){ p.pocket += 3; log('💵 '+p.name+' rackette le marché (+3 M$).', 'gold'); return 0; }
+  if (cid==='cheque'){ p.pocket += 4; log('💵 '+p.name+' encaisse un chèque de Miami (+4 M$).', 'gold'); return 0; }
+  if (cid==='detour'){
+    const pr = G.players[G.presidentIdx];
+    if (pr.alive && pr.id!==p.id && pr.pocket>0){
+      const take = Math.min(2, pr.pocket); pr.pocket -= take; p.pocket += take;
+      log('🕳 '+p.name+' détourne '+take+' M$ de la poche du Presidente.', 'red'); pr.grudge[p.id] += 1;
+    }
+    return 0;
+  }
+  if (cid==='chantage'){
+    const richest = G.players.filter(t=>t.alive && t.id!==p.id).sort((a,b)=>b.pocket-a.pocket)[0];
+    if (richest && richest.pocket>0){
+      const take = Math.min(2, richest.pocket); richest.pocket -= take; p.pocket += take;
+      log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' M$).', 'red'); richest.grudge[p.id] += 1.5;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+async function voteBudget(alloc){
+  const pres = G.players[G.presidentIdx];
+  let yes = 0, no = 0;
+  const presMalusRef = { v: 0 };
+  const forced = {};   // dossier compromettant
+  const ctx = { presMalusRef, forced, pres };
+
+  // vote humain d'abord (avec cartes visuelles)
+  if (G.players[0].alive){
+    const my = alloc[0];
+    const voteCards = G.players[0].hand.filter(c=>c.phase==='vote');
+    let html = '<h3>Vote du budget</h3><div class="mtext">On vous propose <b>'+my+' M$</b>. '
+      + (G.presidentIdx===0 ? 'Vous votez évidemment pour votre propre budget ?' : pres.name+' jure avoir presque tout redistribué. Le total de l\'aide ? « Secret d\'État. » À vous de flairer l\'arnaque.')+'</div>';
+    if (voteCards.length){
+      html += '<div class="mtext">Cliquez les cartes à jouer :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+      voteCards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
+      html += '</div>';
+    }
+    const played = new Set();
+    const choice = await new Promise(res=>{
+      modal(html + '<div class="mbtns"><button class="mbtn" id="vYes">Voter POUR</button><button class="mbtn danger" id="vNo">Voter CONTRE</button></div>');
+      document.querySelectorAll('#modalBox .gcard').forEach(el=>{
+        el.onclick = ()=>{ el.classList.toggle('selected');
+          const ci = +el.dataset.ci;
+          played.has(ci) ? played.delete(ci) : played.add(ci);
+        };
+      });
+      document.getElementById('vYes').onclick = ()=>{ closeModal(); res('yes'); };
+      document.getElementById('vNo').onclick = ()=>{ closeModal(); res('no'); };
+    });
+    let myVotes = 1 + (G.players[0].role.id==='interior'?1:0);
+    for (const ci of [...played]){
+      const c = voteCards[ci];
+      if (!c) continue;
+      myVotes += applyVoteCard(G.players[0], c.id, choice==='yes', ctx);
+      consumeCard(G.players[0], c.id);
+    }
+    renderPlayers();
+    if (choice==='yes') yes += myVotes; else no += myVotes;
+    log('Vous votez <b>'+(choice==='yes'?'POUR':'CONTRE')+'</b> ('+myVotes+' voix).');
+  }
+
+  // votes des joueurs distants puis des IA
+  for (const p of G.players){
+    if (!p.alive || p.id===0) continue;
+    if (p.remote){
+      const cards = p.hand.filter(c=>c.phase==='vote');
+      const text = (p.id===G.presidentIdx)
+        ? 'Vous votez évidemment pour votre propre budget ?'
+        : 'On vous propose <b>'+alloc[p.id]+' M$</b>. '+escapeHTML(pres.name)+' jure avoir presque tout redistribué. Le total ? « Secret d\'État. »';
+      const ans = (await NET.prompt(p, 'vote', { text, cards: cards.map(c=>({id:c.id,name:c.name,desc:c.desc,cat:c.cat})) })) || { choice:'yes', played:[] };
+      let vv = 1 + (p.role.id==='interior'?1:0);
+      if (p.id === G.presidentIdx) vv = Math.max(0, vv - presMalusRef.v);
+      const cy = ans.choice === 'yes';
+      (ans.played || []).forEach(cid=>{
+        if (!p.hand.some(c=>c.id===cid && c.phase==='vote')) return;
+        vv += applyVoteCard(p, cid, cy, ctx);
+        consumeCard(p, cid);
+      });
+      if (cy) yes += vv; else no += vv;
+      log(p.name+' vote '+(cy?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+vv+' voix).');
+      renderPlayers();
+      await sleep(800);
+      continue;
+    }
+    let v = 1 + (p.role.id==='interior'?1:0);
+    if (p.id === G.presidentIdx) v = Math.max(0, v - presMalusRef.v);
+    let voteYes;
+    if (forced[p.id] !== undefined){ voteYes = forced[p.id]==='yes'; }
+    else if (p.id === G.presidentIdx){ voteYes = true; }
+    else {
+      const share = alloc[p.id];
+      const fair = 2;
+      let prob = 0.25 + share*0.22 - p.grudge[G.presidentIdx]*0.15 + DIFF().yesBias;
+      if (p.ai==='brutal') prob -= 0.08;
+      if (p.ai==='prudent') prob += 0.12;
+      voteYes = Math.random() < Math.max(0.05, Math.min(0.95, prob));
+      if (!voteYes && share < fair) p.grudge[G.presidentIdx] += 0.5;
+    }
+    // l'IA joue parfois ses cartes de vote et d'argent
+    p.hand.filter(c=>c.phase==='vote').forEach(c=>{
+      if (c.cat==='argent'){
+        if (c.id==='potdevin'){ p.pocket+=2; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un pot-de-vin (+2 M$).'); }
+        else if (c.id==='cheque'){ p.pocket+=4; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un chèque de Miami (+4 M$).'); }
+        else if (c.id==='chantage'){
+          const richest = G.players.filter(pp=>pp.alive&&pp.id!==p.id).sort((a,b)=>b.pocket-a.pocket)[0];
+          if (richest && richest.pocket>0){
+            const take=Math.min(2,richest.pocket); richest.pocket-=take; p.pocket+=take;
+            consumeCard(p,c.id); log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' M$).','red');
+            richest.grudge[p.id]+=1.5;
+          }
+        }
+        else if (c.id==='racket'){ p.pocket+=3; consumeCard(p,c.id); log('💵 '+p.name+' rackette le marché (+3 M$).'); }
+        else if (c.id==='detour' && G.presidentIdx!==p.id && G.players[G.presidentIdx].alive && G.players[G.presidentIdx].pocket>0 && Math.random()<0.7){
+          const pr=G.players[G.presidentIdx]; const take=Math.min(2,pr.pocket); pr.pocket-=take; p.pocket+=take;
+          consumeCard(p,c.id); log('🕳 '+p.name+' détourne '+take+' M$ de la poche du Presidente.','red'); pr.grudge[p.id]+=1;
+        }
+      } else if (Math.random()<0.3){
+        if (c.id==='fraude'){ v+=2; consumeCard(p,c.id); log('🗳 '+p.name+' joue Fraude électorale (+2 voix).'); }
+        else if (c.id==='ambassade'){ v+=3; consumeCard(p,c.id); log('🏛 '+p.name+' joue Soutien de l\'Ambassade (+3 voix).'); }
+        else if (c.id==='syndicat'||c.id==='eveque'||c.id==='cousinage'){ v+=2; consumeCard(p,c.id); log('🗳 '+p.name+' joue '+c.name+' (+2 voix).'); }
+      }
+    });
+    if (voteYes) yes += v; else no += v;
+    log(p.name+' vote '+(voteYes?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+v+' voix).');
+    await sleep(800);
+  }
+  return { passed: yes > no, yes, no };
+}
+
+// ---------------------------------------------------------------------
+// PHASE 2 : LA NUIT (planques, assassinats, banque)
+// ---------------------------------------------------------------------
+async function phaseNight(){
+  setPhase('🌙 Nuit — Planques et poignards');
+  fx.setNight();
+  log('🌙 La nuit tombe sur la capitale. Chacun choisit où dormir…');
+  await sleep(1600);
+
+  // choix humain
+  if (G.players[0].alive){
+    await humanNight();
+  }
+  // choix des joueurs distants (en parallèle), puis des IA
+  await Promise.all(G.players.map(async p=>{
+    if (!p.alive || p.id===0) return;
+    if (p.remote){
+      const n = await NET.prompt(p, 'night', { pocket: p.pocket });
+      p.night = LOCATIONS.some(l=>l.id===n) ? n : 'planque';
+    } else {
+      p.night = aiNightChoice(p);
+    }
+  }));
+
+  // assassinats : humain (carte assassin), puis IA (police + cartes)
+  const attempts = []; // {killer, target, guess}
+  if (G.players[0].alive){
+    const a = await humanAssassin();
+    if (a) attempts.push(a);
+  }
+  for (const p of G.players){
+    if (!p.alive || p.id===0) continue;
+    if (p.remote){
+      const isPolice = p.role.id==='policia';
+      const cards = p.hand.filter(c=>['assassin','bombe','poison','espion','cigare','embuscade'].includes(c.id));
+      if (!isPolice && !cards.length) continue;
+      const means = [];
+      if (isPolice) means.push({ key:'police', kind:'assassin', label:'Police Secrète (gratuit)', desc:'Assassinat classique offert par votre poste.', cat:'POLICE', color:'#8fa3c7' });
+      cards.forEach(c=> means.push({ key:c.id, kind:c.id, label:c.name, desc:c.desc, cat:CARD_CATS[c.cat].label, color:CARD_CATS[c.cat].color }));
+      const targets = G.players.filter(t=>t.alive && t.id!==p.id).map(t=>({ id:t.id, name:t.name, color:t.color, roleName:t.role.name }));
+      const ans = await NET.prompt(p, 'assassin', { means, targets });
+      if (ans && G.players[ans.target] && G.players[ans.target].alive && ans.target !== p.id){
+        if (ans.meanKey !== 'police'){
+          if (!p.hand.some(c=>c.id===ans.meanKey)) continue;
+          consumeCard(p, ans.meanKey);
+        }
+        const FIXED = { cigare:'residence', embuscade:'banque' };
+        const kind = ['assassin','bombe','poison','espion','cigare','embuscade'].includes(ans.kind) ? ans.kind : 'assassin';
+        const guess = kind==='espion' ? null : (FIXED[kind] || (['residence','banque','planque'].includes(ans.guess) ? ans.guess : 'residence'));
+        attempts.push({ killer:p.id, target:ans.target, guess, kind });
+      }
+      continue;
+    }
+    const a = aiAssassin(p);
+    if (a) attempts.push(a);
+  }
+
+  await sleep(600);
+
+  // révélation des planques sur le plateau (pions)
+  NET.event({ kind:'nights', nights: G.players.map(p=>p.night) });
+  fx.pawnsNight();
+  await sleep(2200);
+
+  // résolution des assassinats
+  for (const a of attempts){
+    const t = G.players[a.target];
+    if (!t.alive) continue;
+    const kind = a.kind || 'assassin';
+    const guess = kind==='espion' ? t.night : a.guess;
+    const kindTxt = { assassin:'Des hommes armés rôdent', bombe:'Un colis suspect est déposé', poison:'Une silhouette se glisse en cuisine', espion:'Suivie depuis des jours, la cible est localisée', cigare:'Une boîte de havanes est livrée', embuscade:'Des silhouettes guettent le coffre' }[kind] || 'Des hommes armés rôdent';
+    log('🔪 '+kindTxt+' autour de <b>'+LOCATIONS.find(l=>l.id===guess).name+'</b>…');
+    await sleep(1900);
+    if (t.night === guess && guess !== 'ambassade'){
+      // 1) échec du poison ?
+      if (kind==='poison' && Math.random()<0.5){
+        log('🧪 Le poison ne prend pas… '+t.name+' se réveille avec une simple migraine.', 'gold');
+        t.grudge[a.killer] += 1;
+        await sleep(1300); continue;
+      }
+      // 2) garde du corps (le poison l\'ignore)
+      if (t.guarded && kind!=='poison'){
+        consumeCard(t, 'garde');
+        log('🛡 '+t.name+' est sauvé par son garde du corps ! L\'attaque échoue.', 'gold');
+        fx.gunFlash(t.night, false);
+        t.grudge[a.killer] += 2;
+        await sleep(1300); continue;
+      }
+      // 3) doublure : 50% de survie
+      if (t.doublure && Math.random()<0.5){
+        consumeCard(t, 'doublure');
+        log('🎭 C\'était la doublure de '+t.name+' ! Le vrai dormait ailleurs dans la maison.', 'gold');
+        fx.gunFlash(t.night, true);
+        t.grudge[a.killer] += 2;
+        await sleep(1300); continue;
+      }
+      if (t.doublure) consumeCard(t, 'doublure'); // la doublure a été sacrifiée pour rien
+
+      // 4) mort
+      t.alive = false;
+      fx.gunFlash(t.night, true);
+      const k = G.players[a.killer];
+      if (kind==='bombe' || kind==='cigare'){
+        const destroyed = t.pocket; t.pocket = 0;
+        log('💥 <b>'+t.name+'</b> '+(kind==='cigare'?'allume son havane… et saute avec !':'saute avec sa planque !')+(destroyed>0?' Ses '+destroyed+' M$ partent en fumée.':'')+' La méthode choque tout le monde.', 'red');
+        G.players.forEach(pp=>{ if(pp.alive) pp.grudge[a.killer] += 1.2; });
+      } else {
+        let loot = 0;
+        if (!t.valise){ loot = t.pocket; t.pocket = 0; }
+        k.pocket += loot;
+        const verb = kind==='poison' ? 'empoisonné' : 'assassiné';
+        log('💀 <b>'+t.name+'</b> est '+verb+' cette nuit !'+(loot>0?' Son magot de '+loot+' M$ disparaît ('+k.name+' siffle innocemment).':' Sa valise diplomatique protège son argent.'), 'red');
+        G.players.forEach(pp=>{ if(pp.alive) pp.grudge[a.killer] += 0.5; });
+      }
+      if (t.id === G.presidentIdx){
+        G.coupJustified = true;
+        log('⚠️ Le Presidente est mort ! Le pouvoir vacille…', 'red');
+      }
+    } else {
+      log('…mais la cible n\'était pas là. Nuit blanche pour les tueurs.');
+    }
+    await sleep(1300);
+  }
+
+  // Compte offshore : dépôt à distance
+  for (const p of G.players){
+    if (!p.alive || p.pocket<=0 || p.night==='banque') continue;
+    const hasOff = p.hand.some(c=>c.id==='offshore');
+    if (!hasOff) continue;
+    let use = false;
+    if (p.id===0){
+      use = await ask('<h3>💼 Compte offshore</h3><div class="mtext">Transférer vos <b>'+p.pocket+' M$</b> en Suisse depuis votre planque, sans passer par la banque ?</div>',
+        [ {label:'Transférer ('+p.pocket+' M$)', value:true}, {label:'Garder la carte', value:false, cls:'alt'} ]);
+    } else if (p.remote){
+      use = !!(await NET.prompt(p, 'offshore', { pocket: p.pocket }));
+    } else {
+      use = p.pocket>=4 && Math.random()<0.8;
+    }
+    if (use){
+      consumeCard(p,'offshore');
+      log('💼 '+p.name+' fait transiter <b>'+p.pocket+' M$</b> par un compte offshore. Propre.', 'green');
+      p.bank += p.pocket; p.pocket = 0;
+      fx.deposit();
+    }
+  }
+
+  // dépôts en banque
+  G.players.forEach(p=>{
+    if (!p.alive) return;
+    if (p.night==='banque' && !G.bankClosed && p.pocket>0){
+      log('🏦 '+p.name+' dépose <b>'+p.pocket+' M$</b> sur son compte suisse.', 'green');
+      p.bank += p.pocket; p.pocket = 0;
+      fx.deposit();
+    }
+  });
+  if (G.bankClosed){
+    const frustrated = G.players.filter(p=>p.alive&&p.night==='banque');
+    if (frustrated.length) log('🌀 La banque était fermée à cause du cyclone ! '+frustrated.map(p=>p.name).join(', ')+' repart(ent) bredouille(s).', 'red');
+  }
+  G.bankClosed = false;
+  renderPlayers();
+  await sleep(900);
+}
+
+async function humanNight(){
+  const me = G.players[0];
+  let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+me.pocket+' M$</b>. La banque permet de sécuriser votre magot… mais tout le monde le sait.</div><div class="opt-grid" id="optGrid">';
+  LOCATIONS.forEach(l=>{
+    html += '<div class="opt" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span><b>'+l.name+'</b><span class="odesc">'+l.desc+'</span></div>';
+  });
+  html += '</div><div class="mbtns"><button class="mbtn" id="okNight" disabled>Valider</button></div>';
+  return new Promise(res=>{
+    modal(html);
+    let sel = null;
+    document.querySelectorAll('.opt').forEach(el=>{
+      el.onclick = ()=>{
+        document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+        el.classList.add('selected');
+        sel = el.dataset.id;
+        document.getElementById('okNight').disabled = false;
+      };
+    });
+    document.getElementById('okNight').onclick = ()=>{
+      me.night = sel; closeModal(); res();
+    };
+  });
+}
+
+async function humanAssassin(){
+  const me = G.players[0];
+  const isPolice = me.role.id==='policia';
+  const attackCards = me.hand.filter(c=>['assassin','bombe','poison','espion','cigare','embuscade'].includes(c.id));
+  if (!attackCards.length && !isPolice) return null;
+  const targets = G.players.filter((p,i)=>i!==0 && p.alive);
+  if (!targets.length) return null;
+
+  // moyens d'attaque disponibles (un seul par nuit)
+  const means = [];
+  if (isPolice) means.push({ key:'police', kind:'assassin', label:'Police Secrète (gratuit)', desc:'Un assassinat classique offert par votre poste.' });
+  attackCards.forEach(c=> means.push({ key:c.id, kind:c.id, label:c.name, desc:c.desc, card:c }));
+
+  let html = '<h3>🔪 Opération nocturne ?</h3><div class="mtext">Une seule tentative par nuit. Choisissez votre méthode, la cible, puis devinez sa planque (l\'Espion vise à coup sûr). L\'Ambassade est intouchable.</div>';
+  html += '<div class="mtext"><b>Méthode :</b></div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+  means.forEach((mn,mi)=>{
+    const cat = mn.card ? CARD_CATS[mn.card.cat] : { label:'POLICE', color:'#8fa3c7' };
+    html += '<div class="gcard mean" data-mi="'+mi+'"><div class="gc-band" style="background:'+cat.color+'">'+cat.label+'</div><div class="gc-name">'+mn.label+'</div><div class="gc-desc">'+mn.desc+'</div></div>';
+  });
+  html += '</div><div class="mtext"><b>Cible :</b></div><div class="opt-grid">';
+  targets.forEach(t=>{
+    html += '<div class="opt tgt" data-id="'+t.id+'"><b style="color:'+t.color+'">'+t.name+'</b><span class="odesc">Poche : ? — '+t.role.name+'</span></div>';
+  });
+  html += '</div><div id="locBlock"><div class="mtext"><b>Où dort-il/elle, à votre avis ?</b></div><div class="opt-grid">';
+  LOCATIONS.filter(l=>l.id!=='ambassade').forEach(l=>{
+    html += '<div class="opt loc" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span>'+l.name+'</div>';
+  });
+  html += '</div></div><div class="mbtns"><button class="mbtn danger" id="okKill" disabled>Lancer l\'opération</button><button class="mbtn alt" id="noKill">Pas cette nuit</button></div>';
+
+  return new Promise(res=>{
+    modal(html);
+    let mi=null, tgt=null, loc=null;
+    const FIXED_GUESS = { cigare:'residence', embuscade:'banque' };
+    const isSpy = ()=> mi!==null && means[mi].kind==='espion';
+    const fixed = ()=> mi!==null ? (FIXED_GUESS[means[mi].kind]||null) : null;
+    const check = ()=>{
+      const noLoc = isSpy() || fixed();
+      document.getElementById('locBlock').style.display = noLoc ? 'none' : 'block';
+      document.getElementById('okKill').disabled = !(mi!==null && tgt!==null && (loc || noLoc));
+    };
+    document.querySelectorAll('.mean').forEach(el=> el.onclick=()=>{
+      document.querySelectorAll('.mean').forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected'); mi=+el.dataset.mi; check();
+    });
+    document.querySelectorAll('.tgt').forEach(el=> el.onclick=()=>{
+      document.querySelectorAll('.tgt').forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected'); tgt=+el.dataset.id; check();
+    });
+    document.querySelectorAll('.loc').forEach(el=> el.onclick=()=>{
+      document.querySelectorAll('.loc').forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected'); loc=el.dataset.id; check();
+    });
+    document.getElementById('okKill').onclick = ()=>{
+      const mn = means[mi];
+      if (mn.card) consumeCard(me, mn.card.id);
+      const g = mn.kind==='espion' ? null : (FIXED_GUESS[mn.kind] || loc);
+      closeModal(); res({killer:0, target:tgt, guess: g, kind:mn.kind});
+    };
+    document.getElementById('noKill').onclick = ()=>{ closeModal(); res(null); };
+  });
+}
+
+function aiNightChoice(p){
+  // banque si gros magot (mais risqué), sinon arbitrer confort (résidence = carte) vs discrétion (amante)
+  const threat = Math.max(...p.grudge);
+  if (p.pocket >= 4 && Math.random() < DIFF().depositProb && !G.bankClosed) return 'banque';
+  if (threat >= 2 && Math.random() < 0.5) return 'ambassade';
+  if (p.hand.length <= 1 && Math.random() < 0.6) return 'residence';   // besoin de cartes
+  if (threat >= 1) return 'planque';                                    // on se fait discret
+  return pick(['residence','planque','planque']);
+}
+
+function aiAssassin(p){
+  const isPolice = p.role.id==='policia';
+  const attackCard = p.hand.find(c=>['assassin','bombe','poison','espion','cigare','embuscade'].includes(c.id));
+  const hasCard = !!attackCard;
+  if (!isPolice && !hasCard) return null;
+  // motivation : rancune ou cible riche
+  const targets = G.players.map((t,i)=>({t,i}))
+    .filter(o=>o.t.alive && o.i!==p.id)
+    .map(o=>({ ...o, score: o.t.pocket*0.6 + p.grudge[o.i]*1.4 + (o.i===G.presidentIdx?0.8:0) + (o.i===0 ? DIFF().humanHate : 0) }))
+    .sort((a,b)=>b.score-a.score);
+  if (!targets.length) return null;
+  const best = targets[0];
+  const motivation = best.score + (p.ai==='brutal'?1.5:0);
+  if (motivation < 3*DIFF().killThresh && !isPolice) return null;      // pas envie de gâcher la carte
+  if (motivation < 2*DIFF().killThresh && isPolice) return null;
+  // deviner la planque : si la cible est riche → banque probable
+  let guess;
+  if (best.t.pocket >= 4) guess = Math.random()<0.6 ? 'banque' : pick(['residence','planque']);
+  else guess = pick(['residence','planque','residence']);
+  // préférer l'espion (sûr), sinon la carte disponible, sinon la police
+  let kind = 'assassin';
+  if (hasCard && (!isPolice || attackCard.id==='espion' || Math.random()<0.5)){
+    kind = attackCard.id;
+    consumeCard(p, attackCard.id);
+  }
+  if (kind==='cigare') guess = 'residence';
+  if (kind==='embuscade') guess = 'banque';
+  return { killer:p.id, target:best.i, guess, kind };
+}
+
+// ---------------------------------------------------------------------
+// PHASE 3 : ÉVÉNEMENT
+// ---------------------------------------------------------------------
+async function phaseEvent(){
+  setPhase('📻 Radio Nationale — Événement du jour');
+  const ev = pick(EVENTS);
+  log('📻 <i>« Ici Radio Nationale… »</i> '+ev.text, 'gold');
+  fx.radioWave();
+  ev.fx(G);
+  renderPlayers();
+  await sleep(2800);
+}
+
+// ---------------------------------------------------------------------
+// PHASE 4 : COUP D'ÉTAT
+// ---------------------------------------------------------------------
+async function maybeCoup(){
+  if (G.coupBlocked){ G.coupBlocked=false; G.coupJustified=false; return; }
+  if (!G.coupJustified) return;
+  G.coupJustified = false;
+
+  setPhase('🔥 COUP D\'ÉTAT !');
+  log('🔥 <b>LES CHARS SORTENT ! Le coup d\'État est lancé !</b>', 'red');
+  fx.startCoup();
+  toast('⚠️ COUP D\'ÉTAT ⚠️', 2600);
+  await sleep(1600);
+
+  // choix des camps
+  const pres = G.players[G.presidentIdx];
+  const sides = {}; // id -> 'loyal' | 'rebel'
+  if (pres.alive) sides[pres.id] = 'loyal';
+
+  if (G.players[0].alive && G.presidentIdx !== 0){
+    const choice = await ask(
+      '<h3>Choisissez votre camp</h3><div class="mtext">'+ (pres.alive ? pres.name+' s\'accroche au pouvoir.' : 'Le pouvoir est vacant !') +
+      ' Rejoignez-vous les <b>rebelles</b> (si vous gagnez, le plus gradé des rebelles prend le palais) ou les <b>loyalistes</b> ?<br><br>Votre force militaire : <b>'+coupStrength(G.players[0],false)+'</b></div>',
+      [ {label:'⚔️ REBELLION', value:'rebel', cls:'danger'}, {label:'🛡 LOYAUTÉ', value:'loyal'} ]
+    );
+    sides[0] = choice;
+    // cartes de coup (sélection visuelle)
+    const coupCards = G.players[0].hand.filter(c=>c.phase==='coup');
+    if (coupCards.length){
+      let chtml = '<h3>⚔️ Renforts pour la bataille</h3><div class="mtext">Cliquez les cartes à engager dans le coup (elles seront défaussées) :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+      coupCards.forEach((c,ci)=>{ chtml += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
+      chtml += '</div>';
+      const chosen = await new Promise(res=>{
+        modal(chtml + '<div class="mbtns"><button class="mbtn" id="okCoupCards">Au combat</button></div>');
+        const sel = new Set();
+        document.querySelectorAll('#modalBox .gcard').forEach(el=>{
+          el.onclick = ()=>{ el.classList.toggle('selected');
+            const ci = +el.dataset.ci; sel.has(ci)?sel.delete(ci):sel.add(ci); };
+        });
+        document.getElementById('okCoupCards').onclick = ()=>{ closeModal(); res([...sel]); };
+      });
+      for (const ci of chosen){
+        const c = coupCards[ci]; if (!c) continue;
+        G.players[0].coupBonus = (G.players[0].coupBonus||0) + (COUP_CARD_POWER[c.id]||2);
+        if (c.id==='cia'){ G.players.forEach(pp=>{ if(pp.alive&&pp.id!==0) pp.grudge[0]+=1; }); log('🕶 L\'appui de la CIA se sait déjà. On vous regarde de travers.','red'); }
+        log('⚔️ Vous engagez « '+c.name+' » (+'+(COUP_CARD_POWER[c.id]||2)+' force).');
+        consumeCard(G.players[0], c.id);
+      }
+    }
+  } else if (G.players[0].alive){
+    sides[0] = 'loyal';
+  }
+
+  // camps des joueurs distants puis des IA
+  for (const p of G.players){
+    if (!p.alive || sides[p.id]) continue;
+    if (p.remote){
+      const text = (pres.alive ? escapeHTML(pres.name)+' s\'accroche au pouvoir.' : 'Le pouvoir est vacant !')
+        + ' Votre force militaire : <b>'+coupStrength(p, false)+'</b>.';
+      sides[p.id] = (await NET.prompt(p, 'side', { text })) === 'rebel' ? 'rebel' : 'loyal';
+      const cc = p.hand.filter(c=>c.phase==='coup');
+      const chosenIds = (await NET.prompt(p, 'coupCards', { cards: cc.map(c=>({id:c.id,name:c.name,desc:c.desc,cat:c.cat})) })) || [];
+      chosenIds.forEach(cid=>{
+        if (!p.hand.some(c=>c.id===cid && c.phase==='coup')) return;
+        p.coupBonus = (p.coupBonus||0) + (COUP_CARD_POWER[cid]||2);
+        if (cid==='cia'){ G.players.forEach(pp=>{ if(pp.alive&&pp.id!==p.id) pp.grudge[p.id]+=1; }); }
+        log('⚔️ '+p.name+' engage « '+(CARD_TYPES.find(c=>c.id===cid)||{name:cid}).name+' ».');
+        consumeCard(p, cid);
+      });
+      continue;
+    }
+    let rebelProb = 0.3 + p.grudge[G.presidentIdx]*0.2;
+    if (p.ai==='brutal') rebelProb += 0.2;
+    if (p.ai==='prudent') rebelProb -= 0.15;
+    if (!pres.alive) rebelProb += 0.3;
+    sides[p.id] = Math.random() < rebelProb ? 'rebel' : 'loyal';
+    // cartes de coup IA
+    p.hand.filter(c=>c.phase==='coup').forEach(c=>{
+      if (Math.random()<0.7){
+        p.coupBonus = (p.coupBonus||0) + (COUP_CARD_POWER[c.id]||2);
+        if (c.id==='cia'){ G.players.forEach(pp=>{ if(pp.alive&&pp.id!==p.id) pp.grudge[p.id]+=1; }); }
+        log('⚔️ '+p.name+' engage « '+c.name+' ».');
+        consumeCard(p,c.id);
+      }
+    });
+  }
+
+  const rebels = G.players.filter(p=>p.alive && sides[p.id]==='rebel');
+  const loyals = G.players.filter(p=>p.alive && sides[p.id]==='loyal');
+  log('⚔️ Rebelles : '+(rebels.map(p=>p.name).join(', ')||'personne')+' — 🛡 Loyalistes : '+(loyals.map(p=>p.name).join(', ')||'personne'));
+
+  let rebelForce = rebels.reduce((s,p)=>s+coupStrength(p,true),0);
+  let loyalForce = loyals.reduce((s,p)=>s+coupStrength(p,true),0);
+  log('Forces en présence — Rebelles : <b>'+rebelForce+'</b> · Loyalistes : <b>'+loyalForce+'</b>');
+
+  if (rebels.length===0 || loyals.length===0){
+    document.getElementById('coupSides').classList.add('hidden');
+    NET.event({ kind:'coupsides', html:'', show:false });
+    log(rebels.length===0 ? '🕊 Personne n\'ose bouger. Le régime survit.' : '🏳 Le régime s\'effondre sans combattre !', 'gold');
+    if (loyals.length===0 && rebels.length>0){ await installNewPresident(rebels); }
+    fx.endCoup();
+    G.players.forEach(p=>p.coupBonus=0);
+    return;
+  }
+
+  // ============ COUP FAÇON PLATEAU : déploiement puis DÉPLACEMENTS adjacents ============
+  const humanSide = (G.players[0].alive && sides[0]) ? sides[0] : null;
+  const rebelLeader = rebels.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
+  const loyalLeader = loyals.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
+
+  // panneau "qui est avec qui"
+  const sidesPanel = document.getElementById('coupSides');
+  sidesPanel.innerHTML =
+    '<b style="color:#ff6b6b">⚔️ REBELLES ('+rebelForce+' u.)</b><br>' +
+    (rebels.map(p=>'<span style="color:'+p.color+'">●</span> '+p.name+(p.id===0?' (vous)':'')).join('<br>')||'—') +
+    '<br><b style="color:#4da3ff">🛡 LOYALISTES ('+loyalForce+' u.)</b><br>' +
+    (loyals.map(p=>'<span style="color:'+p.color+'">●</span> '+p.name+(p.id===0?' (vous)':'')).join('<br>')||'—');
+  sidesPanel.classList.remove('hidden');
+  NET.event({ kind:'coupsides', html: sidesPanel.innerHTML, show:true });
+
+  // unités PERSISTANTES sur la carte : { siteId : {r, l} }
+  const units = {};
+  COUP_SITES.forEach(s=> units[s.id] = { r:0, l:0 });
+  const owner = {};
+  COUP_SITES.forEach(s=>{ owner[s.id]='loyal'; V.flags[s.id]='#4da3ff'; });
+  V.coupUnits = units;   // le rendu lit directement cette structure
+  NET.syncUnits();
+
+  log('🪖 <b>Manche 1 : déploiement.</b> Les loyalistes tiennent la ville ; les rebelles entrent par les faubourgs (pas de déploiement direct au Palais). Ensuite, les troupes se déplacent de site en site adjacent, comme sur le plateau.');
+
+  // ---- MANCHE 1 : chaque ministre déploie SES unités, chacun son tour ----
+  const deployOrder = G.players.filter(p=>p.alive && sides[p.id]);
+  for (const p of deployOrder){
+    const pSide = sides[p.id];
+    const n = coupStrength(p, true);
+    if (n <= 0) continue;
+    log((pSide==='rebel'?'⚔️ ':'🛡 ')+'<b style="color:'+p.color+'">'+p.name+'</b>'+(p.id===0?' (vous)':'')+' déploie ses <b>'+n+'</b> unités…');
+    if (p.id===0){ await humanDeploy(n, pSide); NET.syncUnits(); }
+    else if (p.remote){
+      const alloc = (await NET.prompt(p, 'deploy', { army:n, side:pSide })) || {};
+      await applyRemoteDeploy(p, n, pSide, alloc, units);
+    }
+    else { await aiDeployAnimated(p, n, pSide, units); NET.syncUnits(); }
+    await sleep(500);
+  }
+  await sleep(1200);
+
+  for (let round=1; round<=3; round++){
+    const rTot = COUP_SITES.reduce((n,s)=>n+units[s.id].r,0);
+    const lTot = COUP_SITES.reduce((n,s)=>n+units[s.id].l,0);
+    if (rTot===0 || lTot===0) break;
+    log('<b>— MANCHE '+round+'/3 — Rebelles : '+rTot+' u. · Loyalistes : '+lTot+' u. —</b>', 'gold');
+
+    // ---- déplacements (à partir de la manche 2) : le contrôleur du camp manœuvre ----
+    if (round >= 2){
+      const controllerOf = (sideName)=>{
+        const members = G.players.filter(p=>p.alive && sides[p.id]===sideName);
+        return members.find(p=>p.id===0)
+          || members.filter(p=>p.remote).sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0]
+          || members.sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
+      };
+      const doMoves = async (sideName)=>{
+        const ctrl = controllerOf(sideName);
+        if (!ctrl) return;
+        const key = sideName==='rebel' ? 'r' : 'l';
+        if (ctrl.id===0){
+          await humanMove(units, sideName, round);
+        } else if (ctrl.remote){
+          NET.syncUnits();
+          const moves = (await NET.prompt(ctrl, 'move', { side:sideName, round })) || [];
+          const arrived = {};
+          for (const mv of moves){
+            if (!mv || !ADJ[mv.from] || !ADJ[mv.from].includes(mv.to)) continue;
+            const avail = units[mv.from][key] - (arrived[mv.from]||0);
+            if (avail <= 0) continue;
+            units[mv.from][key]--; units[mv.to][key]++;
+            arrived[mv.to] = (arrived[mv.to]||0) + 1;
+          }
+          if (moves.length) log('🪖 '+(sideName==='rebel'?'Les rebelles':'Les loyalistes')+' redéploient leurs forces ('+ctrl.name+').');
+        } else {
+          aiMove(units, sideName, ctrl.ai);
+        }
+        NET.syncUnits();
+      };
+      await doMoves('rebel');
+      await doMoves('loyal');
+      await sleep(1200);
+    }
+
+    // ---- batailles sur les sites contestés ----
+    for (const s of COUP_SITES){
+      const u = units[s.id];
+      if (u.r>0 && u.l>0){
+        const r0 = u.r, l0 = u.l;
+        log('🎲 <b>'+s.name+'</b> : '+r0+' rebelles contre '+l0+' loyalistes…');
+        const d = await rollSiteDice(r0, l0, s.name);
+        const rScore = r0 + d.r, lScore = l0 + d.l;
+        const rebelWin = rScore > lScore || (rScore===lScore && owner[s.id]==='rebel');
+        const loserUnits = rebelWin ? u.l : u.r;
+        const winnerUnits = rebelWin ? u.r : u.l;
+        const loserLoss = Math.min(loserUnits, Math.ceil(loserUnits/2));
+        const winnerLoss = Math.floor(winnerUnits/4);
+        const survivors = loserUnits - loserLoss;
+        if (rebelWin){ u.l = 0; u.r = winnerUnits - winnerLoss; }
+        else { u.r = 0; u.l = winnerUnits - winnerLoss; }
+        // retraite des survivants du vaincu vers un site adjacent ami (sinon anéantis)
+        let retreatTxt = '';
+        if (survivors > 0){
+          const loserKey = rebelWin ? 'l' : 'r';
+          const dest = ADJ[s.id].find(a=>{
+            const au = units[a];
+            return (loserKey==='r' ? au.r>0 || (au.l===0 && owner[a]==='rebel') : au.l>0 || (au.r===0 && owner[a]==='loyal'));
+          }) || ADJ[s.id].find(a=> units[a].r===0 && units[a].l===0);
+          if (dest){
+            units[dest][loserKey] += survivors;
+            retreatTxt = ' '+survivors+' survivant(s) se replie(nt) sur '+COUP_SITES.find(cs=>cs.id===dest).name+'.';
+          } else {
+            retreatTxt = ' Les '+survivors+' survivants, encerclés, sont anéantis.';
+          }
+        }
+        fx.battle(s, rebelWin);
+        log('💥 Rebelles '+r0+'+🎲'+d.r+'=<b>'+rScore+'</b> vs Loyalistes '+l0+'+🎲'+d.l+'=<b>'+lScore+'</b> → '
+          +(rebelWin?'<span class="red">les rebelles prennent '+s.name+'</span>':'<span class="green">les loyalistes tiennent '+s.name+'</span>')
+          +' (pertes : '+loserLoss+' / '+winnerLoss+').'+retreatTxt);
+        NET.syncUnits();
+        await sleep(900);
+      }
+    }
+    // mise à jour du contrôle des sites
+    COUP_SITES.forEach(s=>{
+      const u = units[s.id];
+      if (u.r>0 && u.l===0) owner[s.id]='rebel';
+      else if (u.l>0 && u.r===0) owner[s.id]='loyal';
+      V.flags[s.id] = owner[s.id]==='rebel' ? '#ff4444' : '#4da3ff';
+    });
+    NET.syncUnits();
+    await sleep(600);
+  }
+  await sleep(1000);
+
+  // décompte : Palais = 2 points, autres sites = 1 point (6 points au total)
+  let rebelPts = 0;
+  COUP_SITES.forEach(s=>{ if (owner[s.id]==='rebel') rebelPts += (s.id==='palais'?2:1); });
+  G.siteOwners = owner;
+  const rebelSites = Object.values(owner).filter(o=>o==='rebel').length;
+  log('📊 Décompte final : rebelles <b>'+rebelPts+'</b>/6 points (Palais ×2). Majorité requise : 4.');
+  sidesPanel.classList.add('hidden');
+  NET.event({ kind:'coupsides', html:'', show:false });
+  V.coupUnits = null;
+  NET.event({ kind:'units', units:null, flags:V.flags });
+  const rebelsWin = rebelPts >= 4;
+  if (rebelsWin){
+    log('🏴 <b>LES REBELLES CONTRÔLENT LA CAPITALE ('+rebelSites+'/5 sites) !</b>', 'red');
+    await installNewPresident(rebels);
+    // exécution d'un loyaliste
+    await execution(rebels, loyals);
+  } else {
+    log('🛡 <b>Le régime tient bon ('+(5-rebelSites)+'/5 sites). La rébellion est écrasée.</b>', 'green');
+    await execution(loyals, rebels);
+  }
+  fx.endCoup();
+  G.players.forEach(p=>p.coupBonus=0);
+  renderPlayers();
+}
+
+const DIE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// -------- ADJACENCE DES SITES (le Palais au centre, les 4 autres en carré) --------
+const ADJ = {
+  palais:  ['radio','banqueC','caserne','aeroport'],
+  radio:   ['palais','banqueC','caserne'],
+  banqueC: ['palais','radio','aeroport'],
+  caserne: ['palais','radio','aeroport'],
+  aeroport:['palais','banqueC','caserne'],
+};
+
+// -------- déploiement humain : place SES unités (celles des alliés sont déjà sur la carte) --------
+function humanDeploy(army, side){
+  return new Promise(res=>{
+    const sideTxt = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const key = side==='rebel' ? 'r' : 'l';
+    const alloc = {}; COUP_SITES.forEach(s=> alloc[s.id]=0);
+    V.deploy = { mode:'deploy', side, key, alloc, rest: army };
+    const bar = document.getElementById('deployBar');
+    const render = ()=>{
+      bar.innerHTML = '<b>'+sideTxt+' — À vous de déployer</b> · Vos unités restantes : <b>'+V.deploy.rest+'</b>'
+        + '<div class="dep-hint">Cliquez un site pour y placer une de VOS unités · clic droit pour la reprendre · les troupes déjà visibles sont celles des autres ministres'
+        + (side==='rebel' ? ' · <b>Palais interdit au déploiement</b> (il faudra le prendre d\'assaut !)' : '')
+        + '</div>'
+        + '<button class="mbtn danger" id="depOk">EN POSITION</button>';
+      document.getElementById('depOk').onclick = ()=>{
+        const a = V.deploy ? { ...V.deploy.alloc } : {};
+        bar.classList.add('hidden');
+        V.deploy = null; res(a);
+      };
+    };
+    V.deploy.render = render;
+    render();
+    bar.classList.remove('hidden');
+    toast('Placez vos '+army+' unités sur la carte !', 2400);
+  });
+}
+
+// -------- application d'un déploiement reçu du réseau (validé côté hôte) --------
+async function applyRemoteDeploy(p, army, side, alloc, units){
+  const key = side==='rebel' ? 'r' : 'l';
+  let used = 0;
+  for (const s of COUP_SITES){
+    let n = Math.max(0, Math.floor(+alloc[s.id] || 0));
+    if (side==='rebel' && s.id==='palais') n = 0;
+    n = Math.min(n, army - used);
+    if (!n) continue;
+    used += n;
+    units[s.id][key] += n;
+    log('🪖 '+p.name+' place '+n+' unité(s) → '+s.name+'.');
+    NET.syncUnits();
+    await sleep(700);
+  }
+}
+
+// -------- déploiement IA animé : les unités apparaissent une par une sur la carte --------
+async function aiDeployAnimated(p, army, side, units){
+  const key = side==='rebel' ? 'r' : 'l';
+  const alloc = aiDeploy(army, side, p.ai);
+  for (const s of COUP_SITES){
+    const n = alloc[s.id]||0;
+    if (!n) continue;
+    units[s.id][key] += n;
+    log('🪖 '+p.name+' place '+n+' unité(s) → '+s.name+'.');
+    await sleep(700);
+  }
+}
+
+function aiDeploy(army, side, persona){
+  const weights = {};
+  COUP_SITES.forEach(s=>{
+    if (side==='rebel' && s.id==='palais'){ weights[s.id] = 0; return; }
+    let w = s.id==='palais' ? 2.6 : 1;
+    // les rebelles se massent près du palais (radio/caserne adjacentes), les loyalistes défendent
+    if (side==='rebel' && ADJ.palais.includes(s.id)) w += 0.4;
+    w *= rand(0.75, 1.25);
+    weights[s.id] = w;
+  });
+  if (persona==='brutal'){ for (const k in weights) weights[k] = Math.pow(weights[k], 2.2); }
+  if (persona==='prudent'){ for (const k in weights) weights[k] = Math.pow(weights[k], 0.6); }
+  const total = Object.values(weights).reduce((a,b)=>a+b,0) || 1;
+  const alloc = {}; let used = 0;
+  COUP_SITES.forEach(s=>{ alloc[s.id] = Math.floor(army * weights[s.id] / total); used += alloc[s.id]; });
+  let best = COUP_SITES.filter(s=>weights[s.id]>0).sort((a,b)=>weights[b.id]-weights[a.id])[0].id;
+  alloc[best] += (army - used);
+  return alloc;
+}
+
+// -------- MANCHES 2-3 : déplacements adjacents (sélection puis destination) --------
+function humanMove(units, side, round){
+  return new Promise(res=>{
+    const sideTxt = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const key = side==='rebel' ? 'r' : 'l';
+    V.deploy = { mode:'move', side, key, sel:null, moved:{} };  // moved[siteId] = unités déjà arrivées (ne rebougent pas)
+    const bar = document.getElementById('deployBar');
+    const render = ()=>{
+      const selName = V.deploy.sel ? COUP_SITES.find(s=>s.id===V.deploy.sel).name : null;
+      bar.innerHTML = '<b>'+sideTxt+' — Manche '+round+' : mouvements</b>'
+        + '<div class="dep-hint">' + (selName
+          ? '<b>'+selName+'</b> sélectionné → cliquez un site <b>adjacent</b> pour y déplacer 1 unité (clic répété = plusieurs) · re-cliquez la source pour désélectionner'
+          : 'Cliquez un de VOS sites (halo plein) pour sélectionner ses troupes, puis un site adjacent en pointillés. Les unités arrivées ne rebougent plus ce tour.')
+        + '</div>'
+        + '<button class="mbtn danger" id="depOk">FIN DES MOUVEMENTS</button>';
+      document.getElementById('depOk').onclick = ()=>{
+        const mv = (V.deploy && V.deploy.movesLog) || [];
+        bar.classList.add('hidden'); V.deploy = null; res(mv);
+      };
+    };
+    V.deploy.render = render;
+    render();
+    bar.classList.remove('hidden');
+  });
+}
+
+function aiMove(units, side, persona){
+  const key = side==='rebel' ? 'r' : 'l';
+  const foe = side==='rebel' ? 'l' : 'r';
+  const frac = persona==='brutal' ? 0.85 : persona==='prudent' ? 0.4 : 0.6;
+  const arrived = {};   // unités arrivées ce tour, ne rebougent pas
+  COUP_SITES.forEach(s=>{
+    const avail = units[s.id][key] - (arrived[s.id]||0);
+    if (avail <= 0) return;
+    // objectif : le palais s\'il n\'est pas à nous ou s\'il est contesté, sinon renforcer un site menacé
+    let target = null;
+    if (s.id!=='palais' && (units.palais[foe]>0 || units.palais[key]===0)){
+      target = ADJ[s.id].includes('palais') ? 'palais' : ADJ[s.id].find(a=>ADJ[a].includes('palais'));
+    }
+    if (!target){
+      // attaquer le site adjacent ennemi le plus faible
+      const enemyAdj = ADJ[s.id].filter(a=>units[a][foe]>0).sort((a,b)=>units[a][foe]-units[b][foe]);
+      if (enemyAdj.length && units[s.id][key] > units[enemyAdj[0]][foe]) target = enemyAdj[0];
+    }
+    if (target){
+      const n = Math.max(1, Math.floor(avail * frac));
+      units[s.id][key] -= n;
+      units[target][key] = (units[target][key]||0) + n;
+      arrived[target] = (arrived[target]||0) + n;
+      log('🪖 '+(side==='rebel'?'Les rebelles déplacent':'Les loyalistes déplacent')+' '+n+' unité(s) de '+COUP_SITES.find(c=>c.id===s.id).name+' vers '+COUP_SITES.find(c=>c.id===target).name+'.');
+    }
+  });
+}
+
+// -------- clics sur la carte : déploiement OU mouvement --------
+function coupMapClick(best, rightClick){
+  if (!V.deploy || !best) return;
+  const D = V.deploy;
+
+  if (D.mode==='deploy'){
+    const u = V.coupUnits;
+    if (rightClick){
+      if (D.alloc[best.id] > 0){ D.alloc[best.id]--; D.rest++; if (u) u[best.id][D.key]--; }
+    } else {
+      if (D.side==='rebel' && best.id==='palais'){ toast('Le Palais est verrouillé : impossible d\'y déployer !', 1800); return; }
+      if (D.rest > 0){ D.alloc[best.id]++; D.rest--; if (u) u[best.id][D.key]++; }
+      else toast('Plus d\'unités à placer !', 1400);
+    }
+    D.render();
+    return;
+  }
+
+  if (D.mode==='move'){
+    const u = V.coupUnits;
+    if (!u) return;
+    if (D.sel === best.id){ D.sel = null; D.render(); return; }         // désélection
+    if (!D.sel){
+      const movable = u[best.id][D.key] - (D.moved[best.id]||0);
+      if (movable > 0){ D.sel = best.id; D.render(); }
+      else toast('Aucune de vos unités mobiles ici.', 1500);
+      return;
+    }
+    // destination : doit être adjacente
+    if (!ADJ[D.sel].includes(best.id)){ toast('Site non adjacent !', 1400); return; }
+    const movable = u[D.sel][D.key] - (D.moved[D.sel]||0);
+    if (movable <= 0){ D.sel = null; D.render(); return; }
+    u[D.sel][D.key]--;
+    u[best.id][D.key]++;
+    D.moved[best.id] = (D.moved[best.id]||0) + 1;
+    (D.movesLog = D.movesLog || []).push({ from: D.sel, to: best.id });
+    if (u[D.sel][D.key] - (D.moved[D.sel]||0) <= 0) D.sel = null;
+    D.render();
+  }
+}
+// (le picking des sites est géré par la couche de rendu 3D via raycasting)
+
+// -------- dés de bataille : DÉS 3D lancés sur l'île (repli DOM sans Three.js) --------
+function rollSiteDice(rUnits, lUnits, siteName){
+  return new Promise(res=>{
+    const has3d = (typeof THREE !== 'undefined');
+    const tray = document.getElementById('diceTray');
+    document.getElementById('diceSite').textContent = '🏛 BATAILLE : ' + (siteName || '—');
+    const btn = document.getElementById('diceBtn');
+    const dr1=document.getElementById('dr1'), dr2=document.getElementById('dr2');
+    const dl1=document.getElementById('dl1'), dl2=document.getElementById('dl2');
+    const drT=document.getElementById('drTotal'), dlT=document.getElementById('dlTotal');
+    // en 3D, les dés unicode sont masqués : ils roulent SUR l'île
+    document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display = has3d ? 'none' : 'flex');
+    dr2.style.display='none'; dl2.style.display='none';
+    dr1.textContent='⚀'; dl1.textContent='⚀';
+    drT.textContent=''; dlT.textContent='';
+    btn.textContent = '🎲 LANCER LES DÉS';
+    tray.classList.remove('hidden');
+    if (has3d) tray.style.top = '78%';   // laisser voir l'île derrière
+    if (typeof NET !== 'undefined') NET.event({ kind:'dicetray', site: siteName || '—' });
+    btn.onclick = ()=>{
+      btn.disabled = true;
+      const r=randInt(1,6), l=randInt(1,6);
+      const finish = ()=>{
+        drT.textContent = rUnits+' + '+r+' = '+(rUnits+r);
+        dlT.textContent = lUnits+' + '+l+' = '+(lUnits+l);
+        if (typeof NET !== 'undefined') NET.event({ kind:'diceresult', rT: drT.textContent, lT: dlT.textContent });
+        btn.disabled = false;
+        btn.textContent = 'CONTINUER ▶';
+        btn.onclick = ()=>{
+          tray.classList.add('hidden');
+          tray.style.top = '';
+          if (has3d) fx.clearDice();
+          if (typeof NET !== 'undefined') NET.event({ kind:'dicehide' });
+          res({r,l});
+        };
+      };
+      if (has3d){
+        Promise.resolve(fx.throwDice(r, l)).then(finish);
+      } else {
+        [dr1,dl1].forEach(d=>d.classList.add('rolling'));
+        const spin = setInterval(()=>{ dr1.textContent=DIE_FACES[randInt(0,5)]; dl1.textContent=DIE_FACES[randInt(0,5)]; }, 70);
+        setTimeout(()=>{
+          clearInterval(spin);
+          dr1.textContent=DIE_FACES[r-1]; dl1.textContent=DIE_FACES[l-1];
+          [dr1,dl1].forEach(d=>d.classList.remove('rolling'));
+          finish();
+        }, 900);
+      }
+    };
+  });
+}
+function rollBattleDice(rForce, lForce){ // (conservé pour compat, non utilisé par le nouveau système)
+  document.getElementById('dr2').style.display='';
+  document.getElementById('dl2').style.display='';
+  return new Promise(res=>{
+    const tray = document.getElementById('diceTray');
+    const dr1=document.getElementById('dr1'), dr2=document.getElementById('dr2');
+    const dl1=document.getElementById('dl1'), dl2=document.getElementById('dl2');
+    const drT=document.getElementById('drTotal'), dlT=document.getElementById('dlTotal');
+    drT.textContent=''; dlT.textContent='';
+    tray.classList.remove('hidden');
+    [dr1,dr2,dl1,dl2].forEach(d=>d.classList.add('rolling'));
+    const spin = setInterval(()=>{
+      [dr1,dr2,dl1,dl2].forEach(d=> d.textContent = DIE_FACES[randInt(0,5)]);
+    }, 80);
+    setTimeout(()=>{
+      clearInterval(spin);
+      const r1=randInt(1,6), r2=randInt(1,6), l1=randInt(1,6), l2=randInt(1,6);
+      dr1.textContent=DIE_FACES[r1-1]; dr2.textContent=DIE_FACES[r2-1];
+      dl1.textContent=DIE_FACES[l1-1]; dl2.textContent=DIE_FACES[l2-1];
+      [dr1,dr2,dl1,dl2].forEach(d=>d.classList.remove('rolling'));
+      drT.textContent = rForce+' + '+(r1+r2)+' = '+(rForce+r1+r2);
+      dlT.textContent = lForce+' + '+(l1+l2)+' = '+(lForce+l1+l2);
+      setTimeout(()=>{
+        tray.classList.add('hidden');
+        res({r1,r2,l1,l2});
+      }, 1400);
+    }, 1000);
+  });
+}
+
+function coupStrength(p, withBonus){
+  let s = p.role.units + (withBonus ? (p.coupBonus||0) : 0);
+  if (p.role.id==='colonel') s += 2; // frappe aérienne
+  if (p.role.id==='amiral') s += 2;  // bombardement naval
+  return s;
+}
+
+async function installNewPresident(winners){
+  const leader = winners.slice().sort((a,b)=>coupStrength(b,false)-coupStrength(a,false))[0];
+  leader.role = ROLES[0];
+  G.presidentIdx = leader.id;
+  log('👑 <b>'+leader.name+'</b> s\'autoproclame nouveau Presidente ! La foule applaudit (sous la contrainte).', 'gold');
+  fx.newPresident();
+  toast('👑 '+leader.name+' prend le pouvoir');
+  await sleep(1400);
+  await assignCabinet();   // le nouveau président remanie tout le cabinet
+}
+
+// -------- le Presidente distribue les 4 autres postes --------
+async function assignCabinet(){
+  const pres = G.players[G.presidentIdx];
+  const others = G.players.filter(p=>p.id !== pres.id);
+  const rolesToGive = ROLES_ACTIVE.slice(1);   // tous les postes sauf la présidence
+  const remaining = [...others];
+
+  if (pres.id === 0){
+    // le joueur humain distribue poste par poste
+    for (const role of rolesToGive){
+      const choice = await ask(
+        '<h3>👑 Formez votre cabinet</h3><div class="mtext">À qui confiez-vous le poste de <b>'+role.name+'</b> ?<br><span style="color:#9ab; font-size:12px;">'+role.desc+'</span></div>',
+        remaining.map(p=>({ label:p.name, value:p.id }))
+      );
+      const chosen = G.players[choice];
+      chosen.role = role;
+      remaining.splice(remaining.findIndex(p=>p.id===choice), 1);
+      log('📋 Vous nommez <b style="color:'+chosen.color+'">'+chosen.name+'</b> au poste de '+role.name+'.');
+    }
+  } else if (pres.remote){
+    for (const role of rolesToGive){
+      const choice = await NET.prompt(pres, 'role', {
+        roleName: role.name, roleDesc: role.desc,
+        candidates: remaining.map(p=>({ id:p.id, name:p.name })),
+      });
+      const chosen = remaining.find(p=>p.id===choice) || remaining[0];
+      chosen.role = role;
+      remaining.splice(remaining.findIndex(p=>p.id===chosen.id), 1);
+      log('📋 '+pres.name+' nomme <b style="color:'+chosen.color+'">'+chosen.name+(chosen.id===0?' (vous)':'')+'</b> au poste de '+role.name+'.');
+    }
+  } else {
+    // l'IA récompense ceux qu'elle apprécie (rancune faible = bon poste)
+    remaining.sort((a,b)=> (pres.grudge[a.id] + rand(0,0.8)) - (pres.grudge[b.id] + rand(0,0.8)));
+    rolesToGive.forEach((role, i)=>{
+      const chosen = remaining[i];
+      chosen.role = role;
+      log('📋 '+pres.name+' nomme <b style="color:'+chosen.color+'">'+chosen.name+(chosen.id===0?' (vous)':'')+'</b> au poste de '+role.name+'.');
+      // recevoir un mauvais poste crée de la rancune
+      if (role.id==='interior' && chosen.id!==pres.id) chosen.grudge[pres.id] += 0.5;
+    });
+  }
+  renderPlayers();
+  await sleep(800);
+}
+
+async function execution(winners, losers){
+  const aliveLosers = losers.filter(p=>p.alive);
+  if (!aliveLosers.length) return;
+  let victim;
+  const chooser = winners.find(p=>p.id===G.presidentIdx)
+    || winners.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
+  if (chooser && chooser.id===0){
+    const v = await ask(
+      '<h3>⚖️ Le peloton d\'exécution attend</h3><div class="mtext">En tant que vainqueur, vous pouvez faire fusiller un vaincu (il perd tout son argent de poche et rate le reste du tour — sa famille le remplace au prochain tour). Ou faire preuve de clémence.</div>',
+      aliveLosers.map(p=>({label:'🎯 '+p.name, value:p.id, cls:'danger'}))
+        .concat([{label:'🕊 Clémence', value:-1, cls:'alt'}])
+    );
+    if (v===-1){ log('🕊 Vous graciez les vaincus. Quelle grandeur d\'âme (ils s\'en souviendront… ou pas).'); return; }
+    victim = G.players[v];
+  } else if (chooser && chooser.remote){
+    const v = await NET.prompt(chooser, 'exec', { targets: aliveLosers.map(t=>({ id:t.id, name:t.name })) });
+    if (v===-1 || v===null || !aliveLosers.some(t=>t.id===v)){
+      log('🕊 '+chooser.name+' gracie les vaincus.'); return;
+    }
+    victim = G.players[v];
+  } else {
+    // IA choisit : le plus riche en poche, ou le joueur humain si rancune
+    victim = aliveLosers.slice().sort((a,b)=> (b.pocket + (b.id===0?1:0)) - a.pocket)[0];
+    if (Math.random()<0.25){ log('🕊 Les vainqueurs, magnanimes (ou fatigués), ne fusillent personne.'); return; }
+  }
+  if (victim.passeport){
+    consumeCard(victim, 'passeport');
+    log('🛂 Au pied du mur, <b>'+victim.name+'</b> exhibe un faux passeport panaméen et disparaît dans la nuit ! Le peloton tire dans le vide.', 'gold');
+    return;
+  }
+  victim.alive = false;
+  const seized = victim.valise ? 0 : victim.pocket;
+  victim.pocket = victim.valise ? victim.pocket : 0;
+  const newPres = G.players[G.presidentIdx];
+  if (seized>0 && newPres.alive){ newPres.pocket += seized; }
+  fx.execution();
+  log('☠️ <b>'+victim.name+'</b> est passé par les armes contre le mur du Palais.'+(seized>0?' Ses '+seized+' M$ « reviennent à l\'État » (c\'est-à-dire au Presidente).':''), 'red');
+  G.players.forEach(p=>{ if(p.alive) p.grudge[G.presidentIdx]+=0.5; });
+  await sleep(1200);
+}
+
+// ---------------------------------------------------------------------
+// BOUCLE PRINCIPALE
+// ---------------------------------------------------------------------
+async function gameLoop(){
+  for (G.turn=1; G.turn<=TURNS; G.turn++){
+    // résurrections (les morts reviennent : « un cousin reprend le poste »)
+    G.players.forEach(p=>{
+      if (!p.alive){
+        p.alive = true;
+        log('👤 Un cousin de '+p.name+' reprend le poste de '+p.role.name+'. Les affaires continuent.');
+      }
+      p.night = null;
+    });
+    renderPlayers();
+
+    await phaseBudget();
+    await phaseNight();
+    fx.setDay();
+    await phaseEvent();
+    await maybeCoup();
+
+    // pioche de fin de tour (+1 carte si nuit passée à la Résidence : le confort du bureau)
+    G.players.forEach(p=>{
+      if (p.alive){
+        let n = p.role.id==='interior' ? 2 : 1;
+        if (p.night==='residence'){ n += 1; if (p.id===0) log('🏠 Nuit au bureau : vous piochez une carte de plus.'); }
+        draw(p, n);
+        p.hand.forEach(c=>applyPassive(p,c));
+      }
+      if (p.hand.length>7) p.hand.length = 7;
+    });
+    renderHand();
+    renderPlayers();
+  }
+  endGame();
+}
+
+function endGame(){
+  const ranking = G.players.slice().sort((a,b)=> b.bank - a.bank || b.pocket - a.pocket);
+  const winner = ranking[0];
+  if (NET.active){
+    document.getElementById('endTitle').textContent = '🏆 '+winner.name.toUpperCase()+' L\'EMPORTE';
+    document.getElementById('endTag').textContent = 'Son compte suisse déborde. La République applaudit (sous la contrainte).';
+  } else {
+    document.getElementById('endTitle').textContent = winner.id===0 ? '🏆 VICTOIRE' : 'DÉFAITE';
+    document.getElementById('endTag').textContent = winner.id===0
+      ? 'Votre compte suisse déborde. La République vous remercie (elle n\'a pas le choix).'
+      : winner.name+' finit sa carrière sur la Côte d\'Azur. Pas vous.';
+  }
+  let html = '<b>Classement final (compte en banque) :</b><br><br>';
+  ranking.forEach((p,i)=>{
+    html += (i+1)+'. <span style="color:'+p.color+'"><b>'+p.name+'</b></span> — 🏦 '+p.bank+' M$ (poche : '+p.pocket+' M$)<br>';
+  });
+  document.getElementById('endBoard').innerHTML = html;
+  document.getElementById('endScreen').classList.remove('hidden');
+  NET.event({ kind:'end',
+    title: document.getElementById('endTitle').textContent,
+    tag: document.getElementById('endTag').textContent,
+    board: html });
+  fx.confetti();
+}
+
+// ---------- tchat du cabinet (local pour l'instant, branchable au réseau) ----------
+const CHAT_REPLIES = {
+  brutal:       ['On règle ça au peloton, si tu veux.', 'Cause toujours. Mes chars écoutent.', 'Le premier qui bouge, je le fusille.', 'Intéressant. Continue, ça m\'aide à viser.'],
+  opportuniste: ['Je suis d\'accord avec le plus offrant.', 'Ça dépend. Tu proposes combien ?', 'Excellente idée. C\'était la mienne, non ?', 'Je note. Ça peut servir. Contre toi.'],
+  cupide:       ['Et ma part, dans tout ça ?', 'Parle en millions, pas en promesses.', 'Le patriotisme, c\'est bien. Le cash, c\'est mieux.', 'Je t\'écoute dès que tu paies.'],
+  prudent:      ['Restons calmes. Et armés.', 'Je préfère attendre de voir.', 'Pas de vagues. Surtout la nuit.', 'Méfie-toi de ceux qui parlent fort.'],
+};
+function escapeHTML(s){ return s.replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function sendChat(text){
+  if (NET.active){ NET.send({ t:'chat', text }); return; }   // le serveur renvoie à tout le salon
+  const me = G.players.length ? G.players[0] : null;
+  const name = me ? me.name : (NAMES[0]||'Vous');
+  const color = me ? me.color : '#ffd166';
+  log('💬 <b style="color:'+color+'">'+escapeHTML(name)+' :</b> '+escapeHTML(text));
+  // NOTE ONLINE : ici, envoyer {t:'chat', text} au serveur au lieu de la réponse IA
+  if (G.players.length && Math.random() < 0.65){
+    const bots = G.players.filter(p=>p.id!==0 && p.alive);
+    if (bots.length){
+      const bot = pick(bots);
+      const pool = CHAT_REPLIES[bot.ai] || CHAT_REPLIES.opportuniste;
+      setTimeout(()=>{
+        log('💬 <b style="color:'+bot.color+'">'+escapeHTML(bot.name)+' :</b> '+pick(pool));
+      }, 700 + Math.random()*1800);
+    }
+  }
+}
+document.getElementById('chatInput').addEventListener('keydown', e=>{
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim();
+  if (!v) return;
+  e.target.value = '';
+  sendChat(v);
+});
+
+// aide sur les rôles, consultable à tout moment
+const ROLE_ICONS = { presidente:'👑', general:'🎖', colonel:'✈️', policia:'🕶', interior:'🗳', amiral:'⚓', brigade2:'🎖' };
+document.getElementById('helpBtn').onclick = ()=>{
+  const div = document.getElementById('helpRoles');
+  div.innerHTML = (G.players.length ? ROLES_ACTIVE : ROLES).map(r=>{
+    const holder = G.players.length ? G.players.find(p=>p.role.id===r.id) : null;
+    const who = holder ? ' — <span style="color:'+holder.color+'">'+holder.name+(holder.id===0?' (vous)':'')+'</span>' : '';
+    return ROLE_ICONS[r.id]+' <b style="color:#ffd166">'+r.name+'</b>'+who+'<br><span style="color:#9ab; font-size:12px;">'+r.desc+'</span>';
+  }).join('<br><br>');
+  document.getElementById('helpOverlay').classList.remove('hidden');
+};
+const helpOv = document.getElementById('helpOverlay');
+document.getElementById('helpClose').onclick = ()=> helpOv.classList.add('hidden');
+helpOv.addEventListener('click', e=>{ if (e.target === helpOv) helpOv.classList.add('hidden'); });
+window.addEventListener('keydown', e=>{ if (e.key==='Escape') helpOv.classList.add('hidden'); });
+
+let selCount = 5, selDiff = 'normal';
+document.querySelectorAll('.sel-count').forEach(b=> b.onclick = ()=>{
+  selCount = +b.dataset.count;
+  document.querySelectorAll('.sel-count').forEach(o=> o.style.border = '2px solid transparent');
+  b.style.border = '2px solid #ffd166';
+});
+document.querySelectorAll('.sel-diff').forEach(b=> b.onclick = ()=>{
+  selDiff = b.dataset.diff;
+  document.querySelectorAll('.sel-diff').forEach(o=> o.style.border = '2px solid transparent');
+  b.style.border = '2px solid #ffd166';
+});
+
+document.getElementById('startGameBtn').onclick = async ()=>{
+  const nm = (document.getElementById('playerName').value || '').trim();
+  NAMES[0] = nm || 'Vous';
+  document.getElementById('titleScreen').classList.add('hidden');
+  G.difficulty = selDiff;
+  initPlayers(selCount);
+  renderPlayers();
+  renderHand();
+  log('🇺🇳 La communauté internationale « salue la stabilité » de la République. Que la fête commence.');
+  const pres = G.players[G.presidentIdx];
+  log('👑 <b>'+pres.name+'</b> '+(G.presidentIdx===0?'(vous !) ':'')+'occupe le fauteuil présidentiel et forme son cabinet…', 'gold');
+  await assignCabinet();
+  gameLoop();
+};
+
+// =====================================================================
+// COUCHE DE RENDU 3D — diorama Three.js
+// =====================================================================
+let V = { dayTarget:1, day:1, deploy:null, coupUnits:null, coupMode:false, flags:{}, presGlow:0 };
+let fx;
+
+if (typeof THREE === 'undefined'){
+  // secours : sans Three.js (hors-ligne), le jeu reste jouable sans visuels
+  fx = new Proxy({}, { get: ()=> ()=>{} });
+  document.getElementById('phaseBanner').textContent = '⚠️ Three.js introuvable — mode texte';
+} else {
+
+// ---------- scène, caméra, rendu ----------
+const canvas = document.getElementById('board');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9fc4e8);
+scene.fog = new THREE.Fog(0x9fc4e8, 70, 160);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 300);
+const CAM_BASE = new THREE.Vector3(22, 26, 28);
+camera.position.copy(CAM_BASE);
+let camLook = new THREE.Vector3(0, 0, 2);
+let camLookTarget = camLook.clone();
+let camShake = 0, camFocusT = 0;
+
+function resize3d(){
+  const w = document.getElementById('boardWrap');
+  renderer.setSize(w.clientWidth, w.clientHeight);
+  camera.aspect = w.clientWidth / w.clientHeight;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize3d);
+resize3d();
+
+// ---------- lumières jour/nuit ----------
+const sun = new THREE.DirectionalLight(0xfff2d0, 1.15);
+sun.position.set(14, 22, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-24, right:24, top:24, bottom:-24 });
+sun.shadow.camera.updateProjectionMatrix();
+scene.add(sun);
+const moon = new THREE.DirectionalLight(0x8fa8ff, 0);
+moon.position.set(-10, 18, -6);
+scene.add(moon);
+const ambient = new THREE.AmbientLight(0xccc4b0, 0.55);
+scene.add(ambient);
+
+// ---------- matériaux utilitaires ----------
+const M = (color, opts)=> new THREE.MeshLambertMaterial(Object.assign({ color }, opts||{}));
+function box(w,h,d, color, x,y,z, parent){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), M(color));
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
+  (parent||scene).add(m); return m;
+}
+
+// ---------- sprites texte (compteurs, noms) ----------
+const spriteCache = {};
+function textSprite(txt, color, size){
+  const key = txt+'|'+color;
+  let tex = spriteCache[key];
+  if (!tex){
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 80;
+    const g = c.getContext('2d');
+    g.font = 'bold 44px Segoe UI, Arial';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = '#000'; g.shadowBlur = 10;
+    g.fillStyle = color;
+    g.fillText(txt, 128, 40);
+    tex = new THREE.CanvasTexture(c);
+    spriteCache[key] = tex;
+  }
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthWrite:false }));
+  const s = size || 1;
+  sp.scale.set(3.2*s, 1.0*s, 1);
+  return sp;
+}
+
+// ---------- île, mer, routes ----------
+const seaGeo = new THREE.PlaneGeometry(220, 220, 48, 48);
+const sea = new THREE.Mesh(seaGeo, M(0x2a6ea0, { transparent:true, opacity:0.96 }));
+sea.rotation.x = -Math.PI/2; sea.position.y = -0.9;
+sea.receiveShadow = true;
+scene.add(sea);
+const seaPos = seaGeo.attributes.position;
+const seaBase = seaPos.array.slice();
+
+const island = new THREE.Mesh(new THREE.CylinderGeometry(17.5, 19.5, 1.6, 10), M(0xb9a97e));
+island.position.y = -0.8; island.receiveShadow = true;
+scene.add(island);
+const grass = new THREE.Mesh(new THREE.CylinderGeometry(16.6, 17.4, 0.5, 10), M(0x7ba05b));
+grass.position.y = -0.05; grass.receiveShadow = true;
+scene.add(grass);
+
+// positions 3D des sites (le Palais au centre)
+const SITE3D = {
+  palais:  new THREE.Vector3( 0.0, 0,  0.0),
+  radio:   new THREE.Vector3(-8.5, 0, -5.0),
+  banqueC: new THREE.Vector3( 8.5, 0, -5.0),
+  caserne: new THREE.Vector3(-8.5, 0,  5.5),
+  aeroport:new THREE.Vector3( 8.5, 0,  5.5),
+};
+// routes suivant le graphe d'adjacence (on VOIT les axes de mouvement)
+Object.entries(ADJ).forEach(([from, tos])=>{
+  tos.forEach(to=>{
+    if (from < to) return; // une seule fois
+    const a = SITE3D[from], b = SITE3D[to];
+    const len = a.distanceTo(b);
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.1), M(0x6e6252));
+    road.rotation.x = -Math.PI/2;
+    road.position.copy(a).add(b).multiplyScalar(0.5).setY(0.22);
+    road.rotation.z = Math.atan2(b.x-a.x, b.z-a.z) + Math.PI/2;
+    road.receiveShadow = true;
+    scene.add(road);
+  });
+});
+
+// ---------- fenêtres émissives (allumées la nuit) ----------
+const windowMats = [];
+function windowMat(){
+  const m = new THREE.MeshLambertMaterial({ color:0x5c7893, emissive:0xffd97a, emissiveIntensity:0 });
+  windowMats.push(m);
+  return m;
+}
+
+// ---------- bâtiments des 5 sites ----------
+const siteGroups = {}, siteFlags = {}, siteLabels = {}, unitGroups = {}, haloRings = {}, intelSprites = {};
+const pickTargets = [];
+function buildSites(){
+  COUP_SITES.forEach(s=>{
+    const p = SITE3D[s.id];
+    const g = new THREE.Group();
+    g.position.copy(p);
+    scene.add(g);
+    siteGroups[s.id] = g;
+
+    if (s.id === 'palais'){
+      box(5.2, 2.2, 3.6, 0xe8dcc0, 0, 1.1, 0, g);
+      for (let i=0;i<5;i++) box(0.35, 2.2, 0.35, 0xd8c9a5, -2+i*1, 1.1, 1.95, g);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(1.25, 18, 12, 0, Math.PI*2, 0, Math.PI/2), M(0xc9a02f));
+      dome.position.y = 2.2; dome.castShadow = true; g.add(dome);
+      box(4.6, 0.35, 3.2, 0xd8c9a5, 0, 2.35, 0, g);
+    } else if (s.id === 'radio'){
+      box(3, 1.8, 2.4, 0xcfc4ae, 0, 0.9, 0, g);
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 3.4, 6), M(0x888888));
+      mast.position.set(0.8, 3.3, 0); g.add(mast);
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color:0xff4444 }));
+      beacon.position.set(0.8, 5.05, 0); g.add(beacon);
+      g.userData.beacon = beacon;
+      const win = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.6, 0.05), windowMat());
+      win.position.set(0, 1.1, 1.22); g.add(win);
+    } else if (s.id === 'banqueC'){
+      box(3.2, 2.0, 2.6, 0xd9d3c4, 0, 1.0, 0, g);
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0, 2.15, 0.9, 4), M(0xcabf9f));
+      ped.position.y = 2.35; ped.rotation.y = Math.PI/4; ped.castShadow = true; g.add(ped);
+      for (let i=0;i<4;i++) box(0.28, 2.0, 0.28, 0xcabf9f, -1.2+i*0.8, 1.0, 1.4, g);
+      const dollar = textSprite('$', '#ffd166', 0.8);
+      dollar.position.set(0, 1.4, 1.55); g.add(dollar);
+    } else if (s.id === 'caserne'){
+      box(4.2, 1.4, 2.2, 0x5f6b4f, 0, 0.7, 0, g);
+      box(1.4, 1.0, 2.2, 0x515c43, 2.0, 0.5, 0.6, g);
+      for (let i=0;i<5;i++) box(0.5, 0.35, 0.5, 0x8a7c5e, -1.8+i*0.6, 0.18, 1.5, g);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.5, 0.05), windowMat());
+      win.position.set(0, 0.85, 1.12); g.add(win);
+    } else if (s.id === 'aeroport'){
+      box(3.4, 1.3, 2.2, 0xb9bfc8, 0, 0.65, 0, g);
+      box(0.6, 2.6, 0.6, 0x9aa4b5, 1.6, 1.3, -0.6, g);
+      box(1.2, 0.7, 1.2, 0x5c88b5, 1.6, 2.9, -0.6, g);
+      const strip = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.6), M(0x3c3a36));
+      strip.rotation.x = -Math.PI/2; strip.position.set(0, 0.02, 2.6); g.add(strip);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, 0.05), windowMat());
+      win.position.set(0, 0.75, 1.12); g.add(win);
+    }
+
+    // mât + drapeau (couleur = camp qui tient le site)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.6, 6), M(0x6b5b3e));
+    pole.position.set(-2.2, 1.3, 1.6); g.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.65, 6, 2), M(0x2e7d4f, { side:THREE.DoubleSide }));
+    flag.position.set(-1.62, 2.35, 1.6);
+    g.add(flag);
+    siteFlags[s.id] = flag;
+    flag.userData.base = flag.geometry.attributes.position.array.slice();
+
+    // nom du site
+    const label = textSprite(s.name, '#f2ead2', 1.05);
+    label.position.set(0, 3.6, 0);
+    g.add(label);
+    siteLabels[s.id] = label;
+
+    // groupe des unités + halo + intel
+    const ug = new THREE.Group(); g.add(ug); unitGroups[s.id] = ug;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(2.9, 3.25, 40), new THREE.MeshBasicMaterial({ color:0xffd166, transparent:true, opacity:0, side:THREE.DoubleSide, depthWrite:false }));
+    ring.rotation.x = -Math.PI/2; ring.position.y = 0.28;
+    g.add(ring); haloRings[s.id] = ring;
+
+    // disque de clic invisible (picking)
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(3.4, 20), new THREE.MeshBasicMaterial({ visible:false }));
+    disc.rotation.x = -Math.PI/2; disc.position.y = 0.15;
+    disc.userData.siteId = s.id;
+    g.add(disc);
+    pickTargets.push(disc);
+  });
+}
+buildSites();
+
+// ---------- planques de nuit (rangée côté caméra) ----------
+const NIGHT3D = {
+  residence: new THREE.Vector3(-10.5, 0, 10.5),
+  banque:    new THREE.Vector3(-3.5, 0, 12.0),
+  planque:   new THREE.Vector3( 3.5, 0, 12.0),
+  ambassade: new THREE.Vector3(10.5, 0, 10.5),
+};
+const NIGHT_META = { residence:['Résidence','🏠'], banque:['Banque','🏦'], planque:['Amante','🌙'], ambassade:['Ambassade','🏛'] };
+Object.entries(NIGHT3D).forEach(([id, p])=>{
+  const g = new THREE.Group(); g.position.copy(p); scene.add(g);
+  box(2.0, 1.1, 1.6, id==='ambassade' ? 0xd9d3c4 : 0xc4b394, 0, 0.55, 0, g);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(0, 1.6, 0.9, 4), M(id==='planque' ? 0x8a4a6b : 0x8a5c3b));
+  roof.position.y = 1.55; roof.rotation.y = Math.PI/4; roof.castShadow = true; g.add(roof);
+  const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 0.05), windowMat());
+  win.position.set(0, 0.6, 0.85); g.add(win);
+  const lb = textSprite(NIGHT_META[id][1]+' '+NIGHT_META[id][0], '#e8e2d0', 0.75);
+  lb.position.set(0, 2.4, 0); g.add(lb);
+});
+
+// ---------- palmiers, maisons de décor, nuages, étoiles ----------
+const palms3d = [];
+for (let i=0;i<12;i++){
+  const a = Math.random()*Math.PI*2, r = 13.5 + Math.random()*2.5;
+  const px = Math.cos(a)*r, pz = Math.sin(a)*r;
+  if (pz > 9 && Math.abs(px) < 13) continue; // laisser la place aux planques
+  const g = new THREE.Group(); g.position.set(px, 0, pz); scene.add(g);
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 2.4, 6), M(0x6b5636));
+  trunk.position.y = 1.2; trunk.rotation.z = (Math.random()-0.5)*0.3; trunk.castShadow = true; g.add(trunk);
+  for (let l=0;l<6;l++){
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.16, 1.8, 4), M(0x2e7d4f));
+    leaf.position.y = 2.45;
+    leaf.rotation.z = Math.PI/2.4;
+    leaf.rotation.y = l/6*Math.PI*2;
+    leaf.castShadow = true;
+    g.add(leaf);
+  }
+  g.userData.sway = Math.random()*6.28;
+  palms3d.push(g);
+}
+for (let i=0;i<9;i++){
+  const a = Math.random()*Math.PI*2, r = 11.5 + Math.random()*3;
+  const px = Math.cos(a)*r, pz = Math.sin(a)*r;
+  if (pz > 8) continue;
+  const h = 0.7 + Math.random()*0.7;
+  const b = box(1.1+Math.random(), h, 1.0+Math.random()*0.8, [0x9a8f7d,0x8c8274,0xa39684][i%3], px, h/2, pz);
+  const win = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.04), windowMat());
+  win.position.set(px, h*0.6, pz+0.55+Math.random()*0.4);
+  scene.add(win);
+}
+const clouds = [];
+for (let i=0;i<6;i++){
+  const c = new THREE.Group();
+  for (let j=0;j<3;j++){
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(1.2+Math.random(), 10, 8), M(0xffffff, { transparent:true, opacity:0.85 }));
+    puff.scale.y = 0.5;
+    puff.position.set(j*1.6-1.6, Math.random()*0.4, Math.random()*0.8);
+    c.add(puff);
+  }
+  c.position.set(-40+Math.random()*80, 14+Math.random()*5, -20+Math.random()*20);
+  c.userData.v = 0.4+Math.random()*0.5;
+  scene.add(c); clouds.push(c);
+}
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for (let i=0;i<300;i++){
+  const a = Math.random()*Math.PI*2, r = 60+Math.random()*40, y = 12+Math.random()*40;
+  starPos.push(Math.cos(a)*r, y, Math.sin(a)*r);
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color:0xffffff, size:0.35, transparent:true, opacity:0 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+
+// ---------- meeples des ministres ----------
+const meeples = {};
+function buildMeeples(){
+  Object.values(meeples).forEach(m=> scene.remove(m.g));
+  G.players.forEach((p,i)=>{
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.0, 12), M(p.color));
+    body.position.y = 0.5; body.castShadow = true; g.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 10), M(p.color));
+    head.position.y = 1.15; head.castShadow = true; g.add(head);
+    const crown = textSprite('👑', '#ffd166', 0.55);
+    crown.position.y = 1.85; crown.visible = false; g.add(crown);
+    const skull = textSprite('💀', '#ffffff', 0.5);
+    skull.position.y = 1.6; skull.visible = false; g.add(skull);
+    const mid = (G.players.length-1)/2;
+    g.position.set((i-mid)*1.4, 0, 3.4);
+    scene.add(g);
+    meeples[i] = { g, crown, skull, target: g.position.clone(), bobPhase: Math.random()*6.28 };
+  });
+}
+
+// ---------- rendu des unités par site (côté rebelle rouge / loyaliste bleu) ----------
+let lastUnitsJSON = '';
+function refreshUnits(){
+  const json = JSON.stringify(V.coupUnits||null);
+  if (json === lastUnitsJSON) return;
+  lastUnitsJSON = json;
+  COUP_SITES.forEach(s=>{
+    const ug = unitGroups[s.id];
+    while (ug.children.length) ug.remove(ug.children[0]);
+    if (!V.coupUnits || !V.coupUnits[s.id]) return;
+    const u = V.coupUnits[s.id];
+    const place = (n, color, sideSign)=>{
+      const shown = Math.min(n, 8);
+      for (let k=0;k<shown;k++){
+        const sd = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.34), M(color));
+        sd.castShadow = true;
+        sd.position.set(sideSign*(2.5 + Math.floor(k/4)*0.5), 0.25, -0.9 + (k%4)*0.6);
+        ug.add(sd);
+      }
+      if (n > 0){
+        const lb = textSprite('×'+n, sideSign<0 ? '#ff7b7b' : '#7bb2ff', 1.6);
+        lb.position.set(sideSign*3.3, 2.3, 0);
+        ug.add(lb);
+      }
+    };
+    place(u.r, 0xd94040, -1);
+    place(u.l, 0x3f7fd9, 1);
+  });
+}
+
+// ---------- particules & effets ----------
+const particles = [];   // {mesh, vel, life, spin, kind}
+const tracers = [];     // {line, life}
+const fires = [];       // {g, life, light}
+let plane3d = null, crowd3d = null, radioT = 0;
+
+function spawnParticle(mesh, vel, life, kind, spin){
+  mesh.castShadow = false;
+  scene.add(mesh);
+  particles.push({ mesh, vel, life, kind, spin: spin||0 });
+}
+function billMesh(){
+  return new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.28), M(0x6fbf6f, { side:THREE.DoubleSide }));
+}
+function tracer(from, to){
+  const g = new THREE.BufferGeometry().setFromPoints([from, to]);
+  const line = new THREE.Line(g, new THREE.LineBasicMaterial({ color:0xfff0a0, transparent:true, opacity:1 }));
+  scene.add(line);
+  tracers.push({ line, life:0.16 });
+}
+function explosion(pos, big){
+  const n = big ? 26 : 12;
+  for (let i=0;i<n;i++){
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.16),
+      new THREE.MeshBasicMaterial({ color:[0xffb347,0xff8c2b,0xffe08a][i%3] }));
+    sp.position.copy(pos).add(new THREE.Vector3(0,0.4,0));
+    spawnParticle(sp, new THREE.Vector3((Math.random()-0.5)*7, Math.random()*6+2, (Math.random()-0.5)*7), 0.7+Math.random()*0.4, 'spark');
+  }
+  for (let i=0;i<6;i++){
+    const sm = new THREE.Mesh(new THREE.SphereGeometry(0.35+Math.random()*0.3, 8, 6),
+      new THREE.MeshLambertMaterial({ color:0x46403a, transparent:true, opacity:0.55 }));
+    sm.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*0.8, 0.4, (Math.random()-0.5)*0.8));
+    spawnParticle(sm, new THREE.Vector3((Math.random()-0.5)*0.6, 1.6+Math.random(), (Math.random()-0.5)*0.6), 1.8+Math.random(), 'smoke');
+  }
+  const light = new THREE.PointLight(0xff9438, 5, 14);
+  light.position.copy(pos).setY(1.5);
+  scene.add(light);
+  setTimeout(()=> scene.remove(light), 500);
+  camShake = Math.max(camShake, big ? 0.45 : 0.22);
+}
+function fire(pos){
+  const g = new THREE.Group();
+  const f1 = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.0, 8), new THREE.MeshBasicMaterial({ color:0xff8c2b }));
+  const f2 = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.65, 8), new THREE.MeshBasicMaterial({ color:0xffe08a }));
+  f1.position.y = 0.5; f2.position.y = 0.55;
+  g.add(f1, f2);
+  g.position.copy(pos);
+  const light = new THREE.PointLight(0xff8c2b, 1.6, 8);
+  light.position.copy(pos).setY(1.2);
+  scene.add(g); scene.add(light);
+  fires.push({ g, light, life:14 });
+}
+
+// ---------- DÉS 3D à physique simplifiée ----------
+// astuce classique : le résultat est tiré d'avance, le dé culbute librement,
+// puis on l'oriente en douceur pour montrer la bonne face au repos.
+function pipTexture(n, bg, fg){
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0,0,128,128);
+  g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 8; g.strokeRect(4,4,120,120);
+  g.fillStyle = fg;
+  const P = { 1:[[64,64]], 2:[[36,36],[92,92]], 3:[[32,32],[64,64],[96,96]],
+    4:[[36,36],[92,36],[36,92],[92,92]], 5:[[34,34],[94,34],[64,64],[34,94],[94,94]],
+    6:[[38,30],[90,30],[38,64],[90,64],[38,98],[90,98]] };
+  P[n].forEach(([x,y])=>{ g.beginPath(); g.arc(x,y,12,0,6.28); g.fill(); });
+  return new THREE.CanvasTexture(c);
+}
+// faces BoxGeometry : [+x, -x, +y, -y, +z, -z] → valeurs [1, 6, 2, 5, 3, 4] (opposées = 7)
+const FACE_VALUES = [1, 6, 2, 5, 3, 4];
+function makeDie(color){
+  const mats = FACE_VALUES.map(v=> new THREE.MeshLambertMaterial({ map: pipTexture(v, color, '#1a1a1a') }));
+  const die = new THREE.Mesh(new THREE.BoxGeometry(1.35, 1.35, 1.35), mats);
+  die.castShadow = true;
+  return die;
+}
+// quaternion amenant la face de valeur v vers le haut (+Y)
+function faceUpQuat(v){
+  const q = new THREE.Quaternion();
+  const X = new THREE.Vector3(1,0,0), Z = new THREE.Vector3(0,0,1);
+  if (v===2) q.identity();
+  else if (v===5) q.setFromAxisAngle(X, Math.PI);
+  else if (v===1) q.setFromAxisAngle(Z, -Math.PI/2);
+  else if (v===6) q.setFromAxisAngle(Z,  Math.PI/2);
+  else if (v===3) q.setFromAxisAngle(X, -Math.PI/2);
+  else if (v===4) q.setFromAxisAngle(X,  Math.PI/2);
+  // yaw aléatoire pour le naturel
+  const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), Math.random()*Math.PI*2);
+  return yaw.multiply(q);
+}
+const diceSim = [];   // {mesh, vel, angVel, targetQ, phase:'fly'|'settle'|'done', settleT}
+let diceResolve = null;
+
+// zone d'atterrissage : la pelouse dégagée entre le Palais et les planques (x -4..4, z 5.5..9.5)
+function throwOneDie(color, value, x0){
+  const die = makeDie(color);
+  die.position.set(x0, 7.5, 15.5);
+  die.quaternion.setFromEuler(new THREE.Euler(Math.random()*6, Math.random()*6, Math.random()*6));
+  scene.add(die);
+  diceSim.push({
+    mesh: die,
+    vel: new THREE.Vector3((Math.random()-0.5)*1.2 - x0*0.2, 0.8, -5.2 - Math.random()*1.2),
+    angVel: new THREE.Vector3((Math.random()*14+8)*(Math.random()<0.5?-1:1), Math.random()*10, (Math.random()*14+8)*(Math.random()<0.5?-1:1)),
+    targetQ: faceUpQuat(value),
+    phase: 'fly', settleT: 0, bounces: 0,
+  });
+  return die;
+}
+
+function updateDice(dt){
+  let allDone = diceSim.length > 0;
+  diceSim.forEach(d=>{
+    if (d.phase === 'fly'){
+      d.vel.y -= 22*dt;
+      d.mesh.position.addScaledVector(d.vel, dt);
+      d.mesh.rotation.x += d.angVel.x*dt;
+      d.mesh.rotation.y += d.angVel.y*dt;
+      d.mesh.rotation.z += d.angVel.z*dt;
+      // murs invisibles : les dés restent sur la pelouse dégagée, jamais derrière un bâtiment
+      if (d.mesh.position.x < -4){ d.mesh.position.x = -4; d.vel.x = Math.abs(d.vel.x)*0.7; }
+      if (d.mesh.position.x >  4){ d.mesh.position.x =  4; d.vel.x = -Math.abs(d.vel.x)*0.7; }
+      if (d.mesh.position.z < 5.4){ d.mesh.position.z = 5.4; d.vel.z = Math.abs(d.vel.z)*0.6; }
+      if (d.mesh.position.z > 9.6){ d.mesh.position.z = 9.6; d.vel.z = -Math.abs(d.vel.z)*0.6; }
+      // rebond sur l'île
+      if (d.mesh.position.y < 0.68){
+        d.mesh.position.y = 0.68;
+        d.bounces++;
+        d.vel.y = Math.abs(d.vel.y)*0.42;
+        d.vel.x *= 0.72; d.vel.z *= 0.72;
+        d.angVel.multiplyScalar(0.6);
+        camShake = Math.max(camShake, 0.08);
+        if (d.bounces >= 3 || d.vel.length() < 2.2){ d.phase = 'settle'; d.settleT = 0; }
+      }
+      allDone = false;
+    } else if (d.phase === 'settle'){
+      d.settleT += dt;
+      const k = Math.min(1, d.settleT / 0.45);
+      d.mesh.quaternion.slerp(d.targetQ, 0.18);
+      d.mesh.position.y += (0.68 - d.mesh.position.y)*0.3;
+      d.mesh.position.x += (d.mesh.position.x > 0 ? 1.4 : -1.4 - d.mesh.position.x*0) * 0; // reste où il s'arrête
+      if (k >= 1){ d.mesh.quaternion.copy(d.targetQ); d.phase = 'done'; }
+      allDone = false;
+    }
+  });
+  if (allDone && diceResolve){
+    const r = diceResolve; diceResolve = null;
+    setTimeout(r, 350);   // petit temps pour lire les faces
+  }
+}
+
+const vignette = document.createElement('div');
+vignette.style.cssText = 'position:absolute; inset:0; pointer-events:none; z-index:55; opacity:0; transition:opacity .4s; background:radial-gradient(ellipse at center, transparent 55%, rgba(200,30,30,.5) 100%);';
+document.getElementById('boardWrap').appendChild(vignette);
+
+// ---------- API fx ----------
+fx = {
+  setDay(){ V.dayTarget = 1; },
+  setNight(){ V.dayTarget = 0; },
+  planeDrop(){
+    if (!plane3d){
+      const g = new THREE.Group();
+      const fus = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.28, 3.4, 10), M(0xdfe4ea));
+      fus.rotation.z = Math.PI/2; g.add(fus);
+      box(0.12, 0.06, 4.4, 0xc4ccd6, 0, 0.1, 0, g);
+      box(1.4, 0.5, 0.08, 0xc4ccd6, -1.5, 0.35, 0, g);
+      plane3d = g; scene.add(g);
+    }
+    plane3d.position.set(-40, 12, -2);
+    plane3d.userData.active = true;
+  },
+  moneyRain(){
+    for (let i=0;i<55;i++){
+      const b = billMesh();
+      b.position.set((Math.random()-0.5)*26, 10+Math.random()*8, (Math.random()-0.5)*20);
+      b.rotation.set(Math.random()*3, Math.random()*3, 0);
+      spawnParticle(b, new THREE.Vector3((Math.random()-0.5)*1.5, -2.2-Math.random()*1.5, (Math.random()-0.5)*1.5), 4+Math.random()*2, 'bill', (Math.random()-0.5)*4);
+    }
+  },
+  deposit(){
+    const p = SITE3D.banqueC;
+    for (let i=0;i<12;i++){
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,0.05,10), new THREE.MeshBasicMaterial({ color:0xffd166 }));
+      c.position.copy(p).add(new THREE.Vector3((Math.random()-0.5), 1.5, (Math.random()-0.5)));
+      spawnParticle(c, new THREE.Vector3((Math.random()-0.5)*2.5, 3+Math.random()*2, (Math.random()-0.5)*2.5), 1.2, 'coin', 6);
+    }
+    fx.focus('banqueC', 2.0);
+  },
+  angryCrowd(){
+    if (crowd3d) scene.remove(crowd3d);
+    crowd3d = new THREE.Group();
+    for (let i=0;i<14;i++){
+      const m = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 8), M(0x3a3128));
+      m.position.set(-3+ i*0.45, 0.3, 3.6+Math.random()*0.8);
+      m.userData.ph = Math.random()*6.28;
+      crowd3d.add(m);
+      if (i%3===0){
+        const sign = box(0.5, 0.32, 0.04, 0xc0392b, m.position.x, 1.1, m.position.z, crowd3d);
+        sign.userData.ph = m.userData.ph;
+      }
+    }
+    crowd3d.userData.life = 5;
+    scene.add(crowd3d);
+  },
+  radioWave(){ radioT = 3; fx.focus('radio', 1.6); },
+  gunFlash(nightLoc, kill){
+    const base = NIGHT3D[nightLoc] || NIGHT3D.residence;
+    for (let i=0;i<3;i++){
+      setTimeout(()=>{
+        const from = base.clone().add(new THREE.Vector3((Math.random()-0.5)*4, 0.4, 3));
+        const to = base.clone().add(new THREE.Vector3((Math.random()-0.5)*0.6, 0.8, 0.4));
+        tracer(from, to);
+        camShake = Math.max(camShake, 0.15);
+      }, i*180);
+    }
+    if (kill) setTimeout(()=> explosion(base, false), 550);
+  },
+  startCoup(){
+    V.coupMode = true;
+    V.flags = {};
+    vignette.style.opacity = 1;
+    camShake = 0.5;
+  },
+  battle(siteData, rebelWin){
+    const p = SITE3D[siteData.id];
+    fx.focus(siteData.id, 2.6);
+    for (let i=0;i<8;i++){
+      setTimeout(()=>{
+        const a = Math.random()*6.28, d = 3+Math.random()*2.5;
+        tracer(p.clone().add(new THREE.Vector3(Math.cos(a)*d, 0.5, Math.sin(a)*d)),
+               p.clone().add(new THREE.Vector3((Math.random()-0.5), 0.7, (Math.random()-0.5))));
+      }, i*90);
+    }
+    setTimeout(()=>{
+      explosion(p, true);
+      fire(p.clone().add(new THREE.Vector3((Math.random()-0.5)*2, 0, (Math.random()-0.5)*1.5)));
+    }, 850);
+  },
+  endCoup(){
+    V.coupMode = false;
+    vignette.style.opacity = 0;
+    setTimeout(()=>{ fires.forEach(f=> f.life = Math.min(f.life, 2)); V.flags = {}; }, 4000);
+  },
+  execution(){
+    const p = SITE3D.palais;
+    fx.focus('palais', 2.2);
+    for (let i=0;i<4;i++){
+      setTimeout(()=>{
+        tracer(p.clone().add(new THREE.Vector3(-5, 0.9, 2.5)), p.clone().add(new THREE.Vector3(-2.4+(Math.random()-0.5)*0.4, 0.9, 2.2)));
+        camShake = Math.max(camShake, 0.2);
+      }, i*150);
+    }
+  },
+  newPresident(){ V.presGlow = 4; fx.focus('palais', 2.5); },
+  confetti(){
+    for (let i=0;i<120;i++){
+      const c = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.16),
+        new THREE.MeshBasicMaterial({ color: COLORS[i%COLORS.length], side:THREE.DoubleSide }));
+      c.position.set((Math.random()-0.5)*24, 8+Math.random()*10, (Math.random()-0.5)*18);
+      spawnParticle(c, new THREE.Vector3((Math.random()-0.5), -1.5-Math.random(), (Math.random()-0.5)), 6+Math.random()*3, 'bill', (Math.random()-0.5)*6);
+    }
+  },
+  pawnsNight(){
+    if (!Object.keys(meeples).length) buildMeeples();
+    const byLoc = {};
+    G.players.forEach(p=>{ if (p.alive && p.night){ (byLoc[p.night] = byLoc[p.night]||[]).push(p.id); } });
+    Object.entries(byLoc).forEach(([loc, ids])=>{
+      const base = NIGHT3D[loc];
+      ids.forEach((id,k)=>{
+        meeples[id].target = base.clone().add(new THREE.Vector3((k-(ids.length-1)/2)*1.0, 0, 2.0));
+      });
+    });
+  },
+  pawnsDay(){
+    if (!Object.keys(meeples).length) buildMeeples();
+    const mid = (G.players.length-1)/2;
+    G.players.forEach((p,i)=>{
+      meeples[i].target = new THREE.Vector3((i-mid)*1.4, 0, 3.6);
+    });
+  },
+  throwDice(rVal, lVal){
+    fx.clearDice();
+    throwOneDie('#e5b3b3', rVal, -1.6);   // dé rebelle (rougeâtre)
+    throwOneDie('#b3c6e5', lVal,  1.6);   // dé loyaliste (bleuté)
+    camLookTarget = new THREE.Vector3(0, 0.3, 7.5);
+    camFocusT = 4.0;
+    return new Promise(r=>{ diceResolve = r; });
+  },
+  clearDice(){
+    diceSim.forEach(d=> scene.remove(d.mesh));
+    diceSim.length = 0;
+    diceResolve = null;
+  },
+  focus(siteId, dur){
+    camLookTarget = SITE3D[siteId] ? SITE3D[siteId].clone().setY(0.8) : new THREE.Vector3(0,0,0.5);
+    camFocusT = dur || 2;
+  },
+};
+
+// ---------- picking des sites (déploiement / mouvements) ----------
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+function pickSite(clientX, clientY){
+  const r = canvas.getBoundingClientRect();
+  pointer.set(((clientX-r.left)/r.width)*2-1, -((clientY-r.top)/r.height)*2+1);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(pickTargets, false);
+  if (!hits.length) return null;
+  return COUP_SITES.find(s=>s.id === hits[0].object.userData.siteId) || null;
+}
+canvas.addEventListener('click', e=>{
+  if (!V.deploy) return;
+  coupMapClick(pickSite(e.clientX, e.clientY), false);
+});
+canvas.addEventListener('contextmenu', e=>{
+  if (!V.deploy) return;
+  e.preventDefault();
+  coupMapClick(pickSite(e.clientX, e.clientY), true);
+});
+
+// ---------- boucle d'animation ----------
+const skyDay = new THREE.Color(0x9fc4e8), skyNight = new THREE.Color(0x141a2e);
+const fogDay = new THREE.Color(0x9fc4e8), fogNight = new THREE.Color(0x141a2e);
+const clockR = { t: performance.now() };
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (now - clockR.t)/1000);
+  clockR.t = now;
+  const t = now/1000;
+
+  // jour/nuit
+  V.day += (V.dayTarget - V.day) * Math.min(1, dt*1.2);
+  const d = V.day;
+  sun.intensity = 0.15 + d*1.0;
+  moon.intensity = (1-d)*0.5;
+  ambient.intensity = 0.22 + d*0.36;
+  scene.background.copy(skyNight).lerp(skyDay, d);
+  scene.fog.color.copy(fogNight).lerp(fogDay, d);
+  starMat.opacity = (1-d)*0.9;
+  windowMats.forEach(m=> m.emissiveIntensity = (1-d)*0.9);
+
+  // mer
+  for (let i=0;i<seaPos.count;i++){
+    seaPos.setZ(i, seaBase[i*3+2] + Math.sin(t*1.4 + seaBase[i*3]*0.35 + seaBase[i*3+1]*0.22)*0.18);
+  }
+  seaPos.needsUpdate = true;
+
+  // palmiers
+  palms3d.forEach(p=>{ p.rotation.z = Math.sin(t*1.1 + p.userData.sway)*0.05; });
+  // nuages
+  clouds.forEach(c=>{ c.position.x += c.userData.v*dt; if (c.position.x > 45) c.position.x = -45; });
+  // drapeaux : ondulation + couleur de contrôle
+  COUP_SITES.forEach(s=>{
+    const flag = siteFlags[s.id];
+    const pos = flag.geometry.attributes.position;
+    const base = flag.userData.base;
+    for (let i=0;i<pos.count;i++){
+      const x = base[i*3];
+      pos.setZ(i, Math.sin(t*5 + x*4)*0.07*(x+0.55));
+    }
+    pos.needsUpdate = true;
+    const want = V.flags[s.id] || (V.coupMode ? '#888888' : '#2e7d4f');
+    flag.material.color.lerp(new THREE.Color(want), 0.12);
+    if (siteGroups[s.id].userData.beacon){
+      siteGroups[s.id].userData.beacon.material.color.setHex(Math.sin(t*4)>0 ? 0xff4444 : 0x551111);
+    }
+  });
+
+  // halo du nouveau président
+  if (V.presGlow > 0){
+    V.presGlow -= dt;
+    const ring = haloRings.palais;
+    ring.material.color.setHex(0xffd166);
+    ring.material.opacity = 0.4 + 0.3*Math.sin(t*6);
+    ring.scale.setScalar(1.15);
+  }
+
+  // halos de déploiement / mouvement
+  const pulse = 0.5 + 0.5*Math.sin(t*4);
+  COUP_SITES.forEach(s=>{
+    const ring = haloRings[s.id];
+    if (V.presGlow > 0 && s.id==='palais') return;
+    let opacity = 0, color = 0xffd166, scale = 1;
+    if (V.deploy){
+      const D = V.deploy;
+      if (D.mode === 'deploy'){
+        const forbidden = (D.side==='rebel' && s.id==='palais');
+        color = forbidden ? 0x888888 : 0xffd166;
+        opacity = forbidden ? 0.18 : 0.25 + 0.3*pulse;
+      } else if (D.mode === 'move'){
+        const u = V.coupUnits;
+        if (D.sel === s.id){ color = 0xffd166; opacity = 0.65 + 0.25*pulse; scale = 1.1; }
+        else if (D.sel && ADJ[D.sel].includes(s.id)){ color = 0x7bed9f; opacity = 0.4 + 0.35*pulse; }
+        else if (!D.sel && u && (u[s.id][D.key]-(D.moved[s.id]||0)) > 0){ color = 0xffd166; opacity = 0.3 + 0.25*pulse; }
+      }
+    }
+    ring.material.color.setHex(color);
+    ring.material.opacity += (opacity - ring.material.opacity)*0.25;
+    ring.scale.setScalar(ring.scale.x + (scale - ring.scale.x)*0.2);
+  });
+
+  // meeples : déplacement doux + insignes
+  Object.entries(meeples).forEach(([id, m])=>{
+    m.g.position.lerp(m.target, Math.min(1, dt*2.2));
+    const moving = m.g.position.distanceTo(m.target) > 0.15;
+    m.g.position.y = moving ? Math.abs(Math.sin(t*8 + m.bobPhase))*0.18 : 0;
+    const p = G.players[id];
+    if (p){
+      m.crown.visible = (+id === G.presidentIdx) && p.alive;
+      m.skull.visible = !p.alive;
+      m.g.children[0].material.color.set(p.alive ? p.color : '#555');
+      m.g.children[1].material.color.set(p.alive ? p.color : '#555');
+    }
+  });
+
+  // avion de l'aide
+  if (plane3d && plane3d.userData.active){
+    plane3d.position.x += dt*9;
+    plane3d.position.y = 12 + Math.sin(t*2)*0.4;
+    if (plane3d.position.x > -14 && plane3d.position.x < 14 && Math.random() < 0.1){
+      const crate = box(0.4, 0.4, 0.4, 0xa0793e, plane3d.position.x, plane3d.position.y-0.6, plane3d.position.z);
+      scene.remove(crate); // retiré de la scène directe, géré en particule
+      spawnParticle(crate, new THREE.Vector3(0, -1.6, 0), 6, 'crate');
+    }
+    if (plane3d.position.x > 45) plane3d.userData.active = false;
+  }
+
+  // foule en colère
+  if (crowd3d){
+    crowd3d.userData.life -= dt;
+    crowd3d.children.forEach(m=>{ m.position.y = 0.3 + Math.abs(Math.sin(t*6 + m.userData.ph))*0.25 + (m.geometry.type==='BoxGeometry'?0.8:0); });
+    if (crowd3d.userData.life <= 0){ scene.remove(crowd3d); crowd3d = null; }
+  }
+
+  // ondes radio
+  if (radioT > 0){
+    radioT -= dt;
+    if (Math.random() < 0.12){
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 6, 20),
+        new THREE.MeshBasicMaterial({ color:0xffd166, transparent:true, opacity:0.8 }));
+      ring.position.copy(SITE3D.radio).add(new THREE.Vector3(0.8, 5.05, 0));
+      spawnParticle(ring, new THREE.Vector3(0,0.4,0), 1.2, 'wave');
+    }
+  }
+
+  // particules
+  for (let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.life -= dt;
+    if (p.life <= 0){ scene.remove(p.mesh); particles.splice(i,1); continue; }
+    if (p.kind==='spark' || p.kind==='coin') p.vel.y -= 12*dt;
+    if (p.kind==='crate') p.vel.y = Math.max(p.vel.y, -1.6);
+    p.mesh.position.addScaledVector(p.vel, dt);
+    if (p.spin) p.mesh.rotation.z += p.spin*dt, p.mesh.rotation.x += p.spin*0.6*dt;
+    if (p.kind==='smoke'){ p.mesh.scale.multiplyScalar(1+dt*0.8); p.mesh.material.opacity = Math.min(0.55, p.life*0.35); }
+    if (p.kind==='wave'){ p.mesh.scale.multiplyScalar(1+dt*3); p.mesh.material.opacity = p.life*0.7; }
+    if (p.mesh.position.y < 0.05 && (p.kind==='bill'||p.kind==='crate'||p.kind==='coin')){
+      p.mesh.position.y = 0.05; p.vel.set(0,0,0); p.spin = 0;
+    }
+  }
+  // traçantes
+  for (let i=tracers.length-1;i>=0;i--){
+    const tr = tracers[i];
+    tr.life -= dt;
+    tr.line.material.opacity = Math.max(0, tr.life*7);
+    if (tr.life <= 0){ scene.remove(tr.line); tracers.splice(i,1); }
+  }
+  // feux
+  for (let i=fires.length-1;i>=0;i--){
+    const f = fires[i];
+    f.life -= dt;
+    f.g.children[0].scale.y = 1 + Math.sin(t*10 + i)*0.25;
+    f.g.children[1].scale.y = 1 + Math.sin(t*13 + i)*0.3;
+    f.light.intensity = 1.2 + Math.sin(t*11 + i)*0.5;
+    if (Math.random() < 0.25){
+      const sm = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5),
+        new THREE.MeshLambertMaterial({ color:0x46403a, transparent:true, opacity:0.45 }));
+      sm.position.copy(f.g.position).add(new THREE.Vector3(0, 0.8, 0));
+      spawnParticle(sm, new THREE.Vector3((Math.random()-0.5)*0.4, 1.4, (Math.random()-0.5)*0.4), 1.6, 'smoke');
+    }
+    if (f.life <= 0){ scene.remove(f.g); scene.remove(f.light); fires.splice(i,1); }
+  }
+
+  // dés 3D
+  updateDice(dt);
+
+  // unités sur les sites
+  refreshUnits();
+
+  // caméra : focus temporaire + tremblement + respiration
+  if (camFocusT > 0){ camFocusT -= dt; if (camFocusT <= 0) camLookTarget = new THREE.Vector3(0,0,2); }
+  camLook.lerp(camLookTarget, Math.min(1, dt*2));
+  camShake = Math.max(0, camShake - dt*1.4);
+  const shakeV = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).multiplyScalar(camShake);
+  camera.position.copy(CAM_BASE)
+    .add(new THREE.Vector3(Math.sin(t*0.12)*0.7, Math.sin(t*0.09)*0.35, Math.cos(t*0.12)*0.7))
+    .add(shakeV);
+  camera.lookAt(camLook);
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+} // fin du bloc THREE
+
+// =====================================================================
+// COUCHE RÉSEAU — salons, prompts distants, sync d'état, vocal WebRTC
+// (modèle hôte-autoritaire : l'hôte fait tourner gameLoop, les autres
+//  reçoivent journal/état/effets et répondent aux prompts)
+// =====================================================================
+let MYSEAT = 0;
+const NET = {
+  active:false, isHost:false, ws:null, myPeerId:null, roomCode:null,
+  lobby:[],                 // [{id, name}]
+  promptSeq:0, pending:{},  // promptId -> resolve
+  peerBySeat:{}, seatByPeer:{},
+
+  connect(url){
+    return new Promise((res, rej)=>{
+      try{
+        const ws = new WebSocket(url);
+        ws.onopen = ()=>{ NET.ws = ws; res(); };
+        ws.onerror = ()=> rej(new Error('Connexion impossible'));
+        ws.onmessage = e=>{ try{ NET.onMessage(JSON.parse(e.data)); }catch(err){} };
+        ws.onclose = ()=>{ if (NET.active) toast('⚠️ Connexion au serveur perdue', 4000); };
+      }catch(e){ rej(e); }
+    });
+  },
+  send(o){ if (NET.ws && NET.ws.readyState===1) NET.ws.send(JSON.stringify(o)); },
+  event(data){ if (NET.active && NET.isHost) NET.send({ t:'event', data }); },
+  syncUnits(){ NET.event({ kind:'units', units: V.coupUnits, flags: V.flags }); },
+
+  // ---- prompt d'un joueur distant : renvoie une promesse résolue par sa réponse ----
+  prompt(p, kind, payload){
+    return new Promise(res=>{
+      if (!p.remote || !NET.peerBySeat[p.id]){ res(NET.fallback(kind, p, payload)); return; }
+      const id = ++NET.promptSeq;
+      NET.pending[id] = { res, seat:p.id, kind, p, payload };
+      NET.event({ kind:'prompt', only:p.id, prompt:{ id, kind, payload } });
+      log('⏳ En attente de <b style="color:'+p.color+'">'+p.name+'</b>…');
+      // filet de sécurité : au bout de 75 s, l'IA répond à sa place
+      setTimeout(()=>{
+        if (NET.pending[id]){ const pd = NET.pending[id]; delete NET.pending[id];
+          log('💤 '+p.name+' ne répond pas — son conseiller IA décide.', 'red');
+          pd.res(NET.fallback(kind, p, payload)); }
+      }, 75000);
+    });
+  },
+  fallback(kind, p, payload){
+    switch(kind){
+      case 'budget':   return aiBudget(p, payload.aid);
+      case 'vote':     return { choice: Math.random()<0.6?'yes':'no', played:[] };
+      case 'night':    return aiNightChoice(p);
+      case 'assassin': return null;
+      case 'side':     return Math.random()<0.4 ? 'rebel' : 'loyal';
+      case 'coupCards':return [];
+      case 'offshore': return p.pocket>=4;
+      case 'deploy':   return aiDeploy(payload.army, payload.side, p.ai||'opportuniste');
+      case 'move':     return [];
+      case 'exec':     return -1;
+      case 'role':     return payload.candidates[0].id;
+      default: return null;
+    }
+  },
+
+  onMessage(msg){
+    switch(msg.t){
+      case 'created':
+      case 'joined': {
+        NET.myPeerId = msg.you; NET.roomCode = msg.code; NET.active = true;
+        NET.isHost = (msg.t==='created');
+        document.getElementById('lobbyRoom').classList.remove('hidden');
+        document.getElementById('lobbyRoomCode').textContent = msg.code;
+        document.getElementById('lobbyStatus').textContent = '';
+        if (NET.isHost) document.getElementById('lobbyStart').classList.remove('hidden');
+        break;
+      }
+      case 'error': document.getElementById('lobbyStatus').textContent = msg.error; break;
+      case 'lobby': {
+        NET.lobby = msg.players;
+        if (msg.hostId !== undefined) NET.isHost = (msg.hostId === NET.myPeerId);
+        document.getElementById('lobbyStart').classList.toggle('hidden', !NET.isHost);
+        document.getElementById('lobbyPlayers').innerHTML = msg.players.map((p,i)=>
+          '<span style="color:'+COLORS[i%COLORS.length]+'">●</span> '+escapeHTML(p.name)
+          + (p.id===msg.hostId?' <span style="color:#ffd166">(hôte)</span>':'')
+          + (p.id===NET.myPeerId?' — vous':'')).join('<br>');
+        voice.refreshPeers();
+        break;
+      }
+      case 'chat': {
+        const seat = NET.seatByPeer[msg.from];
+        const color = (seat!==undefined && G.players[seat]) ? G.players[seat].color : '#9ab';
+        (NET.rawLog||log)('💬 <b style="color:'+color+'">'+escapeHTML(msg.name)+' :</b> '+escapeHTML(msg.text));
+        break;
+      }
+      case 'left': {
+        const seat = NET.seatByPeer[msg.id];
+        if (NET.isHost && seat !== undefined && G.players[seat]){
+          const p = G.players[seat];
+          p.remote = false; p.ai = p.ai || 'opportuniste';
+          delete NET.peerBySeat[seat]; delete NET.seatByPeer[msg.id];
+          log('🔌 '+p.name+' a quitté : une IA reprend son poste.', 'red');
+          // répondre aux prompts en cours de ce siège
+          Object.entries(NET.pending).forEach(([id, pd])=>{
+            if (pd.seat === seat){ delete NET.pending[id]; pd.res(NET.fallback(pd.kind, pd.p, pd.payload)); }
+          });
+        }
+        break;
+      }
+      case 'start': if (!NET.isHost) clientStart(msg.config); break;
+      case 'action': {
+        if (!NET.isHost) return;
+        const pd = NET.pending[msg.data && msg.data.promptId];
+        if (pd && NET.seatByPeer[msg.from] === pd.seat){ delete NET.pending[msg.data.promptId]; pd.res(msg.data.answer); }
+        break;
+      }
+      case 'event': clientEvent(msg.data); break;
+      case 'signal': voice.onSignal(msg.from, msg.data); break;
+    }
+  },
+};
+
+// ---------------------------------------------------------------------
+// CÔTÉ CLIENT (non-hôte) : appliquer les événements diffusés par l'hôte
+// ---------------------------------------------------------------------
+function clientEvent(d){
+  if (!d || NET.isHost) return;
+  if (d.kind === 'seat'){ if (d.peer === NET.myPeerId) MYSEAT = d.seat; return; }
+  if (d.only !== undefined && d.only !== MYSEAT) return;
+  switch(d.kind){
+    case 'init': {
+      ROLES_ACTIVE = ROLES.slice(0, d.count);
+      G.difficulty = d.difficulty;
+      G.players = d.players.map((pl,i)=>({
+        id:i, name:pl.name, color:pl.color, alive:true,
+        role: ROLES.find(r=>r.id===pl.roleId) || ROLES[0],
+        pocket:0, bank:0, hand:[], night:null, grudge:[], ai:null, remote:false,
+      }));
+      G.presidentIdx = d.presidentIdx;
+      G.turn = 1;
+      document.getElementById('lobbyScreen').classList.add('hidden');
+      renderPlayers(); renderHand();
+      break;
+    }
+    case 'snap': {
+      d.players.forEach((s,i)=>{ if (G.players[i]){ G.players[i].alive = s.alive; G.players[i].bank = s.bank;
+        G.players[i].role = ROLES.find(r=>r.id===s.roleId) || G.players[i].role; } });
+      G.presidentIdx = d.presidentIdx; G.turn = d.turn;
+      renderPlayers();
+      break;
+    }
+    case 'pocket': if (G.players[MYSEAT]){ G.players[MYSEAT].pocket = d.v; renderPlayers(); } break;
+    case 'hand':   if (G.players[MYSEAT]){ G.players[MYSEAT].hand = d.cards.map(id=>CARD_TYPES.find(c=>c.id===id)).filter(Boolean).map(c=>({...c})); renderHand(); } break;
+    case 'aid':    document.getElementById('aidPool').textContent = d.v; break;
+    case 'log':    log(d.txt, d.cls); break;
+    case 'phase':  setPhase(d.txt); break;
+    case 'toast':  toast(d.txt, d.ms); break;
+    case 'nights': d.nights.forEach((n,i)=>{ if (G.players[i]) G.players[i].night = n; }); break;
+    case 'units':  V.coupUnits = d.units; V.flags = d.flags || V.flags; break;
+    case 'coupsides': {
+      const el = document.getElementById('coupSides');
+      el.innerHTML = d.html; el.classList.toggle('hidden', !d.show);
+      break;
+    }
+    case 'dicetray': {
+      const tray = document.getElementById('diceTray');
+      document.getElementById('diceSite').textContent = '🏛 BATAILLE : '+d.site;
+      document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display='none');
+      document.getElementById('drTotal').textContent = '…';
+      document.getElementById('dlTotal').textContent = '…';
+      document.getElementById('diceBtn').style.display = 'none';
+      tray.classList.remove('hidden'); tray.style.top = '78%';
+      break;
+    }
+    case 'diceresult': {
+      document.getElementById('drTotal').textContent = d.rT;
+      document.getElementById('dlTotal').textContent = d.lT;
+      break;
+    }
+    case 'dicehide': {
+      const tray = document.getElementById('diceTray');
+      tray.classList.add('hidden'); tray.style.top='';
+      document.getElementById('diceBtn').style.display='';
+      fx.clearDice && fx.clearDice();
+      break;
+    }
+    case 'fx': {
+      let args = d.args || [];
+      if (d.fn === 'battle') args = [ COUP_SITES.find(s=>s.id===args[0]), args[1] ];
+      try{ fx[d.fn] && fx[d.fn](...args); }catch(e){}
+      break;
+    }
+    case 'prompt': runClientPrompt(d.prompt); break;
+    case 'end': {
+      document.getElementById('endTitle').textContent = d.title;
+      document.getElementById('endTag').textContent = d.tag;
+      document.getElementById('endBoard').innerHTML = d.board;
+      document.getElementById('endScreen').classList.remove('hidden');
+      fx.confetti && fx.confetti();
+      break;
+    }
+  }
+}
+
+function clientStart(config){
+  // le client attend l'événement init de l'hôte ; on prépare juste l'écran
+  document.getElementById('lobbyScreen').classList.add('hidden');
+  setPhase('Connexion à la République…');
+}
+
+// ---------------------------------------------------------------------
+// PROMPTS CLIENTS : petites UI autonomes pilotées par la charge utile
+// ---------------------------------------------------------------------
+async function runClientPrompt(pr){
+  let answer = null;
+  const P = pr.payload || {};
+  switch(pr.kind){
+    case 'budget': answer = await cpBudget(P); break;
+    case 'vote':   answer = await cpVote(P); break;
+    case 'night':  answer = await cpNight(P); break;
+    case 'assassin': answer = await cpAssassin(P); break;
+    case 'side':   answer = await ask('<h3>Choisissez votre camp</h3><div class="mtext">'+P.text+'</div>',
+                      [ {label:'⚔️ REBELLION', value:'rebel', cls:'danger'}, {label:'🛡 LOYAUTÉ', value:'loyal'} ]); break;
+    case 'coupCards': answer = await cpCoupCards(P); break;
+    case 'offshore': answer = await ask('<h3>💼 Compte offshore</h3><div class="mtext">Transférer vos <b>'+P.pocket+' M$</b> en Suisse depuis votre planque ?</div>',
+                      [ {label:'Transférer', value:true}, {label:'Garder la carte', value:false, cls:'alt'} ]); break;
+    case 'exec':   answer = await ask('<h3>⚖️ Le peloton attend</h3><div class="mtext">Faire fusiller un vaincu, ou clémence ?</div>',
+                      P.targets.map(t=>({label:'🎯 '+t.name, value:t.id, cls:'danger'})).concat([{label:'🕊 Clémence', value:-1, cls:'alt'}])); break;
+    case 'role':   answer = await ask('<h3>👑 Formez votre cabinet</h3><div class="mtext">Poste de <b>'+P.roleName+'</b><br><span style="color:#9ab; font-size:12px;">'+P.roleDesc+'</span></div>',
+                      P.candidates.map(c=>({label:c.name, value:c.id}))); break;
+    case 'deploy': answer = await humanDeploy(P.army, P.side); break;
+    case 'move':   answer = await humanMove(V.coupUnits, P.side, P.round); break;
+  }
+  NET.send({ t:'action', data:{ promptId: pr.id, answer } });
+}
+
+function cpBudget(P){
+  return new Promise(res=>{
+    let html = '<h3>Vous êtes El Presidente</h3><div class="mtext">Répartissez les <b>'+P.aid+' M$</b> de l\'aide. Le reste file dans votre poche.</div>';
+    P.players.forEach(o=>{
+      html += '<div class="alloc-row"><div class="dot" style="background:'+o.color+'"></div>'
+        + '<span style="min-width:110px">'+escapeHTML(o.name)+'</span>'
+        + '<input type="range" min="0" max="'+P.aid+'" value="0" data-i="'+o.seat+'" class="alloc">'
+        + '<span class="val" id="val'+o.seat+'">0M</span></div>';
+    });
+    html += '<div class="mtext" style="margin-top:8px">Reste (pour vous) : <b id="rest">'+P.aid+'</b> M$</div>';
+    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer ce budget</button></div>';
+    modal(html);
+    const sliders = [...document.querySelectorAll('.alloc')];
+    const upd = ()=>{
+      let sum = 0;
+      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+'M'; });
+      document.getElementById('rest').textContent = P.aid - sum;
+      document.getElementById('okBudget').disabled = (P.aid - sum) < 0;
+    };
+    sliders.forEach(s=> s.oninput = upd); upd();
+    document.getElementById('okBudget').onclick = ()=>{
+      const alloc = {};
+      sliders.forEach(s=>{ alloc[+s.dataset.i] = +s.value; });
+      closeModal(); res(alloc);
+    };
+  });
+}
+function cpVote(P){
+  return new Promise(res=>{
+    let html = '<h3>Vote du budget</h3><div class="mtext">'+P.text+'</div>';
+    if (P.cards.length){
+      html += '<div class="mtext">Cliquez les cartes à jouer :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+      P.cards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
+      html += '</div>';
+    }
+    modal(html + '<div class="mbtns"><button class="mbtn" id="vYes">Voter POUR</button><button class="mbtn danger" id="vNo">Voter CONTRE</button></div>');
+    const played = new Set();
+    document.querySelectorAll('#modalBox .gcard').forEach(el=>{
+      el.onclick = ()=>{ el.classList.toggle('selected'); const ci=+el.dataset.ci; played.has(ci)?played.delete(ci):played.add(ci); };
+    });
+    const done = c=>{ closeModal(); res({ choice:c, played:[...played].map(ci=>P.cards[ci].id) }); };
+    document.getElementById('vYes').onclick = ()=> done('yes');
+    document.getElementById('vNo').onclick = ()=> done('no');
+  });
+}
+function cpNight(P){
+  return new Promise(res=>{
+    let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+P.pocket+' M$</b>.</div><div class="opt-grid">';
+    LOCATIONS.forEach(l=>{ html += '<div class="opt" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span><b>'+l.name+'</b><span class="odesc">'+l.desc+'</span></div>'; });
+    html += '</div><div class="mbtns"><button class="mbtn" id="okNight" disabled>Valider</button></div>';
+    modal(html);
+    let sel = null;
+    document.querySelectorAll('.opt').forEach(el=> el.onclick = ()=>{
+      document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected'); sel = el.dataset.id;
+      document.getElementById('okNight').disabled = false;
+    });
+    document.getElementById('okNight').onclick = ()=>{ closeModal(); res(sel); };
+  });
+}
+function cpAssassin(P){
+  return new Promise(res=>{
+    let html = '<h3>🔪 Opération nocturne ?</h3><div class="mtext">Une seule tentative par nuit.</div>';
+    html += '<div class="mtext"><b>Méthode :</b></div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+    P.means.forEach((mn,mi)=>{
+      html += '<div class="gcard mean" data-mi="'+mi+'"><div class="gc-band" style="background:'+mn.color+'">'+mn.cat+'</div><div class="gc-name">'+mn.label+'</div><div class="gc-desc">'+mn.desc+'</div></div>';
+    });
+    html += '</div><div class="mtext"><b>Cible :</b></div><div class="opt-grid">';
+    P.targets.forEach(t=>{ html += '<div class="opt tgt" data-id="'+t.id+'"><b style="color:'+t.color+'">'+escapeHTML(t.name)+'</b><span class="odesc">'+t.roleName+'</span></div>'; });
+    html += '</div><div id="locBlock"><div class="mtext"><b>Où dort-il/elle ?</b></div><div class="opt-grid">';
+    LOCATIONS.filter(l=>l.id!=='ambassade').forEach(l=>{ html += '<div class="opt loc" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span>'+l.name+'</div>'; });
+    html += '</div></div><div class="mbtns"><button class="mbtn danger" id="okKill" disabled>Lancer l\'opération</button><button class="mbtn alt" id="noKill">Pas cette nuit</button></div>';
+    modal(html);
+    let mi=null, tgt=null, loc=null;
+    const FIXED = { cigare:'residence', embuscade:'banque' };
+    const noLoc = ()=> mi!==null && (P.means[mi].kind==='espion' || FIXED[P.means[mi].kind]);
+    const check = ()=>{
+      document.getElementById('locBlock').style.display = noLoc() ? 'none' : 'block';
+      document.getElementById('okKill').disabled = !(mi!==null && tgt!==null && (loc || noLoc()));
+    };
+    document.querySelectorAll('.mean').forEach(el=> el.onclick=()=>{ document.querySelectorAll('.mean').forEach(o=>o.classList.remove('selected')); el.classList.add('selected'); mi=+el.dataset.mi; check(); });
+    document.querySelectorAll('.tgt').forEach(el=> el.onclick=()=>{ document.querySelectorAll('.tgt').forEach(o=>o.classList.remove('selected')); el.classList.add('selected'); tgt=+el.dataset.id; check(); });
+    document.querySelectorAll('.loc').forEach(el=> el.onclick=()=>{ document.querySelectorAll('.loc').forEach(o=>o.classList.remove('selected')); el.classList.add('selected'); loc=el.dataset.id; check(); });
+    document.getElementById('okKill').onclick = ()=>{
+      const mn = P.means[mi];
+      closeModal(); res({ meanKey: mn.key, kind: mn.kind, target: tgt, guess: mn.kind==='espion' ? null : (FIXED[mn.kind] || loc) });
+    };
+    document.getElementById('noKill').onclick = ()=>{ closeModal(); res(null); };
+  });
+}
+function cpCoupCards(P){
+  return new Promise(res=>{
+    if (!P.cards.length){ res([]); return; }
+    let html = '<h3>⚔️ Renforts pour la bataille</h3><div class="mtext">Cliquez les cartes à engager :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
+    P.cards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
+    html += '</div>';
+    modal(html + '<div class="mbtns"><button class="mbtn" id="okCC">Au combat</button></div>');
+    const sel = new Set();
+    document.querySelectorAll('#modalBox .gcard').forEach(el=>{
+      el.onclick = ()=>{ el.classList.toggle('selected'); const ci=+el.dataset.ci; sel.has(ci)?sel.delete(ci):sel.add(ci); };
+    });
+    document.getElementById('okCC').onclick = ()=>{ closeModal(); res([...sel].map(ci=>P.cards[ci].id)); };
+  });
+}
+
+// ---------------------------------------------------------------------
+// VOCAL WebRTC pair-à-pair (mesh, ≤7 joueurs)
+// ---------------------------------------------------------------------
+const voice = {
+  stream:null, pcs:{}, enabled:false,
+  async enable(){
+    try{
+      voice.stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      voice.enabled = true;
+      document.getElementById('voiceBtn').textContent = '🎙 Vocal actif (couper)';
+      voice.refreshPeers();
+    }catch(e){ toast('Micro refusé ou indisponible', 2500); }
+  },
+  disable(){
+    voice.enabled = false;
+    if (voice.stream) voice.stream.getTracks().forEach(t=>t.stop());
+    voice.stream = null;
+    Object.values(voice.pcs).forEach(pc=>pc.close());
+    voice.pcs = {};
+    document.getElementById('voiceBtn').textContent = '🎙 Activer le vocal';
+  },
+  refreshPeers(){
+    if (!voice.enabled || !NET.active) return;
+    NET.lobby.forEach(pl=>{
+      if (pl.id === NET.myPeerId || voice.pcs[pl.id]) return;
+      if (NET.myPeerId < pl.id) voice.call(pl.id);   // l'id le plus bas initie
+    });
+  },
+  makePC(peerId){
+    const pc = new RTCPeerConnection({ iceServers:[{ urls:'stun:stun.l.google.com:19302' }] });
+    voice.pcs[peerId] = pc;
+    if (voice.stream) voice.stream.getTracks().forEach(tr=> pc.addTrack(tr, voice.stream));
+    pc.ontrack = e=>{
+      let audio = document.getElementById('voice-'+peerId);
+      if (!audio){ audio = document.createElement('audio'); audio.id = 'voice-'+peerId; audio.autoplay = true; document.body.appendChild(audio); }
+      audio.srcObject = e.streams[0];
+    };
+    pc.onicecandidate = e=>{ if (e.candidate) NET.send({ t:'signal', to:peerId, data:{ ice:e.candidate } }); };
+    return pc;
+  },
+  async call(peerId){
+    const pc = voice.makePC(peerId);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    NET.send({ t:'signal', to:peerId, data:{ sdp: pc.localDescription } });
+  },
+  async onSignal(from, data){
+    let pc = voice.pcs[from] || voice.makePC(from);
+    if (data.sdp){
+      await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      if (data.sdp.type === 'offer'){
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        NET.send({ t:'signal', to:from, data:{ sdp: pc.localDescription } });
+      }
+    } else if (data.ice){
+      try{ await pc.addIceCandidate(new RTCIceCandidate(data.ice)); }catch(e){}
+    }
+  },
+};
+
+// ---------------------------------------------------------------------
+// LOBBY : branchements
+// ---------------------------------------------------------------------
+try{ document.getElementById('lobbyServer').value = localStorage.getItem('repServer') || ''; }catch(e){}
+try{ document.getElementById('lobbyName').value = localStorage.getItem('repName') || ''; }catch(e){}
+function lobbyPrep(){
+  const name = (document.getElementById('lobbyName').value||'').trim() || 'Ministre';
+  const url = (document.getElementById('lobbyServer').value||'').trim();
+  try{ localStorage.setItem('repServer', url); localStorage.setItem('repName', name); }catch(e){}
+  return { name, url };
+}
+document.getElementById('lobbyCreate').onclick = async ()=>{
+  const { name, url } = lobbyPrep();
+  if (!url){ document.getElementById('lobbyStatus').textContent = 'Indiquez l\'adresse du serveur (voir ONLINE-README).'; return; }
+  document.getElementById('lobbyStatus').textContent = 'Connexion…';
+  try{ if (!NET.ws) await NET.connect(url); NET.send({ t:'create', name }); }
+  catch(e){ document.getElementById('lobbyStatus').textContent = 'Serveur injoignable.'; }
+};
+document.getElementById('lobbyJoin').onclick = async ()=>{
+  const { name, url } = lobbyPrep();
+  const code = (document.getElementById('lobbyCode').value||'').trim().toUpperCase();
+  if (!url || !code){ document.getElementById('lobbyStatus').textContent = 'Adresse du serveur + code du salon requis.'; return; }
+  document.getElementById('lobbyStatus').textContent = 'Connexion…';
+  try{ if (!NET.ws) await NET.connect(url); NET.send({ t:'join', code, name }); }
+  catch(e){ document.getElementById('lobbyStatus').textContent = 'Serveur injoignable.'; }
+};
+document.getElementById('lobbySolo').onclick = ()=>{
+  document.getElementById('lobbyScreen').classList.add('hidden');
+  document.getElementById('titleScreen').classList.remove('hidden');
+  const nm = (document.getElementById('lobbyName').value||'').trim();
+  if (nm) document.getElementById('playerName').value = nm;
+};
+document.getElementById('voiceBtn').onclick = ()=> voice.enabled ? voice.disable() : voice.enable();
+
+// l'hôte lance : humains = joueurs du salon (hôte = siège 0), le reste en IA
+document.getElementById('lobbyStart').onclick = ()=>{
+  if (!NET.isHost) return;
+  const humans = [ ...NET.lobby.filter(p=>p.id===NET.myPeerId), ...NET.lobby.filter(p=>p.id!==NET.myPeerId) ];
+  const count = Math.max(5, Math.min(7, humans.length));
+  NET.send({ t:'start', config:{ count } });
+  hostStart(humans, count, 'normal');
+};
+async function hostStart(humans, count, difficulty){
+  document.getElementById('lobbyScreen').classList.add('hidden');
+  G.difficulty = difficulty;
+  const defaults = ['Gén. Morales','Col. Vásquez','Doña Ferreira','Dr Ocampo','Amiral Bautista','Sra Quintero'];
+  humans.forEach((h,i)=> NAMES[i] = h.name);
+  for (let i=humans.length; i<count; i++) NAMES[i] = defaults[(i-1) % defaults.length];
+  initPlayers(count);
+  // marquer les joueurs distants
+  humans.forEach((h,i)=>{
+    if (i===0) return;   // l'hôte
+    G.players[i].remote = true; G.players[i].ai = null;
+    NET.peerBySeat[i] = h.id; NET.seatByPeer[h.id] = i;
+  });
+  // envoyer les sièges + l'état initial
+  NET.seatByPeer[NET.myPeerId] = 0;
+  humans.forEach((h,i)=>{ if (i>0) NET.event({ kind:'seat', seat:i, peer:h.id }); });
+  NET.event({ kind:'init', count, difficulty,
+    players: G.players.map(p=>({ name:p.name, color:p.color, roleId:p.role.id })),
+    presidentIdx: G.presidentIdx });
+  netifyHost();
+  renderPlayers(); renderHand();
+  log('🌐 Partie en ligne — salon '+NET.roomCode+' : '+humans.map(h=>escapeHTML(h.name)).join(', ')+' + '+(count-humans.length)+' IA.');
+  await assignCabinet();
+  gameLoop();
+}
+
+// ---------------------------------------------------------------------
+// INSTRUMENTATION HÔTE : diffuser journal, phases, effets, état
+// ---------------------------------------------------------------------
+function netifyHost(){
+  if (!NET.active || !NET.isHost) return;
+  const _log = log;
+  NET.rawLog = _log;
+  log = (txt, cls)=>{ _log(txt, cls); NET.event({ kind:'log', txt, cls }); };
+  const _setPhase = setPhase;
+  setPhase = (t)=>{ _setPhase(t); NET.event({ kind:'phase', txt:t }); };
+  const _toast = toast;
+  toast = (t, ms)=>{ _toast(t, ms); NET.event({ kind:'toast', txt:t, ms }); };
+  const _renderPlayers = renderPlayers;
+  renderPlayers = ()=>{
+    _renderPlayers();
+    NET.event({ kind:'snap', turn:G.turn, presidentIdx:G.presidentIdx,
+      players: G.players.map(p=>({ alive:p.alive, bank:p.bank, roleId:p.role.id })) });
+    G.players.forEach(p=>{ if (p.remote) NET.event({ kind:'pocket', v:p.pocket, only:p.id }); });
+  };
+  const _renderHand = renderHand;
+  renderHand = ()=>{
+    _renderHand();
+    G.players.forEach(p=>{ if (p.remote) NET.event({ kind:'hand', cards:p.hand.map(c=>c.id), only:p.id }); });
+  };
+  // effets : rejoués chez les clients
+  const _fx = fx;
+  fx = new Proxy(_fx, {
+    get(target, fn){
+      const orig = target[fn];
+      if (typeof orig !== 'function') return orig;
+      return (...args)=>{
+        let ser = args;
+        if (fn === 'battle') ser = [ args[0] && args[0].id, args[1] ];
+        NET.event({ kind:'fx', fn, args: ser });
+        return orig.apply(target, args);
+      };
+    }
+  });
+}
+
+
+</script>
+</body>
+</html>
