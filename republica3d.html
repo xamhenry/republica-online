@@ -370,10 +370,10 @@
     <b>Les 5 postes du cabinet</b> (attribués au hasard, redistribués après chaque coup réussi) :<br>
     👑 <b>El Presidente</b> — répartit l'aide étrangère comme il l'entend (le non-alloué file dans sa poche). Garde présidentielle : 3 unités. Toujours loyaliste pendant un coup.<br>
     🎖 <b>Général de Brigade</b> — la force brute : 4 unités, la plus grosse armée du pays. Son camp pèse lourd dans un coup.<br>
-    ✈️ <b>Colonel de l'Air</b> — 2 unités, mais sa frappe aérienne ajoute +2 de force à son camp pendant un coup.<br>
+    ✈️ <b>Colonel de l'Air</b> — 2 unités, et une <b>frappe aérienne</b> par coup d'État : son chasseur pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
     🕶 <b>Chef de la Police Secrète</b> — 2 unités, et surtout <b>un assassinat gratuit chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
     🗳 <b>Ministre de l'Intérieur</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier.<br>
-    ⚓ <b>Amiral de la Flotte</b> <i>(à 6+)</i> — 2 unités, et sa canonnière bombarde le port : +2 de force au coup.<br>
+    ⚓ <b>Amiral de la Flotte</b> <i>(à 6+)</i> — 2 unités, et une salve de <b>canonnière</b> par coup d'État : elle bombarde le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
     🎖 <b>Général de la 2e Brigade</b> <i>(à 7)</i> — 3 unités de troupes fraîches. Deux généraux dans une junte, c'est un de trop…
   </div>
   <p>Vous jouez contre 4 ministres IA aux personnalités bien trempées. Ils négocient mal, trahissent bien.</p>
@@ -437,10 +437,10 @@ const PERSONALITIES = [null, 'brutal', 'opportuniste', 'cupide', 'prudent', 'bru
 const ROLES = [
   { id:'presidente', name:'El Presidente',        units:3, desc:'Répartit le budget. Garde présidentielle (3 unités).' },
   { id:'general',    name:'Général 1re Brigade',  units:4, desc:'La 1re Brigade (4 unités). Le bras armé du régime.' },
-  { id:'colonel',    name:'Colonel de l\'Air',    units:2, desc:'2 unités + frappe aérienne : +2 de force au coup.' },
+  { id:'colonel',    name:'Colonel de l\'Air',    units:2, desc:'2 unités. Une fois par coup d\'État : frappe aérienne sur le site de votre choix (détruit jusqu\'à 2 unités ennemies).' },
   { id:'policia',    name:'Chef de la Police',    units:2, desc:'2 unités. Un assassinat gratuit chaque nuit.' },
   { id:'interior',   name:'Ministre de l\'Intérieur', units:1, desc:'1 unité. +1 voix au vote, pioche 1 carte de plus.' },
-  { id:'amiral',     name:'Amiral de la Flotte',  units:2, desc:'2 unités + la canonnière bombarde le port : +2 de force au coup. (6+ joueurs)' },
+  { id:'amiral',     name:'Amiral de la Flotte',  units:2, desc:'2 unités. Une fois par coup d\'État : la canonnière bombarde le site de votre choix (détruit jusqu\'à 2 unités ennemies). (6+ joueurs)' },
   { id:'brigade2',   name:'Général 2e Brigade',   units:3, desc:'La 2e Brigade : 3 unités de troupes fraîches. (7 joueurs)' },
 ];
 let ROLES_ACTIVE = ROLES.slice(0,5);   // défini au lancement selon le nombre de joueurs
@@ -1266,6 +1266,7 @@ async function maybeCoup(){
 
   setPhase('🔥 COUP D\'ÉTAT !');
   log('🔥 <b>LES CHARS SORTENT ! Le coup d\'État est lancé !</b>', 'red');
+  G.players.forEach(p=>{ p.strikeUsed = false; });   // frappe aérienne / canonnière : une par coup
   fx.startCoup();
   toast('⚠️ COUP D\'ÉTAT ⚠️', 2600);
   await sleep(1600);
@@ -1446,6 +1447,46 @@ async function maybeCoup(){
       await doMoves('rebel');
       await doMoves('loyal');
       await sleep(1200);
+    }
+
+    // ---- frappes spéciales : chasseur du Colonel, canonnière de l'Amiral ----
+    // une seule fois par coup d'État, sur N'IMPORTE QUEL site occupé par l'ennemi,
+    // détruit jusqu'à 2 unités (l'équivalent de l'ancien +2, mais ciblé).
+    const doStrike = async (p, kind)=>{
+      const foeKey = sides[p.id]==='rebel' ? 'l' : 'r';
+      const targets = COUP_SITES.filter(s=> units[s.id][foeKey] > 0);
+      if (!targets.length) return;
+      const lbl = kind==='air' ? '✈️ Frappe aérienne' : '⚓ Canonnière';
+      let choice = null;
+      if (p.id===0){
+        choice = await ask('<h3>'+lbl+'</h3><div class="mtext">Une seule fois par coup d\'État : frapper un site maintenant '
+          + '(détruit jusqu\'à <b>2 unités ennemies</b>), ou garder pour une prochaine manche ?</div>',
+          targets.map(s=>({ label:'🎯 '+s.name+' ('+units[s.id][foeKey]+' ennemi'+(units[s.id][foeKey]>1?'s':'')+')', value:s.id, cls:'danger' }))
+            .concat([{ label:'🕰 Garder', value:null, cls:'alt' }]));
+      } else if (p.remote){
+        choice = await NET.prompt(p, 'strike', { kind, label:lbl, round,
+          sites: targets.map(s=>({ id:s.id, name:s.name, foes: units[s.id][foeKey] })) });
+        if (choice && !targets.some(s=>s.id===choice)) choice = null;
+      } else {
+        // IA : frappe le plus gros paquet ennemi — tout de suite s'il est gras, sinon manche 2+
+        const best = targets.slice().sort((a,b)=>units[b.id][foeKey]-units[a.id][foeKey])[0];
+        if (units[best.id][foeKey] >= 3 || round >= 2) choice = best.id;
+      }
+      if (!choice) return;
+      p.strikeUsed = true;
+      const s = COUP_SITES.find(c=>c.id===choice);
+      const killed = Math.min(2, units[choice][foeKey]);
+      log(lbl+' de <b style="color:'+p.color+'">'+p.name+'</b> sur <b>'+s.name+'</b> !', 'red');
+      await Promise.resolve(kind==='air' ? (fx.airstrike && fx.airstrike(choice)) : (fx.navalStrike && fx.navalStrike(choice)));
+      units[choice][foeKey] -= killed;
+      log('💥 '+killed+' unité'+(killed>1?'s':'')+' ennemie'+(killed>1?'s':'')+' détruite'+(killed>1?'s':'')+' à '+s.name+'.', 'red');
+      NET.syncUnits();
+      await sleep(700);
+    };
+    for (const p of G.players){
+      if (!p.alive || !sides[p.id] || p.strikeUsed) continue;
+      if (p.role.id==='colonel') await doStrike(p, 'air');
+      else if (p.role.id==='amiral') await doStrike(p, 'naval');
     }
 
     // ---- batailles sur les sites contestés ----
@@ -1855,10 +1896,9 @@ function rollBattleDice(rForce, lForce){ // (conservé pour compat, non utilisé
 }
 
 function coupStrength(p, withBonus){
-  let s = p.role.units + (withBonus ? (p.coupBonus||0) : 0);
-  if (p.role.id==='colonel') s += 2; // frappe aérienne
-  if (p.role.id==='amiral') s += 2;  // bombardement naval
-  return s;
+  // (frappe aérienne et canonnière ne sont plus un +2 passif : ce sont des
+  //  frappes actives, une fois par coup d'État — voir doStrike dans maybeCoup)
+  return p.role.units + (withBonus ? (p.coupBonus||0) : 0);
 }
 
 async function installNewPresident(winners){
@@ -2434,6 +2474,33 @@ function refreshUnits(){
   });
 }
 
+// ---------- canonnière de l'Amiral (au mouillage) & chasseur du Colonel (parqué) ----------
+const gunboat = new THREE.Group();
+{
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 1.1), M(0x5a6b7a));
+  hull.position.y = 0.1; gunboat.add(hull);
+  box(1.3, 0.5, 0.8, 0x77879a, -0.3, 0.55, 0, gunboat);                 // superstructure
+  box(0.1, 0.9, 0.1, 0x3d4a56, 0.1, 1.15, 0, gunboat);                  // mât
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8), M(0x2f3942));
+  barrel.rotation.z = Math.PI/2 - 0.4; barrel.position.set(1.2, 0.6, 0);
+  gunboat.add(barrel);
+  gunboat.position.set(-14, -0.35, -14);   // au mouillage au nord de l'île, visible en vue par défaut
+  gunboat.rotation.y = 0.8;
+  scene.add(gunboat);
+}
+const FIGHTER_PARK = SITE3D.aeroport.clone().add(new THREE.Vector3(1.8, 0.35, 2.4));
+const fighter = new THREE.Group();
+{
+  const fus = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 2.1, 8), M(0x8a9a6b));
+  fus.rotation.z = Math.PI/2; fighter.add(fus);
+  box(2.5, 0.06, 0.55, 0x76865c, 0.1, 0, 0, fighter);                   // ailes
+  box(0.45, 0.4, 0.06, 0x76865c, -0.95, 0.25, 0, fighter);              // dérive
+  fighter.position.copy(FIGHTER_PARK);
+  fighter.rotation.y = 0.6;
+  scene.add(fighter);
+}
+let fighterAnim = null;   // {tgt, dropped, done} : vol de frappe aérienne en cours
+
 // ---------- particules & effets ----------
 const particles = [];   // {mesh, vel, life, spin, kind}
 const tracers = [];     // {line, life}
@@ -2658,6 +2725,35 @@ fx = {
     camShake = 0.5;
     document.body.classList.add('coupview');    // mobile : priorité à la carte
     setTimeout(resize3d, 60);
+  },
+  // frappe aérienne du Colonel : le chasseur décolle, survole le site et largue sa bombe
+  airstrike(siteId){
+    const tgt = (SITE3D[siteId] || SITE3D.palais).clone();
+    fx.focus(siteId, 3.2);
+    return new Promise(done=>{
+      fighter.position.set(tgt.x - 30, 5.5, tgt.z);
+      fighter.rotation.set(0, 0, 0);
+      fighterAnim = { tgt, dropped:false, done };
+    });
+  },
+  // canonnière de l'Amiral : trois salves depuis le large
+  navalStrike(siteId){
+    const tgt = (SITE3D[siteId] || SITE3D.palais).clone();
+    fx.focus(siteId, 3.0);
+    return new Promise(done=>{
+      for (let i=0;i<3;i++){
+        setTimeout(()=>{
+          const muzzle = gunboat.position.clone().add(new THREE.Vector3(0, 1.1, 0));
+          explosion(muzzle, false);
+          tracer(muzzle, tgt.clone().setY(0.8));
+          camShake = Math.max(camShake, 0.25);
+          setTimeout(()=>{
+            explosion(tgt.clone(), i===2);
+            if (i===2){ fire(tgt.clone()); done(); }
+          }, 380);
+        }, i*620);
+      }
+    });
   },
   battle(siteData, rebelWin){
     const p = SITE3D[siteData.id];
@@ -2893,6 +2989,28 @@ function animate(now){
     if (plane3d.position.x > 45) plane3d.userData.active = false;
   }
 
+  // canonnière : tangage au mouillage
+  gunboat.position.y = -0.35 + Math.sin(t*1.2)*0.12;
+  gunboat.rotation.z = Math.sin(t*0.9)*0.03;
+
+  // chasseur : vol de frappe aérienne
+  if (fighterAnim){
+    fighter.position.x += dt*14;
+    fighter.position.y = 5.5 + Math.sin(t*3)*0.15;
+    if (!fighterAnim.dropped && fighter.position.x >= fighterAnim.tgt.x - 0.4){
+      fighterAnim.dropped = true;
+      explosion(fighterAnim.tgt.clone(), true);
+      fire(fighterAnim.tgt.clone().add(new THREE.Vector3((Math.random()-0.5)*1.5, 0, (Math.random()-0.5)*1.5)));
+      camShake = Math.max(camShake, 0.5);
+    }
+    if (fighter.position.x > fighterAnim.tgt.x + 26){
+      const d = fighterAnim.done; fighterAnim = null;
+      fighter.position.copy(FIGHTER_PARK);   // retour au parking de l'aéroport
+      fighter.rotation.set(0, 0.6, 0);
+      if (d) d();
+    }
+  }
+
   // foule en colère
   if (crowd3d){
     crowd3d.userData.life -= dt;
@@ -3076,6 +3194,7 @@ const NET = {
       case 'exec':     return -1;
       case 'role':     return payload.candidates[0].id;
       case 'roll':     return true;
+      case 'strike':   return null;   // l'IA de secours garde la frappe
       default: return null;
     }
   },
@@ -3288,6 +3407,10 @@ async function runClientPrompt(pr){
     case 'deploy': answer = await humanDeploy(P.army, P.side); break;
     case 'move':   answer = await humanMove(V.coupUnits, P.side, P.round); break;
     case 'roll':   answer = await cpRoll(P); break;
+    case 'strike': answer = await ask('<h3>'+P.label+'</h3><div class="mtext">Une seule fois par coup d\'État : frapper un site maintenant '
+      + '(détruit jusqu\'à <b>2 unités ennemies</b>), ou garder pour une prochaine manche ?</div>',
+      P.sites.map(s=>({ label:'🎯 '+s.name+' ('+s.foes+' ennemi'+(s.foes>1?'s':'')+')', value:s.id, cls:'danger' }))
+        .concat([{ label:'🕰 Garder', value:null, cls:'alt' }])); break;
   }
   NET.send({ t:'action', data:{ promptId: pr.id, answer } });
 }
