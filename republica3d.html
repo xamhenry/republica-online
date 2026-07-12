@@ -281,6 +281,16 @@
 
 <div id="toast"></div>
 
+<div id="pauseOverlay" class="hidden" style="position:fixed; inset:0; z-index:390; background:rgba(5,7,10,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:20px;">
+  <div style="font-size:44px;">⏸</div>
+  <div id="pauseMsg" style="color:#ffd166; font-weight:bold; letter-spacing:1px; font-size:16px;">Partie en pause</div>
+  <div id="pauseSub" style="color:#8fa3c7; font-size:12px; max-width:320px; line-height:1.6;"></div>
+  <div class="mbtns" id="pauseBtns" style="justify-content:center;">
+    <button class="mbtn" id="pauseIA">🤖 Continuer avec une IA</button>
+    <button class="mbtn danger" id="pauseQuit">🚪 Quitter la partie</button>
+  </div>
+</div>
+
 <div id="reconnectOverlay" class="hidden" style="position:fixed; inset:0; z-index:400; background:rgba(5,7,10,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:20px;">
   <div style="font-size:44px;">📡</div>
   <div id="reconnectMsg" style="color:#ffd166; font-weight:bold; letter-spacing:1px; font-size:16px;">Connexion perdue — reconnexion…</div>
@@ -354,7 +364,7 @@
     ③ la <b>nuit</b>, chacun choisit sa planque, envoie des assassins, ou va déposer son magot à la banque →
     ④ un <b>événement</b> secoue le pays → ⑤ si le régime vacille, c'est le <b>COUP D'ÉTAT</b> : batailles pour le Palais, la Radio, la Caserne…<br>
     <b>Attention :</b> l'argent en poche peut être volé sur votre cadavre. Seule la banque compte. Une balle n'est jamais loin.<br>
-    <b>Les cartes</b> (21 types : votes, argent, assassins, protections, renforts) s'affichent devant vous et se jouent d'un clic au bon moment. <b>Les coups d'État se jouent comme sur le plateau</b> : 3 manches, vous déployez vos unités sur les 5 sites (le Palais compte double), chaque bataille se résout aux dés (unités + 1d6) avec des pertes définitives.
+    <b>Les cartes</b> (29 types : votes, argent, assassins, protections, renforts) s'affichent devant vous et se jouent d'un clic au bon moment. <b>Les coups d'État se jouent comme sur le plateau</b> : 3 manches, vous déployez vos unités sur les 5 sites (le Palais compte double), chaque bataille se résout aux dés (unités + 1d6) avec des pertes définitives.
   </div>
   <div class="rules">
     <b>Les 5 postes du cabinet</b> (attribués au hasard, redistribués après chaque coup réussi) :<br>
@@ -1345,6 +1355,9 @@ async function maybeCoup(){
   const humanSide = (G.players[0].alive && sides[0]) ? sides[0] : null;
   const rebelLeader = rebels.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
   const loyalLeader = loyals.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
+  // qui lance les dés pour chaque camp : le chef s'il est humain, sinon le premier humain, sinon l'IA
+  const pickRoller = (leader, arr)=> [leader, ...arr].find(p=> p && (p.id===0 || p.remote)) || null;
+  const coupRollers = { rebel: pickRoller(rebelLeader, rebels), loyal: pickRoller(loyalLeader, loyals) };
 
   // panneau "qui est avec qui"
   const sidesPanel = document.getElementById('coupSides');
@@ -1431,7 +1444,7 @@ async function maybeCoup(){
       if (u.r>0 && u.l>0){
         const r0 = u.r, l0 = u.l;
         log('🎲 <b>'+s.name+'</b> : '+r0+' rebelles contre '+l0+' loyalistes…');
-        const d = await rollSiteDice(r0, l0, s.name);
+        const d = await rollSiteDice(r0, l0, s.name, coupRollers);
         const rScore = r0 + d.r, lScore = l0 + d.l;
         const rebelWin = rScore > lScore || (rScore===lScore && owner[s.id]==='rebel');
         const loserUnits = rebelWin ? u.l : u.r;
@@ -1729,55 +1742,77 @@ function coupMapClick(best, rightClick){
 // (le picking des sites est géré par la couche de rendu 3D via raycasting)
 
 // -------- dés de bataille : DÉS 3D lancés sur l'île (repli DOM sans Three.js) --------
-function rollSiteDice(rUnits, lUnits, siteName){
-  return new Promise(res=>{
-    const has3d = (typeof THREE !== 'undefined');
-    const tray = document.getElementById('diceTray');
-    document.getElementById('diceSite').textContent = '🏛 BATAILLE : ' + (siteName || '—');
-    const btn = document.getElementById('diceBtn');
-    const dr1=document.getElementById('dr1'), dr2=document.getElementById('dr2');
-    const dl1=document.getElementById('dl1'), dl2=document.getElementById('dl2');
-    const drT=document.getElementById('drTotal'), dlT=document.getElementById('dlTotal');
-    // en 3D, les dés unicode sont masqués : ils roulent SUR l'île
-    document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display = has3d ? 'none' : 'flex');
-    dr2.style.display='none'; dl2.style.display='none';
-    dr1.textContent='⚀'; dl1.textContent='⚀';
-    drT.textContent=''; dlT.textContent='';
-    btn.textContent = '🎲 LANCER LES DÉS';
-    tray.classList.remove('hidden');
-    if (has3d) tray.style.top = '78%';   // laisser voir l'île derrière
-    if (typeof NET !== 'undefined') NET.event({ kind:'dicetray', site: siteName || '—' });
-    btn.onclick = ()=>{
-      btn.disabled = true;
-      const r=randInt(1,6), l=randInt(1,6);
-      const finish = ()=>{
-        drT.textContent = rUnits+' + '+r+' = '+(rUnits+r);
-        dlT.textContent = lUnits+' + '+l+' = '+(lUnits+l);
-        if (typeof NET !== 'undefined') NET.event({ kind:'diceresult', rT: drT.textContent, lT: dlT.textContent });
-        btn.disabled = false;
-        btn.textContent = 'CONTINUER ▶';
-        btn.onclick = ()=>{
-          tray.classList.add('hidden');
-          tray.style.top = '';
-          if (has3d) fx.clearDice();
-          if (typeof NET !== 'undefined') NET.event({ kind:'dicehide' });
-          res({r,l});
-        };
-      };
-      if (has3d){
-        Promise.resolve(fx.throwDice(r, l)).then(finish);
-      } else {
-        [dr1,dl1].forEach(d=>d.classList.add('rolling'));
-        const spin = setInterval(()=>{ dr1.textContent=DIE_FACES[randInt(0,5)]; dl1.textContent=DIE_FACES[randInt(0,5)]; }, 70);
-        setTimeout(()=>{
-          clearInterval(spin);
-          dr1.textContent=DIE_FACES[r-1]; dl1.textContent=DIE_FACES[l-1];
-          [dr1,dl1].forEach(d=>d.classList.remove('rolling'));
-          finish();
-        }, 900);
-      }
-    };
+function setDiceStatus(txt){
+  document.getElementById('diceSite').textContent = txt;
+  if (typeof NET !== 'undefined') NET.event({ kind:'dicestatus', txt });
+}
+
+// chaque camp lance SES dés à tour de rôle : rebelles d'abord, puis loyalistes.
+// rollers = { rebel: joueur|null, loyal: joueur|null } — l'hôte clique lui-même,
+// un joueur distant reçoit le bouton chez lui, une IA lance toute seule.
+async function rollSiteDice(rUnits, lUnits, siteName, rollers){
+  const has3d = (typeof THREE !== 'undefined');
+  const tray = document.getElementById('diceTray');
+  const btn = document.getElementById('diceBtn');
+  const dr1=document.getElementById('dr1'), dl1=document.getElementById('dl1');
+  const drT=document.getElementById('drTotal'), dlT=document.getElementById('dlTotal');
+  // en 3D, les dés unicode sont masqués : ils roulent SUR l'île
+  document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display = has3d ? 'none' : 'flex');
+  document.getElementById('dr2').style.display='none';
+  document.getElementById('dl2').style.display='none';
+  dr1.textContent='⚀'; dl1.textContent='⚀';
+  drT.textContent='…'; dlT.textContent='…';
+  btn.style.display='none';
+  tray.classList.remove('hidden');
+  if (has3d){ tray.style.top = '78%'; fx.clearDice(); }   // laisser voir l'île derrière
+  if (typeof NET !== 'undefined') NET.event({ kind:'dicetray', site: siteName || '—' });
+  setDiceStatus('🏛 BATAILLE : ' + (siteName || '—'));
+
+  const vals = {};
+  for (const side of ['rebel','loyal']){
+    const roller = rollers && rollers[side];
+    const lbl = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const val = randInt(1,6);
+    vals[side] = val;
+    if (roller && roller.id === 0){
+      // l'hôte (ou le joueur solo) lance lui-même
+      await new Promise(done=>{
+        btn.style.display=''; btn.disabled=false;
+        btn.textContent = '🎲 '+lbl+' : À VOUS DE LANCER';
+        btn.onclick = ()=>{ btn.disabled=true; btn.style.display='none'; done(); };
+      });
+    } else if (roller && roller.remote){
+      setDiceStatus('🏛 '+(siteName||'—')+' — '+lbl+' : '+roller.name+' lance…');
+      await NET.prompt(roller, 'roll', { site: siteName||'—', side, label: lbl });
+    } else {
+      setDiceStatus('🏛 '+(siteName||'—')+' — '+lbl+' lancent…');
+      await sleep(800);
+    }
+    if (has3d){
+      await fx.throwDie(side, val);
+    } else {
+      const d = side==='rebel' ? dr1 : dl1;
+      d.classList.add('rolling');
+      await new Promise(fin=>{
+        const spin = setInterval(()=>{ d.textContent = DIE_FACES[randInt(0,5)]; }, 70);
+        setTimeout(()=>{ clearInterval(spin); d.textContent = DIE_FACES[val-1]; d.classList.remove('rolling'); fin(); }, 900);
+      });
+    }
+    const u = side==='rebel' ? rUnits : lUnits;
+    (side==='rebel' ? drT : dlT).textContent = u+' + '+val+' = '+(u+val);
+    if (typeof NET !== 'undefined') NET.event({ kind:'diceresult', rT: drT.textContent, lT: dlT.textContent });
+    setDiceStatus('🏛 BATAILLE : ' + (siteName || '—'));
+  }
+
+  await new Promise(done=>{
+    btn.style.display=''; btn.disabled=false; btn.textContent='CONTINUER ▶';
+    btn.onclick = done;
   });
+  tray.classList.add('hidden');
+  tray.style.top = '';
+  if (has3d) fx.clearDice();
+  if (typeof NET !== 'undefined') NET.event({ kind:'dicehide' });
+  return { r: vals.rebel, l: vals.loyal };
 }
 function rollBattleDice(rForce, lForce){ // (conservé pour compat, non utilisé par le nouveau système)
   document.getElementById('dr2').style.display='';
@@ -2680,6 +2715,13 @@ fx = {
     camFocusT = 4.0;
     return new Promise(r=>{ diceResolve = r; });
   },
+  throwDie(side, val){
+    // un seul dé, pour les lancers à tour de rôle (rebelles puis loyalistes)
+    throwOneDie(side==='rebel' ? '#e5b3b3' : '#b3c6e5', val, side==='rebel' ? -1.6 : 1.6);
+    camLookTarget = new THREE.Vector3(0, 0.3, 7.5);
+    camFocusT = 4.0;
+    return new Promise(r=>{ diceResolve = r; });
+  },
   clearDice(){
     diceSim.forEach(d=> scene.remove(d.mesh));
     diceSim.length = 0;
@@ -2930,6 +2972,19 @@ const NET = {
   promptSeq:0, pending:{},  // promptId -> resolve
   peerBySeat:{}, seatByPeer:{},
   serverUrl:null, token:null, started:false, reconnecting:false, pingT:null,
+  awaySeats:{},   // seat -> nom : joueurs déconnectés, la partie est en pause tant qu'il y en a
+
+  // la boucle de jeu de l'hôte s'arrête ici (via sleep) tant que la pause dure
+  pauseGate(){
+    return new Promise(r=>{
+      (function chk(){ Object.keys(NET.awaySeats).length ? setTimeout(chk, 400) : r(); })();
+    });
+  },
+  updatePause(){
+    const names = Object.values(NET.awaySeats);
+    if (names.length) pauseShow(names, true); else pauseHide();
+    NET.event({ kind:'pause', show: names.length>0, names });
+  },
 
   connect(url){
     NET.serverUrl = url;
@@ -2939,7 +2994,7 @@ const NET = {
         ws.onopen = ()=>{
           NET.ws = ws;
           clearInterval(NET.pingT);   // battement de cœur : évite la coupure des connexions inactives
-          NET.pingT = setInterval(()=>{ if (NET.ws===ws && ws.readyState===1) ws.send('{"t":"ping"}'); }, 25000);
+          NET.pingT = setInterval(()=>{ if (NET.ws===ws && ws.readyState===1) ws.send('{"t":"ping"}'); }, 15000);
           res();
         };
         ws.onerror = ()=> rej(new Error('Connexion impossible'));
@@ -2983,8 +3038,13 @@ const NET = {
       NET.event({ kind:'prompt', only:p.id, prompt:{ id, kind, payload } });
       log('⏳ En attente de <b style="color:'+p.color+'">'+p.name+'</b>…');
       // filet de sécurité : au bout de 75 s, l'IA répond à sa place
+      // (sauf si le joueur est déconnecté : la partie est en PAUSE, on attend
+      //  son retour ou la décision de l'hôte)
       setTimeout(()=>{
-        if (NET.pending[id]){ const pd = NET.pending[id]; delete NET.pending[id];
+        if (NET.pending[id]){
+          const pd = NET.pending[id];
+          if (NET.awaySeats[pd.seat] !== undefined) return;
+          delete NET.pending[id];
           log('💤 '+p.name+' ne répond pas — son conseiller IA décide.', 'red');
           pd.res(NET.fallback(kind, p, payload)); }
       }, 75000);
@@ -3003,6 +3063,7 @@ const NET = {
       case 'move':     return [];
       case 'exec':     return -1;
       case 'role':     return payload.candidates[0].id;
+      case 'roll':     return true;
       default: return null;
     }
   },
@@ -3041,6 +3102,8 @@ const NET = {
           const p = G.players[seat];
           p.remote = true; p.ai = null;
           NET.peerBySeat[seat] = msg.id;
+          delete NET.awaySeats[seat];
+          NET.updatePause();
           log('🔌 <b>'+p.name+'</b> est de retour et reprend son poste !', 'green');
           renderPlayers(); renderHand();   // resynchronise banque/poche/main chez lui
           // relancer les questions encore en attente pour ce siège
@@ -3071,13 +3134,12 @@ const NET = {
         const seat = NET.seatByPeer[msg.id];
         if (NET.isHost && seat !== undefined && G.players[seat]){
           const p = G.players[seat];
-          p.remote = false; p.ai = p.ai || 'opportuniste';
-          // on GARDE le mapping siège<->pair : le serveur lui rend le même id s'il revient
-          log('🔌 '+p.name+' est déconnecté : une IA garde son poste au chaud (15 min pour revenir).', 'red');
-          // répondre aux prompts en cours de ce siège
-          Object.entries(NET.pending).forEach(([id, pd])=>{
-            if (pd.seat === seat){ delete NET.pending[id]; pd.res(NET.fallback(pd.kind, pd.p, pd.payload)); }
-          });
+          // on GARDE le mapping siège<->pair (le serveur lui rend le même id s'il
+          // revient) et on met la partie en PAUSE : l'hôte choisit d'attendre,
+          // de confier le siège à une IA, ou de quitter.
+          log('🔌 <b>'+p.name+'</b> est déconnecté — ⏸ partie en pause (reconnexion automatique).', 'red');
+          NET.awaySeats[seat] = p.name;
+          NET.updatePause();
         }
         break;
       }
@@ -3151,6 +3213,8 @@ function clientEvent(d){
       document.getElementById('dlTotal').textContent = d.lT;
       break;
     }
+    case 'dicestatus': document.getElementById('diceSite').textContent = d.txt; break;
+    case 'pause': d.show ? pauseShow(d.names, false) : pauseHide(); break;
     case 'dicehide': {
       const tray = document.getElementById('diceTray');
       tray.classList.add('hidden'); tray.style.top='';
@@ -3206,8 +3270,22 @@ async function runClientPrompt(pr){
                       P.candidates.map(c=>({label:c.name, value:c.id}))); break;
     case 'deploy': answer = await humanDeploy(P.army, P.side); break;
     case 'move':   answer = await humanMove(V.coupUnits, P.side, P.round); break;
+    case 'roll':   answer = await cpRoll(P); break;
   }
   NET.send({ t:'action', data:{ promptId: pr.id, answer } });
+}
+
+// c'est à CE joueur de lancer les dés de son camp
+function cpRoll(P){
+  return new Promise(res=>{
+    const tray = document.getElementById('diceTray');
+    const btn = document.getElementById('diceBtn');
+    tray.classList.remove('hidden'); tray.style.top = '78%';
+    document.getElementById('diceSite').textContent = '🏛 BATAILLE : ' + (P.site || '—');
+    btn.style.display=''; btn.disabled=false;
+    btn.textContent = '🎲 '+(P.label||'')+' : À VOUS DE LANCER';
+    btn.onclick = ()=>{ btn.disabled=true; btn.style.display='none'; res(true); };
+  });
 }
 
 function cpBudget(P){
@@ -3377,6 +3455,48 @@ const voice = {
 };
 
 // ---------------------------------------------------------------------
+// PAUSE : un joueur est déconnecté — la partie attend, l'hôte décide
+// ---------------------------------------------------------------------
+function pauseShow(names, isHost){
+  names = names || [];
+  document.getElementById('pauseMsg').textContent =
+    '⏸ Partie en pause — '+names.join(', ')+' '+(names.length>1?'sont déconnectés':'est déconnecté');
+  document.getElementById('pauseSub').textContent = isHost
+    ? 'Reconnexion automatique en cours (siège gardé 15 min). Attendez son retour, confiez le siège à une IA, ou quittez la partie.'
+    : 'Reconnexion automatique en cours. L\'hôte peut confier le siège à une IA ou arrêter la partie.';
+  document.getElementById('pauseBtns').style.display = isHost ? 'flex' : 'none';
+  document.getElementById('pauseOverlay').classList.remove('hidden');
+}
+function pauseHide(){ document.getElementById('pauseOverlay').classList.add('hidden'); }
+
+document.getElementById('pauseIA').onclick = ()=>{
+  if (!NET.isHost) return;
+  Object.keys(NET.awaySeats).forEach(seatStr=>{
+    const seat = +seatStr;
+    const p = G.players[seat];
+    if (p){
+      p.remote = false; p.ai = p.ai || 'opportuniste';
+      log('🤖 Une IA reprend le poste de <b>'+p.name+'</b> (il pourra revenir).', 'red');
+    }
+    Object.entries(NET.pending).forEach(([pid, pd])=>{
+      if (pd.seat === seat){ delete NET.pending[pid]; pd.res(NET.fallback(pd.kind, pd.p, pd.payload)); }
+    });
+    delete NET.awaySeats[seat];
+  });
+  NET.updatePause();
+};
+document.getElementById('pauseQuit').onclick = ()=>{
+  if (!NET.isHost) return;
+  const board = '<i>La République attendra des jours meilleurs. Relancez un salon pour rejouer.</i>';
+  NET.event({ kind:'end', title:'PARTIE INTERROMPUE', tag:'L\'hôte a mis fin à la partie.', board });
+  pauseHide();
+  document.getElementById('endTitle').textContent = 'PARTIE INTERROMPUE';
+  document.getElementById('endTag').textContent = 'Vous avez mis fin à la partie.';
+  document.getElementById('endBoard').innerHTML = board;
+  document.getElementById('endScreen').classList.remove('hidden');
+};
+
+// ---------------------------------------------------------------------
 // ANTI-VEILLE : garder l'écran allumé pendant la partie (Wake Lock API)
 // + à la remise au premier plan, reconnexion immédiate si nécessaire
 // ---------------------------------------------------------------------
@@ -3470,6 +3590,9 @@ async function hostStart(humans, count, difficulty){
 // ---------------------------------------------------------------------
 function netifyHost(){
   if (!NET.active || !NET.isHost) return;
+  // pause : la boucle de jeu marque un arrêt à chaque sleep tant qu'un joueur est déconnecté
+  const _sleep = sleep;
+  sleep = (ms)=> _sleep(ms).then(()=> NET.pauseGate());
   const _log = log;
   NET.rawLog = _log;
   log = (txt, cls)=>{ _log(txt, cls); NET.event({ kind:'log', txt, cls }); };

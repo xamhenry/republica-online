@@ -49,11 +49,25 @@ function makeCode(){
 
 const GHOST_TTL = 15 * 60 * 1000;   // 15 min pour revenir après une déconnexion en partie
 
+// détection des connexions mortes : derrière le proxy (Render/Cloudflare), une
+// coupure brutale (téléphone en veille) n'émet pas toujours de 'close'. Les clients
+// envoient {t:'ping'} toutes les 15 s ; sans nouvelle d'une connexion depuis 35 s,
+// on la termine — ce qui déclenche le 'close' et donc la mise en pause côté hôte.
+setInterval(() => {
+  wss.clients.forEach((c) => {
+    if (Date.now() - (c.lastSeen || 0) > 35000) return c.terminate();
+    try { c.ping(); } catch (e) {}
+  });
+}, 10000);
+
 wss.on('connection', (ws) => {
   let id = nextId++;                 // réassigné si le client reprend un siège (rejoin)
   let roomCode = null;
+  ws.lastSeen = Date.now();
+  ws.on('pong', () => { ws.lastSeen = Date.now(); });
 
   ws.on('message', (raw) => {
+    ws.lastSeen = Date.now();
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
     const room = roomCode ? rooms[roomCode] : null;
