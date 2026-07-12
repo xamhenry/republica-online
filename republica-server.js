@@ -10,6 +10,7 @@
 // =====================================================================
 "use strict";
 const http = require('http');
+const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 8080;
@@ -46,8 +47,10 @@ function makeCode(){
   return rooms[c] ? makeCode() : c;
 }
 
+const GHOST_TTL = 15 * 60 * 1000;   // 15 min pour revenir après une déconnexion en partie
+
 wss.on('connection', (ws) => {
-  const id = nextId++;
+  let id = nextId++;                 // réassigné si le client reprend un siège (rejoin)
   let roomCode = null;
 
   ws.on('message', (raw) => {
@@ -59,10 +62,11 @@ wss.on('connection', (ws) => {
       // ---- créer un salon : {t:'create', name} ----
       case 'create': {
         const code = makeCode();
-        rooms[code] = { hostId: id, clients: new Map(), started: false };
-        rooms[code].clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16) });
+        const token = crypto.randomBytes(8).toString('hex');
+        rooms[code] = { hostId: id, clients: new Map(), ghosts: {}, started: false };
+        rooms[code].clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16), token });
         roomCode = code;
-        send(ws, { t: 'created', code, you: id });
+        send(ws, { t: 'created', code, you: id, token });
         send(ws, lobbyState(code));
         break;
       }
@@ -73,11 +77,30 @@ wss.on('connection', (ws) => {
         if (!r)            return send(ws, { t: 'error', error: 'Salon introuvable.' });
         if (r.started)     return send(ws, { t: 'error', error: 'La partie a déjà commencé.' });
         if (r.clients.size >= MAX_PLAYERS) return send(ws, { t: 'error', error: 'Salon complet (7 max).' });
-        r.clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16) });
+        const token = crypto.randomBytes(8).toString('hex');
+        r.clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16), token });
         roomCode = code;
-        send(ws, { t: 'joined', code, you: id });
+        send(ws, { t: 'joined', code, you: id, token });
         broadcast(r, lobbyState(code));
         send(ws, lobbyState(code));
+        break;
+      }
+      // ---- reprendre sa place après une coupure : {t:'rejoin', code, token} ----
+      // le siège d'un joueur déconnecté en pleine partie est gardé GHOST_TTL ;
+      // il revient avec le MÊME id, l'hôte le re-promeut d'IA à humain.
+      case 'rejoin': {
+        const code = String(msg.code || '').toUpperCase();
+        const r = rooms[code];
+        const g = r && r.ghosts && r.ghosts[String(msg.token || '')];
+        if (!g) return send(ws, { t: 'error', error: 'Impossible de reprendre la partie (siège expiré ou salon fermé).' });
+        clearTimeout(g.timer);
+        delete r.ghosts[String(msg.token)];
+        id = g.id;
+        roomCode = code;
+        r.clients.set(id, { ws, name: g.name, token: String(msg.token) });
+        send(ws, { t: 'rejoined', code, you: id });
+        broadcast(r, { t: 'back', id }, id);
+        broadcast(r, lobbyState(code));
         break;
       }
       // ---- tchat : {t:'chat', text} → relayé à tout le salon ----
@@ -126,10 +149,32 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (!roomCode || !rooms[roomCode]) return;
     const room = rooms[roomCode];
+    const code = roomCode;
+    const me = room.clients.get(id);
     room.clients.delete(id);
-    if (room.clients.size === 0) { delete rooms[roomCode]; return; }
+
+    // partie en cours : on garde le siège au chaud (ghost), l'hôte reste hôte
+    if (room.started && me) {
+      const gid = id;
+      const g = { id: gid, name: me.name };
+      g.timer = setTimeout(() => {
+        if (!rooms[code]) return;
+        delete room.ghosts[me.token];
+        if (room.clients.size === 0 && !Object.keys(room.ghosts).length) { delete rooms[code]; return; }
+        if (room.hostId === gid && room.clients.size) {   // l'hôte ne reviendra plus
+          room.hostId = [...room.clients.keys()][0];
+          broadcast(room, lobbyState(code));
+        }
+      }, GHOST_TTL);
+      room.ghosts[me.token] = g;
+      broadcast(room, lobbyState(code));
+      broadcast(room, { t: 'left', id });
+      return;
+    }
+
+    if (room.clients.size === 0) { delete rooms[code]; return; }
     if (room.hostId === id) room.hostId = [...room.clients.keys()][0];   // l'hôte suivant reprend
-    broadcast(room, lobbyState(roomCode));
+    broadcast(room, lobbyState(code));
     broadcast(room, { t: 'left', id });
   });
 });

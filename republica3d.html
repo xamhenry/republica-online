@@ -78,6 +78,17 @@
   #deployBar b { color:#ffd166; }
   #deployBar .dep-hint { font-size:11px; color:#9ab; margin-top:3px; }
   #deployBar .mbtn { margin-top:8px; padding:7px 18px; font-size:14px; }
+  #deployBar { max-height:calc(100% - 20px); overflow-y:auto; }
+
+  /* panneau de déploiement / mouvements (boutons + et −) */
+  .dep-sites { display:flex; flex-direction:column; gap:4px; margin:8px 0 2px; text-align:left; }
+  .dep-row { display:flex; align-items:center; gap:8px; background:#10131a99; border:1px solid #3a4358; border-radius:8px; padding:4px 8px; font-size:12px; }
+  .dep-row b { flex:1; color:#e8e2d0; }
+  .dep-row .dinfo { font-size:10px; color:#8fa3c7; white-space:nowrap; }
+  .dep-row .dcount { min-width:22px; text-align:center; color:#ffd166; font-weight:bold; font-size:16px; }
+  .dep-btn { width:36px; height:36px; border-radius:8px; border:none; font-size:18px; font-weight:bold; cursor:pointer; background:#3a4358; color:#eee; flex-shrink:0; }
+  .dep-btn.plus { background:#ffd166; color:#221c10; }
+  .dep-btn:disabled { opacity:.35; cursor:not-allowed; }
 
   #handBoard {
     position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
@@ -219,6 +230,11 @@
     #handCards .gcard { width:78px; min-height:92px; }
     #coupSides { font-size:10px; max-width:150px; padding:6px 8px; line-height:1.5; }
     #deployBar { font-size:11.5px; padding:8px 10px; max-width:96%; }
+
+    /* pendant un coup d'état : priorité à la carte */
+    body.coupview #boardWrap { height:62vh; height:62dvh; }
+    body.coupview #handBoard { display:none; }
+    #diceTray { top:auto !important; bottom:calc(10px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); }
   }
 
   /* petits écrans : écrans titre/lobby défilables, modales et dés compacts */
@@ -264,6 +280,12 @@
 </div>
 
 <div id="toast"></div>
+
+<div id="reconnectOverlay" class="hidden" style="position:fixed; inset:0; z-index:400; background:rgba(5,7,10,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:20px;">
+  <div style="font-size:44px;">📡</div>
+  <div id="reconnectMsg" style="color:#ffd166; font-weight:bold; letter-spacing:1px; font-size:16px;">Connexion perdue — reconnexion…</div>
+  <div style="color:#8fa3c7; font-size:12px; max-width:320px; line-height:1.6;">Votre siège est gardé 15 minutes : une IA vous remplace en attendant, vous reprendrez la partie là où elle en est.</div>
+</div>
 
 <div id="helpOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(5,7,10,.85); z-index:180; display:flex; align-items:center; justify-content:center; padding:16px;">
   <div style="background:#1a1e29; border:2px solid #ffd166; border-radius:12px; max-width:620px; width:100%; padding:22px; max-height:88vh; overflow-y:auto;">
@@ -412,7 +434,7 @@ let ROLES_ACTIVE = ROLES.slice(0,5);   // défini au lancement selon le nombre d
 const LOCATIONS = [
   { id:'residence', icon:'🏠', name:'Résidence',   desc:'Votre bureau et vos dossiers : +1 carte piochée en fin de tour. Mais tout le monde connaît l\'adresse.' },
   { id:'banque',    icon:'🏦', name:'Banque',      desc:'Déposez votre argent de poche en Suisse. Très prévisible : les tueurs adorent.' },
-  { id:'planque',   icon:'🌙', name:'Chez l\'amante', desc:'Discret : les assassins la trouvent rarement. Aucun bonus, mais on dort tranquille.' },
+  { id:'planque',   icon:'🌙', name:'Chez l\'amante', desc:'Discret : les assassins la trouvent rarement. Et ses relations bien placées vous glissent +1 M$ au petit matin.' },
   { id:'ambassade', icon:'🏛', name:'Ambassade',   desc:'Intouchable. Mais ni dépôt, ni carte bonus : une nuit perdue.' },
 ];
 
@@ -1064,6 +1086,13 @@ async function phaseNight(){
     if (frustrated.length) log('🌀 La banque était fermée à cause du cyclone ! '+frustrated.map(p=>p.name).join(', ')+' repart(ent) bredouille(s).', 'red');
   }
   G.bankClosed = false;
+
+  // chez l'amante : ses relations bien placées rapportent 1 M$ au petit matin
+  const choyes = G.players.filter(p=>p.alive && p.night==='planque');
+  if (choyes.length){
+    choyes.forEach(p=>{ p.pocket += 1; });
+    log('🌙 Nuit douce pour '+choyes.map(p=>'<b>'+p.name+'</b>').join(', ')+' : les relations de l\'amante rapportent <b>+1 M$</b> (en poche).', 'gold');
+  }
   renderPlayers();
   await sleep(900);
 }
@@ -1491,12 +1520,31 @@ function humanDeploy(army, side){
     const alloc = {}; COUP_SITES.forEach(s=> alloc[s.id]=0);
     V.deploy = { mode:'deploy', side, key, alloc, rest: army };
     const bar = document.getElementById('deployBar');
+    const foe = key==='r' ? 'l' : 'r';
     const render = ()=>{
-      bar.innerHTML = '<b>'+sideTxt+' — À vous de déployer</b> · Vos unités restantes : <b>'+V.deploy.rest+'</b>'
-        + '<div class="dep-hint">' + (IS_TOUCH ? 'Touchez' : 'Cliquez') + ' un site pour y placer une de VOS unités · ' + (IS_TOUCH ? 'appui long' : 'clic droit') + ' pour la reprendre · les troupes déjà visibles sont celles des autres ministres'
-        + (side==='rebel' ? ' · <b>Palais interdit au déploiement</b> (il faudra le prendre d\'assaut !)' : '')
-        + '</div>'
-        + '<button class="mbtn danger" id="depOk">EN POSITION</button>';
+      const u = V.coupUnits;
+      let rows = '';
+      COUP_SITES.forEach(s=>{
+        const locked = (side==='rebel' && s.id==='palais');
+        const mine = V.deploy.alloc[s.id];
+        const allies = u ? Math.max(0, u[s.id][key] - mine) : 0;
+        const foes = u ? u[s.id][foe] : 0;
+        rows += '<div class="dep-row"><b>'+s.name+(s.id==='palais'?' ×2':'')+'</b>'
+          + '<span class="dinfo">'+(locked ? '🔒 à prendre d\'assaut' : ('alliés '+allies+' · ennemis '+foes))+'</span>'
+          + (locked ? '' :
+            '<button class="dep-btn" data-m="r" data-s="'+s.id+'"'+(mine<=0?' disabled':'')+'>−</button>'
+            + '<span class="dcount">'+mine+'</span>'
+            + '<button class="dep-btn plus" data-m="a" data-s="'+s.id+'"'+(V.deploy.rest<=0?' disabled':'')+'>+</button>')
+          + '</div>';
+      });
+      bar.innerHTML = '<b>'+sideTxt+'</b> — répartissez vos <b>'+army+'</b> unités · reste : <b>'+V.deploy.rest+'</b>'
+        + '<div class="dep-sites">'+rows+'</div>'
+        + '<div class="dep-hint">Chaque site vaut 1 point, le <b>Palais 2</b> — majorité à 4/6 pour les rebelles. Ensuite : 2 manches de mouvements, et chaque site disputé se joue aux dés (unités + 1d6).'
+        + ' Les boutons et la carte '+(IS_TOUCH?'(toucher un site)':'(clic / clic droit)')+' font la même chose.</div>'
+        + '<button class="mbtn danger" id="depOk"'+(V.deploy.rest>0?' disabled':'')+'>EN POSITION</button>';
+      bar.querySelectorAll('.dep-btn').forEach(btn=>{
+        btn.onclick = ()=> coupMapClick(COUP_SITES.find(s=>s.id===btn.dataset.s), btn.dataset.m==='r');
+      });
       document.getElementById('depOk').onclick = ()=>{
         const a = V.deploy ? { ...V.deploy.alloc } : {};
         bar.classList.add('hidden');
@@ -1506,7 +1554,7 @@ function humanDeploy(army, side){
     V.deploy.render = render;
     render();
     bar.classList.remove('hidden');
-    toast('Placez vos '+army+' unités sur la carte !', 2400);
+    toast('Répartissez vos '+army+' unités !', 2400);
   });
 }
 
@@ -1567,14 +1615,38 @@ function humanMove(units, side, round){
     const key = side==='rebel' ? 'r' : 'l';
     V.deploy = { mode:'move', side, key, sel:null, moved:{} };  // moved[siteId] = unités déjà arrivées (ne rebougent pas)
     const bar = document.getElementById('deployBar');
+    const foe = key==='r' ? 'l' : 'r';
     const render = ()=>{
-      const selName = V.deploy.sel ? COUP_SITES.find(s=>s.id===V.deploy.sel).name : null;
-      bar.innerHTML = '<b>'+sideTxt+' — Manche '+round+' : mouvements</b>'
-        + '<div class="dep-hint">' + (selName
-          ? '<b>'+selName+'</b> sélectionné → cliquez un site <b>adjacent</b> pour y déplacer 1 unité (clic répété = plusieurs) · re-cliquez la source pour désélectionner'
-          : 'Cliquez un de VOS sites (halo plein) pour sélectionner ses troupes, puis un site adjacent en pointillés. Les unités arrivées ne rebougent plus ce tour.')
-        + '</div>'
+      const u = V.coupUnits;
+      const sel = V.deploy.sel;
+      let body = '';
+      if (!sel){
+        const srcs = COUP_SITES.filter(s=> u && (u[s.id][key] - (V.deploy.moved[s.id]||0)) > 0);
+        body = srcs.length
+          ? '<div class="dep-hint"><b>1.</b> D\'où partent vos troupes ?</div><div class="dep-sites">'
+            + srcs.map(s=> '<div class="dep-row"><b>'+s.name+'</b>'
+              + '<span class="dinfo">'+(u[s.id][key]-(V.deploy.moved[s.id]||0))+' unité(s) mobile(s)</span>'
+              + '<button class="dep-btn plus" data-s="'+s.id+'">▶</button></div>').join('')
+            + '</div>'
+          : '<div class="dep-hint">Vous n\'avez aucune unité mobile : validez pour passer.</div>';
+      } else {
+        const sName = COUP_SITES.find(s=>s.id===sel).name;
+        const mob = u[sel][key] - (V.deploy.moved[sel]||0);
+        body = '<div class="dep-hint"><b>2.</b> Depuis <b>'+sName+'</b> ('+mob+' mobile(s)) — chaque ➜ envoie 1 unité vers un site voisin :</div><div class="dep-sites">'
+          + ADJ[sel].map(a=>{ const s = COUP_SITES.find(c=>c.id===a);
+              return '<div class="dep-row"><b>'+s.name+(a==='palais'?' ×2':'')+'</b>'
+                + '<span class="dinfo">vous '+u[a][key]+' · ennemis '+u[a][foe]+'</span>'
+                + '<button class="dep-btn plus" data-s="'+a+'">➜ 1</button></div>'; }).join('')
+          + '</div><button class="mbtn alt" id="depBack" style="margin-top:6px; padding:6px 14px; font-size:12px;">↩ Autre site de départ</button>';
+      }
+      bar.innerHTML = '<b>'+sideTxt+' — Manche '+round+' : mouvements</b>' + body
+        + '<div class="dep-hint">Les unités déplacées ne rebougent plus cette manche. La carte reste utilisable aussi'+(IS_TOUCH?' (touchez source puis destination)':'')+'.</div>'
         + '<button class="mbtn danger" id="depOk">FIN DES MOUVEMENTS</button>';
+      bar.querySelectorAll('.dep-btn').forEach(btn=>{
+        btn.onclick = ()=> coupMapClick(COUP_SITES.find(s=>s.id===btn.dataset.s), false);
+      });
+      const back = document.getElementById('depBack');
+      if (back) back.onclick = ()=>{ V.deploy.sel = null; render(); };
       document.getElementById('depOk').onclick = ()=>{
         const mv = (V.deploy && V.deploy.movesLog) || [];
         bar.classList.add('hidden'); V.deploy = null; res(mv);
@@ -1966,6 +2038,7 @@ document.querySelectorAll('.sel-diff').forEach(b=> b.onclick = ()=>{
 });
 
 document.getElementById('startGameBtn').onclick = async ()=>{
+  keepAwake();
   const nm = (document.getElementById('playerName').value || '').trim();
   NAMES[0] = nm || 'Vous';
   document.getElementById('titleScreen').classList.add('hidden');
@@ -2537,6 +2610,8 @@ fx = {
     V.flags = {};
     vignette.style.opacity = 1;
     camShake = 0.5;
+    document.body.classList.add('coupview');    // mobile : priorité à la carte
+    setTimeout(resize3d, 60);
   },
   battle(siteData, rebelWin){
     const p = SITE3D[siteData.id];
@@ -2556,6 +2631,8 @@ fx = {
   endCoup(){
     V.coupMode = false;
     vignette.style.opacity = 0;
+    document.body.classList.remove('coupview');
+    setTimeout(resize3d, 60);
     setTimeout(()=>{ fires.forEach(f=> f.life = Math.min(f.life, 2)); V.flags = {}; }, 4000);
   },
   execution(){
@@ -2852,17 +2929,46 @@ const NET = {
   lobby:[],                 // [{id, name}]
   promptSeq:0, pending:{},  // promptId -> resolve
   peerBySeat:{}, seatByPeer:{},
+  serverUrl:null, token:null, started:false, reconnecting:false, pingT:null,
 
   connect(url){
+    NET.serverUrl = url;
     return new Promise((res, rej)=>{
       try{
         const ws = new WebSocket(url);
-        ws.onopen = ()=>{ NET.ws = ws; res(); };
+        ws.onopen = ()=>{
+          NET.ws = ws;
+          clearInterval(NET.pingT);   // battement de cœur : évite la coupure des connexions inactives
+          NET.pingT = setInterval(()=>{ if (NET.ws===ws && ws.readyState===1) ws.send('{"t":"ping"}'); }, 25000);
+          res();
+        };
         ws.onerror = ()=> rej(new Error('Connexion impossible'));
         ws.onmessage = e=>{ try{ NET.onMessage(JSON.parse(e.data)); }catch(err){} };
-        ws.onclose = ()=>{ if (NET.active) toast('⚠️ Connexion au serveur perdue', 4000); };
+        ws.onclose = ()=>{
+          if (NET.ws !== ws) return;
+          NET.ws = null; clearInterval(NET.pingT);
+          if (!NET.active) return;
+          if (NET.started) NET.tryRejoin();
+          else toast('⚠️ Connexion au serveur perdue', 4000);
+        };
       }catch(e){ rej(e); }
     });
+  },
+  // ---- reconnexion : le serveur garde le siège 15 min, on retente en boucle ----
+  tryRejoin(){
+    if (NET.reconnecting || !NET.started || !NET.token) return;
+    NET.reconnecting = true;
+    document.getElementById('reconnectMsg').textContent = '📡 Connexion perdue — reconnexion…';
+    document.getElementById('reconnectOverlay').classList.remove('hidden');
+    NET.rejoinAttempt();
+  },
+  async rejoinAttempt(){
+    if (!NET.reconnecting) return;
+    try{
+      if (!NET.ws || NET.ws.readyState !== 1) await NET.connect(NET.serverUrl);
+      NET.send({ t:'rejoin', code:NET.roomCode, token:NET.token });
+    }catch(e){}
+    setTimeout(()=>{ if (NET.reconnecting) NET.rejoinAttempt(); }, 5000);
   },
   send(o){ if (NET.ws && NET.ws.readyState===1) NET.ws.send(JSON.stringify(o)); },
   event(data){ if (NET.active && NET.isHost) NET.send({ t:'event', data }); },
@@ -2906,6 +3012,7 @@ const NET = {
       case 'created':
       case 'joined': {
         NET.myPeerId = msg.you; NET.roomCode = msg.code; NET.active = true;
+        NET.token = msg.token || NET.token;
         NET.isHost = (msg.t==='created');
         document.getElementById('lobbyRoom').classList.remove('hidden');
         document.getElementById('lobbyRoomCode').textContent = msg.code;
@@ -2913,7 +3020,36 @@ const NET = {
         if (NET.isHost) document.getElementById('lobbyStart').classList.remove('hidden');
         break;
       }
-      case 'error': document.getElementById('lobbyStatus').textContent = msg.error; break;
+      case 'error': {
+        if (NET.reconnecting){   // siège expiré ou salon fermé : inutile d'insister
+          NET.reconnecting = false;
+          document.getElementById('reconnectMsg').textContent = '⛔ ' + msg.error;
+          break;
+        }
+        document.getElementById('lobbyStatus').textContent = msg.error; break;
+      }
+      case 'rejoined': {
+        NET.myPeerId = msg.you;
+        NET.reconnecting = false;
+        document.getElementById('reconnectOverlay').classList.add('hidden');
+        toast('✅ De retour dans la partie !', 3000);
+        break;
+      }
+      case 'back': {
+        const seat = NET.seatByPeer[msg.id];
+        if (NET.isHost && seat !== undefined && G.players[seat]){
+          const p = G.players[seat];
+          p.remote = true; p.ai = null;
+          NET.peerBySeat[seat] = msg.id;
+          log('🔌 <b>'+p.name+'</b> est de retour et reprend son poste !', 'green');
+          renderPlayers(); renderHand();   // resynchronise banque/poche/main chez lui
+          // relancer les questions encore en attente pour ce siège
+          Object.entries(NET.pending).forEach(([pid, pd])=>{
+            if (pd.seat === seat) NET.event({ kind:'prompt', only:seat, prompt:{ id:+pid, kind:pd.kind, payload:pd.payload } });
+          });
+        }
+        break;
+      }
       case 'lobby': {
         NET.lobby = msg.players;
         if (msg.hostId !== undefined) NET.isHost = (msg.hostId === NET.myPeerId);
@@ -2936,8 +3072,8 @@ const NET = {
         if (NET.isHost && seat !== undefined && G.players[seat]){
           const p = G.players[seat];
           p.remote = false; p.ai = p.ai || 'opportuniste';
-          delete NET.peerBySeat[seat]; delete NET.seatByPeer[msg.id];
-          log('🔌 '+p.name+' a quitté : une IA reprend son poste.', 'red');
+          // on GARDE le mapping siège<->pair : le serveur lui rend le même id s'il revient
+          log('🔌 '+p.name+' est déconnecté : une IA garde son poste au chaud (15 min pour revenir).', 'red');
           // répondre aux prompts en cours de ce siège
           Object.entries(NET.pending).forEach(([id, pd])=>{
             if (pd.seat === seat){ delete NET.pending[id]; pd.res(NET.fallback(pd.kind, pd.p, pd.payload)); }
@@ -3002,7 +3138,7 @@ function clientEvent(d){
     }
     case 'dicetray': {
       const tray = document.getElementById('diceTray');
-      document.getElementById('diceSite').textContent = '🏛 BATAILLE : '+d.site;
+      document.getElementById('diceSite').textContent = '🏛 BATAILLE : '+d.site+' — l\'hôte lance les dés…';
       document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display='none');
       document.getElementById('drTotal').textContent = '…';
       document.getElementById('dlTotal').textContent = '…';
@@ -3042,6 +3178,8 @@ function clientEvent(d){
 
 function clientStart(config){
   // le client attend l'événement init de l'hôte ; on prépare juste l'écran
+  NET.started = true;
+  keepAwake();
   document.getElementById('lobbyScreen').classList.add('hidden');
   setPhase('Connexion à la République…');
 }
@@ -3239,6 +3377,25 @@ const voice = {
 };
 
 // ---------------------------------------------------------------------
+// ANTI-VEILLE : garder l'écran allumé pendant la partie (Wake Lock API)
+// + à la remise au premier plan, reconnexion immédiate si nécessaire
+// ---------------------------------------------------------------------
+let wakeLock = null;
+async function keepAwake(){
+  try{
+    if (navigator.wakeLock && !wakeLock){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', ()=>{ wakeLock = null; });
+    }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState !== 'visible') return;
+  keepAwake();   // le wake lock est relâché quand l'onglet passe en arrière-plan
+  if (NET.active && NET.started && (!NET.ws || NET.ws.readyState !== 1)) NET.tryRejoin();
+});
+
+// ---------------------------------------------------------------------
 // LOBBY : branchements
 // ---------------------------------------------------------------------
 try{ document.getElementById('lobbyServer').value = localStorage.getItem('repServer') || ''; }catch(e){}
@@ -3281,6 +3438,8 @@ document.getElementById('lobbyStart').onclick = ()=>{
   hostStart(humans, count, 'normal');
 };
 async function hostStart(humans, count, difficulty){
+  NET.started = true;
+  keepAwake();
   document.getElementById('lobbyScreen').classList.add('hidden');
   G.difficulty = difficulty;
   const defaults = ['Gén. Morales','Col. Vásquez','Doña Ferreira','Dr Ocampo','Amiral Bautista','Sra Quintero'];
