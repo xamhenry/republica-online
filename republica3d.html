@@ -409,7 +409,11 @@
   <h1 id="endTitle">FIN DE PARTIE</h1>
   <div class="tagline" id="endTag"></div>
   <div class="rules" id="endBoard"></div>
-  <button class="mbtn" onclick="location.reload()">Nouvelle république</button>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+    <button class="mbtn hidden" id="replayBtn">🔄 Rejouer (même salon)</button>
+    <button class="mbtn alt" onclick="location.reload()">Nouvelle république</button>
+  </div>
+  <div id="replayHint" class="hidden" style="margin-top:8px; font-size:12px; color:#8fa3c7;">Restez sur cet écran : si l'hôte relance, vous serez embarqué automatiquement.</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -729,8 +733,14 @@ async function phaseBudget(){
     fx.moneyRain();
   } else {
     log('❌ Budget REJETÉ ('+result.yes+' pour, '+result.no+' contre) ! L\'aide repart... et la rue gronde.', 'red');
-    G.coupJustified = true;
     fx.angryCrowd();
+    // un rejet ne suffit plus à lui seul : une fois sur deux, l'armée hésite
+    if (Math.random() < 0.5){
+      G.coupJustified = true;
+      log('🪖 Les casernes s\'agitent : un coup d\'État devient possible ce tour !', 'red');
+    } else {
+      log('🪖 Les casernes grondent, mais restent fidèles… pour cette fois.');
+    }
     G.players.forEach((p,i)=>{ if(i!==G.presidentIdx && alloc[i]<2) p.grudge[G.presidentIdx]+=1; });
   }
   renderPlayers();
@@ -2002,6 +2012,7 @@ function endGame(){
     html += (i+1)+'. <span style="color:'+p.color+'"><b>'+p.name+'</b></span> — 🏦 '+p.bank+' M$ (poche : '+p.pocket+' M$)<br>';
   });
   document.getElementById('endBoard').innerHTML = html;
+  showEndButtons();
   document.getElementById('endScreen').classList.remove('hidden');
   NET.event({ kind:'end',
     title: document.getElementById('endTitle').textContent,
@@ -2972,6 +2983,7 @@ const NET = {
   promptSeq:0, pending:{},  // promptId -> resolve
   peerBySeat:{}, seatByPeer:{},
   serverUrl:null, token:null, started:false, reconnecting:false, pingT:null,
+  gameGen:0,      // numéro de partie : gèle les boucles des parties précédentes (REJOUER)
   awaySeats:{},   // seat -> nom : joueurs déconnectés, la partie est en pause tant qu'il y en a
 
   // la boucle de jeu de l'hôte s'arrête ici (via sleep) tant que la pause dure
@@ -3233,6 +3245,7 @@ function clientEvent(d){
       document.getElementById('endTitle').textContent = d.title;
       document.getElementById('endTag').textContent = d.tag;
       document.getElementById('endBoard').innerHTML = d.board;
+      showEndButtons();
       document.getElementById('endScreen').classList.remove('hidden');
       fx.confetti && fx.confetti();
       break;
@@ -3242,9 +3255,13 @@ function clientEvent(d){
 
 function clientStart(config){
   // le client attend l'événement init de l'hôte ; on prépare juste l'écran
+  // (sert aussi au REJOUER : l'hôte relance, tout le monde suit sans re-saisir de code)
   NET.started = true;
   keepAwake();
   document.getElementById('lobbyScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('log').innerHTML = '';
+  pauseHide();
   setPhase('Connexion à la République…');
 }
 
@@ -3493,6 +3510,7 @@ document.getElementById('pauseQuit').onclick = ()=>{
   document.getElementById('endTitle').textContent = 'PARTIE INTERROMPUE';
   document.getElementById('endTag').textContent = 'Vous avez mis fin à la partie.';
   document.getElementById('endBoard').innerHTML = board;
+  showEndButtons();
   document.getElementById('endScreen').classList.remove('hidden');
 };
 
@@ -3549,6 +3567,27 @@ document.getElementById('lobbySolo').onclick = ()=>{
 };
 document.getElementById('voiceBtn').onclick = ()=> voice.enabled ? voice.disable() : voice.enable();
 
+// REJOUER dans le même salon : l'hôte relance, les clients suivent via {t:'start'}
+// — personne ne re-saisit ni adresse ni code.
+document.getElementById('replayBtn').onclick = ()=>{
+  if (!NET.active || !NET.isHost) return;
+  NET.gameGen++;                                            // gèle une éventuelle boucle interrompue
+  Object.keys(NET.pending).forEach(k=> delete NET.pending[k]);
+  NET.awaySeats = {}; pauseHide();
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('log').innerHTML = '';
+  const humans = [ ...NET.lobby.filter(p=>p.id===NET.myPeerId), ...NET.lobby.filter(p=>p.id!==NET.myPeerId) ];
+  const count = Math.max(5, Math.min(7, humans.length));
+  NET.send({ t:'start', config:{ count } });
+  hostStart(humans, count, 'normal');
+};
+// affiche les bons boutons de fin selon le rôle en ligne
+function showEndButtons(){
+  const online = NET.active && NET.started;
+  document.getElementById('replayBtn').classList.toggle('hidden', !(online && NET.isHost));
+  document.getElementById('replayHint').classList.toggle('hidden', !(online && !NET.isHost));
+}
+
 // l'hôte lance : humains = joueurs du salon (hôte = siège 0), le reste en IA
 document.getElementById('lobbyStart').onclick = ()=>{
   if (!NET.isHost) return;
@@ -3561,6 +3600,9 @@ async function hostStart(humans, count, difficulty){
   NET.started = true;
   keepAwake();
   document.getElementById('lobbyScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+  // remise à zéro de l'état global (utile au REJOUER)
+  G.aidPenalty = 0; G.coupJustified = false; G.coupBlocked = false; G.bankClosed = false; G.siteOwners = {};
   G.difficulty = difficulty;
   const defaults = ['Gén. Morales','Col. Vásquez','Doña Ferreira','Dr Ocampo','Amiral Bautista','Sra Quintero'];
   humans.forEach((h,i)=> NAMES[i] = h.name);
@@ -3589,10 +3631,16 @@ async function hostStart(humans, count, difficulty){
 // INSTRUMENTATION HÔTE : diffuser journal, phases, effets, état
 // ---------------------------------------------------------------------
 function netifyHost(){
-  if (!NET.active || !NET.isHost) return;
-  // pause : la boucle de jeu marque un arrêt à chaque sleep tant qu'un joueur est déconnecté
+  if (!NET.active || !NET.isHost || NET.netified) return;   // ne jamais ré-emballer (REJOUER)
+  NET.netified = true;
+  // pause : la boucle de jeu marque un arrêt à chaque sleep tant qu'un joueur est
+  // déconnecté ; et si une nouvelle partie a été relancée (gameGen), la boucle de
+  // l'ancienne partie reste gelée pour toujours.
   const _sleep = sleep;
-  sleep = (ms)=> _sleep(ms).then(()=> NET.pauseGate());
+  sleep = (ms)=>{
+    const gen = NET.gameGen;
+    return _sleep(ms).then(()=> NET.pauseGate()).then(()=> new Promise(r=>{ if (gen === NET.gameGen) r(); }));
+  };
   const _log = log;
   NET.rawLog = _log;
   log = (txt, cls)=>{ _log(txt, cls); NET.event({ kind:'log', txt, cls }); };
