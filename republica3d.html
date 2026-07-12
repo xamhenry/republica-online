@@ -2204,22 +2204,26 @@ function box(w,h,d, color, x,y,z, parent){
 const spriteCache = {};
 function textSprite(txt, color, size){
   const key = txt+'|'+color;
-  let tex = spriteCache[key];
-  if (!tex){
+  let entry = spriteCache[key];
+  if (!entry){
+    // le canvas s'adapte à la largeur du texte : plus aucun titre tronqué
     const c = document.createElement('canvas');
-    c.width = 256; c.height = 80;
-    const g = c.getContext('2d');
+    const meas = c.getContext('2d');
+    meas.font = 'bold 44px Segoe UI, Arial';
+    const w = Math.max(64, Math.ceil(meas.measureText(txt).width) + 44);   // marge pour l'ombre portée
+    c.width = w; c.height = 80;
+    const g = c.getContext('2d');   // (changer width réinitialise le contexte)
     g.font = 'bold 44px Segoe UI, Arial';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.shadowColor = '#000'; g.shadowBlur = 10;
     g.fillStyle = color;
-    g.fillText(txt, 128, 40);
-    tex = new THREE.CanvasTexture(c);
-    spriteCache[key] = tex;
+    g.fillText(txt, w/2, 40);
+    entry = { tex: new THREE.CanvasTexture(c), aspect: w/80 };
+    spriteCache[key] = entry;
   }
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthWrite:false }));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:entry.tex, transparent:true, depthWrite:false }));
   const s = size || 1;
-  sp.scale.set(3.2*s, 1.0*s, 1);
+  sp.scale.set(entry.aspect * s, 1.0 * s, 1);   // hauteur constante, largeur au ratio du texte
   return sp;
 }
 
