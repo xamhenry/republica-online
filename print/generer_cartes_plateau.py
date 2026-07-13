@@ -46,6 +46,7 @@ CATS = {
     'ambition': ('AMBITION',  HexColor('#5b3a6b')),
     'charge':   ('CHARGE',    HexColor('#7a1f1f')),
     'lieu':     ('LIEU',      HexColor('#4a6b3a')),
+    'taille':   ('TAILLE ROYALE', HexColor('#8a6a1a')),
     'aide':     ('AIDE DE JEU', HexColor('#555555')),
 }
 PLAYER_COLORS = ['#e0b34e','#d95f5f','#5f8fd9','#8b7fd9','#4eb98f','#d98b44','#d977a5']
@@ -131,9 +132,13 @@ LIEUX = [
     ('La Favorite','☾','Discret. Ses relations vous glissent +1 écu au petit matin.'),
     ('Monastère','☦','Droit d’asile : intouchable cette nuit. Ni dépôt, ni bonus.'),
 ]
+# Paquet TAILLE : remplace le dé 2d6+4 secret. Le Roi en tire une face cachée
+# (bluff pendant le vote), on la RÉVÈLE juste après le vote → le total est prouvé,
+# le Roi ne peut plus mentir sur ce qu’il garde. Distribution en cloche, moyenne ≈ 11.
+TAILLE_VALUES = [7, 8, 8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 14, 15]
 AIDE_TXT = [
-    ('TOUR DE JEU', ['1. TAILLE — le Roi lance 2d6+4 en secret et propose une répartition.',
-                     '2. VOTE — cartes vote, puis pouces levés/baissés simultanés. Rejet : la taille est perdue et sur 4-6 (1d6) la révolte gronde.',
+    ('TOUR DE JEU', ['1. TAILLE — le Roi tire 1 carte Taille en secret et propose une répartition.',
+                     '2. VOTE — cartes vote, puis pouces levés/baissés simultanés. Puis on RÉVÈLE la carte Taille (preuve). Rejet : taille perdue, et sur 4-6 (1d6) la révolte gronde.',
                      '3. NUIT — chacun pose une carte Planque face cachée ; les attaquants posent cible + Filature. Révélation, résolution.',
                      '4. HÉRAUT — révélez 1 carte Événement.',
                      '5. RÉVOLTE — si elle gronde : camps, déploiement, 3 manches, batailles aux dés.']),
@@ -290,6 +295,31 @@ def cards_pdf():
                 draw_card(c, x, y, 'lieu', n, ic, 'FILATURE : posez cette carte face cachée sur votre cible pour deviner sa planque.',
                           corner='FILATURE — joueur '+str(pi+1), edge=pc))
     emit('LIEU', CATS['lieu'][1], fns)
+
+    # ---- 18 cartes TAILLE (paquet du Roi, révélées après le vote) ----
+    def draw_taille(c, x, y, val):
+        label, col = CATS['taille']
+        c.setFillColor(PARCH); c.setStrokeColor(INK); c.setLineWidth(1.2)
+        c.roundRect(x+1.5*mm, y+1.5*mm, CW-3*mm, CH-3*mm, 3*mm, stroke=1, fill=1)
+        c.setFillColor(col)
+        c.roundRect(x+4*mm, y+CH-12*mm, CW-8*mm, 7*mm, 2*mm, stroke=0, fill=1)
+        c.setFillColor(HexColor('#f8f2e2')); c.setFont(FB, 8)
+        c.drawCentredString(x+CW/2, y+CH-9.6*mm, label)
+        # grand chiffre + couronne
+        c.setFillColor(col); c.setFont(SY, 20)
+        c.drawCentredString(x+CW/2, y+CH-30*mm, '♛')
+        c.setFillColor(INK); c.setFont(FB, 40)
+        c.drawCentredString(x+CW/2, y+CH-56*mm, str(val))
+        c.setFont(F, 8); c.drawCentredString(x+CW/2, y+CH-63*mm, 'écus de taille')
+        c.setStrokeColor(GOLD); c.setLineWidth(0.8)
+        c.line(x+10*mm, y+18*mm, x+CW-10*mm, y+18*mm)
+        c.setFillColor(HexColor('#6b5b3a')); c.setFont(FI if HAS_GI else F, 6.4)
+        for i, ln in enumerate(['Tirée en secret par le Roi.',
+                                'Révélée après le vote : le Roi',
+                                'garde ce total moins les dons.']):
+            c.drawCentredString(x+CW/2, y+13*mm-i*3*mm, ln)
+    fns = [lambda c,x,y,v=v: draw_taille(c, x, y, v) for v in TAILLE_VALUES]
+    emit('TAILLE ROYALE', CATS['taille'][1], fns)
 
     # ---- 7 Aides de jeu ----
     def draw_aide(c, x, y):

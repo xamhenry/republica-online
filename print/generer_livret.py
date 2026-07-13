@@ -38,7 +38,7 @@ S_NOTE = ParagraphStyle('note', parent=S_BODY, fontName=FI, textColor=HexColor('
 S_EX = ParagraphStyle('ex', parent=S_BODY, fontName=FI, fontSize=8.8, textColor=HexColor('#555555'),
                       leftIndent=6*mm)
 
-GLYPHS = '⚜☠◉♛☾☦⚔⚑⚒⚓†✠★'
+GLYPHS = '⚜☠◉♛☾☦⚔⚑⚒⚓†✠★①②③④⑤'
 def sym_wrap(t):
     for g in GLYPHS:
         t = t.replace(g, '<font name="'+SY+'">'+g+'</font>')
@@ -109,6 +109,7 @@ def build():
         ['18', 'cartes ÉVÉNEMENT'],
         ['12', 'cartes AMBITION secrète'],
         ['7',  'cartes CHARGE (Roi, Connétable, Maître des Engins, Maître des Assassins, Chancelier, Amiral de France, Capitaine des Routiers)'],
+        ['18', 'cartes TAILLE (le revenu royal — valeurs 7 à 15)'],
         ['56', 'cartes LIEU : pour chaque joueur, 4 cartes PLANQUE + 4 cartes FILATURE'],
         ['7',  'cartes AIDE DE JEU'],
         ['52', 'écus (40 × « 1 », 12 × « 5 »)'],
@@ -131,7 +132,7 @@ def build():
     # ---------- 3. MISE EN PLACE ----------
     st.append(P('3. Mise en place', S_H1))
     for tx in [
-        'Placez le plateau au centre. Mélangez les cartes ACTION (pioche) et ÉVÉNEMENT (pile face cachée). Marqueur de tour sur la case 1.',
+        'Placez le plateau au centre. Mélangez séparément la pioche ACTION, la pile ÉVÉNEMENT et la pioche TAILLE, toutes face cachée. Marqueur de tour sur la case 1.',
         'À 5 joueurs, retirez l’Amiral de France et le Capitaine des Routiers ; à 6, retirez seulement le Capitaine. Mélangez les cartes CHARGE et distribuez-en une à chacun, face visible. Celui qui reçoit <b>Le Roi</b> prend la couronne.',
         'Chacun reçoit ses 8 cartes LIEU (4 Planque, 4 Filature), une aide de jeu, et pioche <b>2 cartes ACTION</b> (3 pour le Chancelier).',
         'Mélangez les AMBITIONS et distribuez-en une à chacun, <b>face cachée</b>. Regardez-la, ne la montrez à personne.',
@@ -142,16 +143,23 @@ def build():
     # ---------- 4. TOUR DE JEU ----------
     st.append(P('4. Le tour de jeu — cinq phases', S_H1))
     st.append(P('① La taille royale', S_H2))
-    st.append(P('Le Roi lance <b>2d6+4 en secret</b> (derrière son paravent) et prend autant d’écus de la réserve, '
-                'cachés. Il propose ensuite à voix haute une répartition : « tant pour untel, tant pour untel… ». '
-                'Il n’est pas obligé de dire le total — <i>ce qu’il n’alloue pas glisse dans sa poche</i>.'))
+    st.append(P('Le Roi <b>pioche une carte TAILLE</b> et la regarde sans la montrer : c’est le revenu du royaume '
+                'ce tour (un nombre entre 7 et 15). Il la garde <b>face cachée</b> devant lui et propose à voix '
+                'haute une répartition : « tant pour untel, tant pour untel… ». Il n’annonce pas le total — '
+                'les barons votent sans savoir combien le Roi garde pour lui. <i>Ce qui n’est pas donné file dans '
+                'sa poche.</i>'))
     st.append(P('② Le vote du Conseil', S_H2))
     st.append(P('Chacun peut d’abord jouer des cartes VOTE ou ÉCUS de sa main (elles se défaussent). '
                 'Puis tous votent <b>simultanément</b> au compte de trois : pouce levé (pour) ou baissé (contre). '
-                'Chaque baron vivant = 1 voix, le Chancelier = 2, plus les bonus de cartes. '
-                'Le Roi vote aussi. <b>Adopté</b> : chacun prend les écus annoncés (en poche), le Roi garde le reste. '
-                '<b>Rejeté</b> : toute la taille retourne à la réserve, et le Roi lance 1d6 — sur <b>4-6</b>, '
-                'la révolte gronde (voir phase ⑤).'))
+                'Chaque baron vivant = 1 voix, le Chancelier = 2, plus les bonus de cartes. Le Roi vote aussi.'))
+    st.append(P('Puis <b>le Roi retourne la carte TAILLE</b> : le total est désormais public et prouvé. '
+                'Chacun voit ce que le Roi s’est gardé — de quoi nourrir bien des rancunes. '
+                '<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend le reste (valeur de la carte '
+                'moins les dons) ; la carte va à la défausse. <b>Rejeté</b> : toute la taille retourne à la réserve '
+                '(le Roi ne garde rien), et il lance 1d6 — sur <b>4-6</b>, la révolte gronde (voir phase ⑤).'))
+    st.append(P('Pourquoi une carte plutôt qu’un dé ? Parce que sans arbitre, un total secret « au dé » ne se '
+                'vérifie pas : le Roi pourrait mentir sur ce qu’il garde. La carte, révélée après le vote, tranche '
+                'sans discussion — le bluff dure le temps du vote, la preuve arrive juste après.', S_NOTE))
     st.append(P('③ La nuit', S_H2))
     st.append(P('Voir le chapitre 5 — c’est le cœur du jeu : planques, dagues et coffres.'))
     st.append(P('④ Le héraut', S_H2))
