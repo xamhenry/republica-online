@@ -152,14 +152,20 @@ def build():
     st.append(P('Chacun peut d’abord jouer des cartes VOTE ou ÉCUS de sa main (elles se défaussent). '
                 'Puis tous votent <b>simultanément</b> au compte de trois : pouce levé (pour) ou baissé (contre). '
                 'Chaque baron vivant = 1 voix, le Chancelier = 2, plus les bonus de cartes. Le Roi vote aussi.'))
-    st.append(P('Puis <b>le Roi retourne la carte TAILLE</b> : le total est désormais public et prouvé. '
-                'Chacun voit ce que le Roi s’est gardé — de quoi nourrir bien des rancunes. '
-                '<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend le reste (valeur de la carte '
-                'moins les dons) ; la carte va à la défausse. <b>Rejeté</b> : toute la taille retourne à la réserve '
-                '(le Roi ne garde rien), et il lance 1d6 — sur <b>4-6</b>, la révolte gronde (voir phase ⑤).'))
-    st.append(P('Pourquoi une carte plutôt qu’un dé ? Parce que sans arbitre, un total secret « au dé » ne se '
-                'vérifie pas : le Roi pourrait mentir sur ce qu’il garde. La carte, révélée après le vote, tranche '
-                'sans discussion — le bluff dure le temps du vote, la preuve arrive juste après.', S_NOTE))
+    st.append(P('<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend discrètement le reste '
+                '(valeur de la carte moins les dons) et <b>glisse la carte TAILLE face cachée devant lui</b>, '
+                'dans sa réserve royale — <i>sans la montrer</i>. Le total reste secret : nul ne sait vraiment '
+                'combien le Roi s’est engraissé. <b>Rejeté</b> : toute la taille retourne à la réserve (le Roi ne '
+                'garde rien), la carte va à la défausse, et il lance 1d6 — sur <b>4-6</b>, la révolte gronde '
+                '(voir phase ⑤).'))
+    st.append(P('Pourquoi une carte plutôt qu’un dé ? Parce qu’un dé secret ne laisse aucune trace : le Roi '
+                'pourrait annoncer n’importe quel total. La carte, elle, est un <b>engagement matériel</b> — un '
+                'objet unique, choisi avant la proposition, posé face cachée et impossible à changer après coup. '
+                'Le total reste caché (le bluff est intact), mais la table garde un recours : à tout moment, un '
+                '<b>vote à la majorité exige l’audit</b> — le Roi retourne sa carte, et l’on vérifie au moins qu’il '
+                'n’a pas promis plus d’écus que la carte n’en contenait. Un Roi pris en flagrant délit rend le '
+                'surplus et récolte les rancunes. Simple garde-fou de confiance entre amis, pas un contrôle '
+                'fiscal : à vous de vous surveiller.', S_NOTE))
     st.append(P('③ La nuit', S_H2))
     st.append(P('Voir le chapitre 5 — c’est le cœur du jeu : planques, dagues et coffres.'))
     st.append(P('④ Le héraut', S_H2))

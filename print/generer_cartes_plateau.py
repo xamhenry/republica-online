@@ -138,7 +138,7 @@ LIEUX = [
 TAILLE_VALUES = [7, 8, 8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 14, 15]
 AIDE_TXT = [
     ('TOUR DE JEU', ['1. TAILLE — le Roi tire 1 carte Taille en secret et propose une répartition.',
-                     '2. VOTE — cartes vote, puis pouces levés/baissés simultanés. Puis on RÉVÈLE la carte Taille (preuve). Rejet : taille perdue, et sur 4-6 (1d6) la révolte gronde.',
+                     '2. VOTE — cartes vote, puis pouces levés/baissés simultanés. Le Roi garde la carte face cachée devant lui (total secret). Rejet : taille perdue, et sur 4-6 (1d6) la révolte gronde.',
                      '3. NUIT — chacun pose une carte Planque face cachée ; les attaquants posent cible + Filature. Révélation, résolution.',
                      '4. HÉRAUT — révélez 1 carte Événement.',
                      '5. RÉVOLTE — si elle gronde : camps, déploiement, 3 manches, batailles aux dés.']),
@@ -314,9 +314,9 @@ def cards_pdf():
         c.setStrokeColor(GOLD); c.setLineWidth(0.8)
         c.line(x+10*mm, y+18*mm, x+CW-10*mm, y+18*mm)
         c.setFillColor(HexColor('#6b5b3a')); c.setFont(FI if HAS_GI else F, 6.4)
-        for i, ln in enumerate(['Tirée en secret par le Roi.',
-                                'Révélée après le vote : le Roi',
-                                'garde ce total moins les dons.']):
+        for i, ln in enumerate(['Tirée en secret par le Roi, gardée',
+                                'face cachée devant lui. Il garde',
+                                'ce total moins les dons annoncés.']):
             c.drawCentredString(x+CW/2, y+13*mm-i*3*mm, ln)
     fns = [lambda c,x,y,v=v: draw_taille(c, x, y, v) for v in TAILLE_VALUES]
     emit('TAILLE ROYALE', CATS['taille'][1], fns)
