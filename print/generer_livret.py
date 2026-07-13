@@ -38,7 +38,7 @@ S_NOTE = ParagraphStyle('note', parent=S_BODY, fontName=FI, textColor=HexColor('
 S_EX = ParagraphStyle('ex', parent=S_BODY, fontName=FI, fontSize=8.8, textColor=HexColor('#555555'),
                       leftIndent=6*mm)
 
-GLYPHS = '⚜☠◉♛☾☦⚔⚑⚒⚓†'
+GLYPHS = '⚜☠◉♛☾☦⚔⚑⚒⚓†✠★'
 def sym_wrap(t):
     for g in GLYPHS:
         t = t.replace(g, '<font name="'+SY+'">'+g+'</font>')
@@ -113,7 +113,7 @@ def build():
         ['7',  'cartes AIDE DE JEU'],
         ['52', 'écus (40 × « 1 », 12 × « 5 »)'],
         ['40', 'unités (20 cubes rouges félons, 20 cubes bleus royaux)'],
-        ['68', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ favorite, ☦ monastère, ♛ règne, † mort)'],
+        ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ favorite, ☦ monastère, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ cathédrale)'],
         ['10', 'marqueurs de contrôle (5 rouges, 5 bleus)'],
         ['2',  'jetons de frappe (trébuchet, nef de guerre) + 1 marqueur de tour'],
         ['2',  'dés à six faces (1 rouge félon, 1 bleu royal)'],
@@ -204,9 +204,10 @@ def build():
     st.append(P('6. La révolte des barons', S_H1))
     st.append(P('A. Les camps', S_H2))
     st.append(P('Le Roi est toujours <b>royal</b>. En partant de sa gauche, chacun annonce son camp : '
-                '<b>félon</b> (rouge) ou <b>royal</b> (bleu). Chacun peut alors jouer des cartes RÉVOLTE '
-                'de sa main : elles ajoutent des unités à déployer. Si personne n’est félon, le calme revient. '
-                'Si personne ne défend, la Couronne tombe sans combat (voir E).'))
+                '<b>félon</b> (rouge) ou <b>royal</b> (bleu) — et prend aussitôt le <b>jeton de camp</b> '
+                'correspondant (⚔ félon ou ⚑ royal), qui restera devant lui. Chacun peut alors jouer des '
+                'cartes RÉVOLTE de sa main : elles ajoutent des unités à déployer. Si personne n’est félon, '
+                'le calme revient. Si personne ne défend, la Couronne tombe sans combat (voir E).'))
     st.append(P('B. Manche 1 — le déploiement', S_H2))
     st.append(P('Chaque baron dispose d’unités égales à sa <b>charge</b> (Connétable 4, Routiers 3, Roi 3, '
                 'Engins / Assassins / Amiral 2, Chancelier 1) plus ses cartes RÉVOLTE jouées. En commençant par '
@@ -224,7 +225,9 @@ def build():
         st.append(LI(tx))
     st.append(P('D. Le décompte', S_H2))
     st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>le Château 2</b> (6 points en tout). '
-                'Les félons l’emportent avec <b>4 points ou plus</b>.'))
+                'Les félons l’emportent avec <b>4 points ou plus</b>. Distribuez alors les traces de la révolte : '
+                'chaque membre du <b>camp vainqueur</b> prend un jeton ★ de sa couleur, et chaque membre du camp '
+                'qui <b>tient la Cathédrale</b> prend un jeton ✠.'))
     st.append(P('E. Couronnement et billot', S_H2))
     st.append(P('<b>Félons vainqueurs</b> : le félon à la plus grosse armée de charge (Connétable 4 > Routiers 3 > '
                 'Engins / Assassins / Amiral 2 > Chancelier 1 ; égalité : le plus riche au coffre) prend la couronne, '
@@ -252,24 +255,49 @@ def build():
         '† à chaque fois que vous mourez (dague ou billot) ;',
         '♛ à chaque fois que vous prenez la couronne ;',
         '☾ chaque nuit passée chez la Favorite (avec votre écu) ;',
-        '☦ chaque nuit passée au Monastère.',
+        '☦ chaque nuit passée au Monastère ;',
+        '⚔ ou ⚑ à chaque révolte, en annonçant votre camp ;',
+        '★ (rouge ou bleue) si votre camp gagne la révolte ; ✠ si votre camp tient la Cathédrale à la fin.',
     ]:
         st.append(LI(tx))
     st.append(P('Prendre un jeton ne trahit PAS votre ambition : tout le monde prend toujours tous ses jetons — '
                 'c’est la chronique publique de la partie, pas un aveu. Au décompte, vos jetons font preuve : '
                 '« 3 jetons ☾, mon ambition était Le Courtisan, +2 écus. » Personne n’a rien à retenir de tête.', S_NOTE))
     st.append(P('3. La vérification collective', S_H2))
-    st.append(P('À la révélation finale, chacun lit son ambition à voix haute et montre ses preuves : jetons, '
-                'zéro jeton (pour L’Insaisissable ou L’Increvable, l’<i>absence</i> de ◉ ou de † fait preuve), '
-                'couronne, ou souvenirs immédiats de la dernière révolte (Croisé, Grand Félon, Loyal — les révoltes '
-                'sont rares et marquantes, la table s’en souvient). En cas de litige, la table tranche à la '
-                'majorité : tout s’est passé sous ses yeux.'))
+    st.append(P('À la révélation finale, chacun lit son ambition à voix haute et montre ses preuves — chaque '
+                'ambition a la sienne, aucune ne repose sur la mémoire seule. Tricher exigerait de prendre un '
+                'jeton au vu de tous pour un événement qui n’a pas eu lieu : impossible discrètement. Et les '
+                'jetons se recoupent entre eux (chaque ☠ correspond au † de quelqu’un, chaque ★ à une révolte '
+                'que toute la table a jouée). En cas de litige, la table tranche à la majorité.'))
+    tab_amb = [
+        ['Ambition', 'Sa preuve au décompte'],
+        ['Le Régicide (+4)', 'un jeton ☠ pris lors d’une nuit où le Roi est mort — l’attaque et sa carte étaient visibles de tous'],
+        ['La Main sanglante (+4)', 'au moins 2 jetons ☠'],
+        ['L’Éminence grise (+3)', 'AUCUN jeton ♛, pas la couronne de départ, et votre pion debout'],
+        ['Le Croisé (+3)', 'un jeton ✠'],
+        ['Le Loyal (+3)', 'au moins un jeton ⚑ et AUCUN jeton ⚔'],
+        ['Le Grand Félon (+3)', 'une ★ rouge (victoire dans le camp félon)'],
+        ['L’Usurpateur (+3)', 'la couronne devant vous à la fin, un jeton ♛, sans être le Roi de départ (la carte Charge initiale fait foi)'],
+        ['L’Insaisissable (+3)', 'AUCUN jeton ◉'],
+        ['L’Increvable (+2)', 'AUCUN jeton †'],
+        ['Le Courtisan (+2)', 'au moins 3 jetons ☾'],
+        ['Le Pénitent (+2)', 'au moins 2 jetons ☦'],
+        ['Le Templier (+2)', 'montrez votre poche : 0 écu — et 6+ écus sur votre coffre (visible depuis toujours)'],
+    ]
+    t2 = Table([[Paragraph(sym_wrap('<b>'+a+'</b>'), S_BODY), Paragraph(sym_wrap(b), S_BODY)] for a, b in tab_amb],
+               colWidths=[46*mm, 126*mm])
+    t2.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),
+                            ('BACKGROUND',(0,0),(-1,0),HexColor('#5b3a6b')),
+                            ('TEXTCOLOR',(0,0),(-1,0),HexColor('#f3e9d2')),
+                            ('ROWBACKGROUNDS',(0,1),(-1,-1),[HexColor('#f3e9d2'), HexColor('#ece0c4')]),
+                            ('TOPPADDING',(0,0),(-1,-1),2.5),('BOTTOMPADDING',(0,0),(-1,-1),2.5)]))
+    st.append(t2)
 
     # ---------- 8. FIN DE PARTIE ----------
     st.append(P('8. Fin de partie et décompte', S_H1))
     for tx in [
         'Après le 8e tour, chacun révèle son ambition et la prouve : si elle est accomplie, il ajoute son bonus À SON COFFRE.',
-        'Titres d’honneur (+1 écu au coffre chacun, record strict — en cas d’égalité, personne) : ⚔ le Sanguinaire (le plus de ☠) · ⚑ le Vétéran (le plus de révoltes jouées) · ☾ le Noctambule (le plus de ☾) · ⚜ le Grippe-sou (la plus grosse poche finale).',
+        'Titres d’honneur (+1 écu au coffre chacun, record strict — en cas d’égalité, personne) : ⚔ le Sanguinaire (le plus de ☠) · ⚑ le Vétéran (le plus de jetons ⚔ et ⚑ cumulés) · ☾ le Noctambule (le plus de ☾) · ⚜ le Grippe-sou (la plus grosse poche finale).',
         'Le baron au coffre le plus garni l’emporte. Égalité : la plus grosse poche départage.',
     ]:
         st.append(LI(tx))

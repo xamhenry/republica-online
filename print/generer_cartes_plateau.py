@@ -481,6 +481,13 @@ def tokens_pdf():
     for _ in range(12): circle_token(dark, HexColor('#4eb98f'), '☦', SY, 11, HexColor('#c8ead9'), 'MONASTÈRE')
     for _ in range(8):  circle_token(dark, GOLD, '♛', SY, 11, HexColor('#e8c25a'), 'RÈGNE')
     for _ in range(10): circle_token(dark, HexColor('#888888'), '†', FB, 12, HexColor('#dddddd'), 'MORT')
+    # camps de révolte : pris publiquement au moment où l'on annonce son camp
+    for _ in range(14): circle_token(dark, HexColor('#a63a3a'), '⚔', SY, 10, HexColor('#f3b5b5'), 'FÉLON')
+    for _ in range(14): circle_token(dark, HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#b5cdf3'), 'ROYAL')
+    # victoire de révolte (couleur du camp vainqueur) & Cathédrale tenue en fin de révolte
+    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', FB, 11, HexColor('#f3b5b5'), 'VICT. FÉLONNE')
+    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', FB, 11, HexColor('#b5cdf3'), 'VICT. ROYALE')
+    for _ in range(8):  circle_token(dark, HexColor('#5b3a6b'), '✠', SY, 10, HexColor('#d9c9f0'), 'CATHÉDRALE')
     c.showPage()
     c.save()
     print('OK', path)
