@@ -78,7 +78,7 @@ wss.on('connection', (ws) => {
         const code = makeCode();
         const token = crypto.randomBytes(8).toString('hex');
         rooms[code] = { hostId: id, clients: new Map(), ghosts: {}, started: false };
-        rooms[code].clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16), token });
+        rooms[code].clients.set(id, { ws, name: String(msg.name || 'Messire').slice(0, 16), token });
         roomCode = code;
         send(ws, { t: 'created', code, you: id, token });
         send(ws, lobbyState(code));
@@ -92,7 +92,7 @@ wss.on('connection', (ws) => {
         if (r.started)     return send(ws, { t: 'error', error: 'La partie a déjà commencé.' });
         if (r.clients.size >= MAX_PLAYERS) return send(ws, { t: 'error', error: 'Salon complet (7 max).' });
         const token = crypto.randomBytes(8).toString('hex');
-        r.clients.set(id, { ws, name: String(msg.name || 'Ministre').slice(0, 16), token });
+        r.clients.set(id, { ws, name: String(msg.name || 'Messire').slice(0, 16), token });
         roomCode = code;
         send(ws, { t: 'joined', code, you: id, token });
         broadcast(r, lobbyState(code));

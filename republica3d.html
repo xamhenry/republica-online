@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0f14">
-<title>REPÚBLICA 3D — Le jeu de la junte</title>
+<title>ROYAUME 3D — Couronne, trahisons & révoltes</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { width:100%; height:100%; overflow:hidden; background:#0d0f14; font-family:'Segoe UI', Arial, sans-serif; color:#e8e2d0; }
@@ -38,7 +38,7 @@
   .pl.me { border-color:#ffd166; }
   .pl.dead { opacity:.45; }
   .pl.president::before {
-    content:'★ PRESIDENTE'; position:absolute; top:-7px; right:8px; font-size:9px;
+    content:'★ LE ROI'; position:absolute; top:-7px; right:8px; font-size:9px;
     background:#ffd166; color:#221c10; padding:1px 6px; border-radius:4px; font-weight:bold;
   }
   .pl .dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,.3); }
@@ -266,14 +266,14 @@
   <div id="side">
     <div id="topbar">
       <span>Tour <b id="turnNum">1</b>/<b id="turnMax">8</b></span>
-      <span>Aide : <b id="aidPool">—</b> M$</span>
+      <span>Taille : <b id="aidPool">—</b> écus</span>
       <button id="helpBtn" style="background:#3a4358; color:#ffd166; border:1px solid #ffd166; border-radius:5px; padding:3px 10px; cursor:pointer; font-size:12px;">ℹ️ Rôles</button>
     </div>
-    <div id="phaseBanner">Bienvenue en República</div>
+    <div id="phaseBanner">Bienvenue au Royaume</div>
     <div id="players"></div>
     <div id="log"></div>
     <div id="chatRow" style="display:flex; gap:6px; padding:8px 10px; border-top:1px solid #2a2f3d; background:#171b25;">
-      <input id="chatInput" maxlength="140" placeholder="💬 Parler au cabinet… (Entrée)"
+      <input id="chatInput" maxlength="140" placeholder="💬 Parler à la cour… (Entrée)"
         style="flex:1; background:#10131a; border:1px solid #3a4358; border-radius:6px; color:#e8e2d0; font-size:12.5px; padding:7px 10px; outline:none;">
     </div>
   </div>
@@ -299,11 +299,12 @@
 
 <div id="helpOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(5,7,10,.85); z-index:180; display:flex; align-items:center; justify-content:center; padding:16px;">
   <div style="background:#1a1e29; border:2px solid #ffd166; border-radius:12px; max-width:620px; width:100%; padding:22px; max-height:88vh; overflow-y:auto;">
-    <h3 style="color:#ffd166; letter-spacing:1px; margin-bottom:10px;">Les postes du cabinet</h3>
+    <h3 style="color:#ffd166; letter-spacing:1px; margin-bottom:10px;">Les charges de la cour</h3>
     <div id="helpRoles" style="font-size:13px; line-height:1.7; color:#cbd3e1;"></div>
     <div style="margin-top:12px; font-size:12px; color:#9ab; line-height:1.6;">
-      Rappel du tour : ① budget proposé par El Presidente → ② vote → ③ nuit (planque / assassinats / banque) → ④ événement radio → ⑤ coup d'État éventuel (3 manches, déploiement sur la carte, dés).
-      Seul <b style="color:#7bed9f">l'argent en banque</b> compte à la fin.
+      Rappel du tour : ① taille répartie par le Roi → ② vote du Conseil → ③ nuit (planque / assassins / coffre) → ④ le héraut proclame un événement → ⑤ révolte éventuelle (3 manches, déploiement sur la carte, dés).
+      Chaque site contrôlé donne un pouvoir : Garnison = 1 renfort/manche · Port = déplacement vers n'importe quel site · Cathédrale = 1 déserteur ennemi/manche · Trésor = recruter 1 routier (2 écus).
+      Seul <b style="color:#7bed9f">l'or au coffre des Templiers</b> compte à la fin.
     </div>
     <div class="mbtns"><button class="mbtn" id="helpClose">Fermer</button></div>
   </div>
@@ -313,13 +314,13 @@
   <div id="diceSite" style="font-size:15px; font-weight:bold; color:#ffd166; letter-spacing:2px; text-shadow:0 1px 3px #000;">—</div>
   <div id="diceRow">
     <div class="dice-side">
-      <div class="ds-label" style="color:#ff6b6b">⚔️ REBELLES</div>
+      <div class="ds-label" style="color:#ff6b6b">⚔️ FÉLONS</div>
       <div class="ds-dice"><div class="die" id="dr1">⚀</div><div class="die" id="dr2">⚀</div></div>
       <div class="ds-total" id="drTotal"></div>
     </div>
     <div id="diceVS">VS</div>
     <div class="dice-side">
-      <div class="ds-label" style="color:#4da3ff">🛡 LOYALISTES</div>
+      <div class="ds-label" style="color:#4da3ff">🛡 ROYAUX</div>
       <div class="ds-dice"><div class="die" id="dl1">⚀</div><div class="die" id="dl2">⚀</div></div>
       <div class="ds-total" id="dlTotal"></div>
     </div>
@@ -328,10 +329,10 @@
 </div>
 
 <div id="lobbyScreen" class="bigscreen">
-  <h1>REPÚBLICA</h1>
+  <h1>ROYAUME</h1>
   <div class="tagline">JOUER EN LIGNE AVEC SES COMPLICES — OU EN SOLO CONTRE LES IA</div>
   <div class="rules" style="max-width:460px; text-align:center;">
-    <input id="lobbyName" maxlength="16" placeholder="Votre nom, Ministre…"
+    <input id="lobbyName" maxlength="16" placeholder="Votre nom, Messire…"
       style="background:#10131a; border:2px solid #3a4358; border-radius:8px; color:#ffd166; font-size:16px; font-weight:bold; padding:10px 14px; text-align:center; width:90%; outline:none; margin-bottom:10px;">
     <input id="lobbyServer" placeholder="Adresse du serveur (wss://…)"
       style="background:#10131a; border:1px solid #3a4358; border-radius:8px; color:#9ab; font-size:12px; padding:8px 12px; text-align:center; width:90%; outline:none; margin-bottom:12px;">
@@ -356,41 +357,42 @@
 </div>
 
 <div id="titleScreen" class="bigscreen hidden">
-  <h1>REPÚBLICA</h1>
-  <div class="tagline">CORRUPTION · TRAHISON · COUPS D'ÉTAT · EN 3D — inspiré des grands classiques de la république bananière</div>
+  <h1>ROYAUME</h1>
+  <div class="tagline">COURONNE · TRAHISONS · RÉVOLTES · EN 3D — chronique d'un royaume de France où les barons ont les dents longues</div>
   <div class="rules">
-    <b>Le but :</b> être le ministre le plus riche… <b>en banque suisse</b> à la fin des 8 tours d'aide étrangère.<br>
-    <b>Chaque tour :</b> ① El Presidente répartit l'aide étrangère → ② le cabinet <b>vote</b> le budget →
-    ③ la <b>nuit</b>, chacun choisit sa planque, envoie des assassins, ou va déposer son magot à la banque →
-    ④ un <b>événement</b> secoue le pays → ⑤ si le régime vacille, c'est le <b>COUP D'ÉTAT</b> : batailles pour le Palais, la Radio, la Caserne…<br>
-    <b>Attention :</b> l'argent en poche peut être volé sur votre cadavre. Seule la banque compte. Une balle n'est jamais loin.<br>
-    <b>Les cartes</b> (29 types : votes, argent, assassins, protections, renforts) s'affichent devant vous et se jouent d'un clic au bon moment. <b>Les coups d'État se jouent comme sur le plateau</b> : 3 manches, vous déployez vos unités sur les 5 sites (le Palais compte double), chaque bataille se résout aux dés (unités + 1d6) avec des pertes définitives.
+    <b>Le but :</b> être le baron le plus riche… <b>au coffre des Templiers</b> à la fin des 8 levées de la taille royale.<br>
+    <b>Chaque tour :</b> ① le Roi répartit la taille → ② le Conseil des barons <b>vote</b> la répartition →
+    ③ la <b>nuit</b>, chacun choisit sa couche, envoie des spadassins, ou va porter son magot au coffre →
+    ④ le <b>héraut</b> proclame un événement → ⑤ si la Couronne vacille, c'est la <b>RÉVOLTE</b> : batailles pour le Château, la Cathédrale, le Port…<br>
+    <b>Attention :</b> l'or en poche peut être pillé sur votre cadavre. Seul le coffre compte. Une dague n'est jamais loin.<br>
+    <b>Les cartes</b> (29 types : votes, écus, assassins, protections, renforts) s'affichent devant vous et se jouent d'un clic au bon moment. <b>Les révoltes se jouent comme sur un plateau</b> : 3 manches, vous déployez vos unités sur les 5 sites (le Château compte double), chaque bataille se résout aux dés (unités + 1d6) avec des pertes définitives.<br>
+    <b>Le pouvoir des sites :</b> contrôler un lieu en fin de manche rapporte — <b>Garnison</b> : 1 renfort par manche · <b>Port</b> : vos troupes y embarquent vers n'importe quel site · <b>Cathédrale</b> : le prêche fait déserter 1 ennemi par manche · <b>Trésor Royal</b> : recrutez 1 routier pour 2 écus de poche.
   </div>
   <div class="rules">
-    <b>Les 5 postes du cabinet</b> (attribués au hasard, redistribués après chaque coup réussi) :<br>
-    👑 <b>El Presidente</b> — répartit l'aide étrangère comme il l'entend (le non-alloué file dans sa poche). Garde présidentielle : 3 unités. Toujours loyaliste pendant un coup.<br>
-    🎖 <b>Général de Brigade</b> — la force brute : 4 unités, la plus grosse armée du pays. Son camp pèse lourd dans un coup.<br>
-    ✈️ <b>Colonel de l'Air</b> — 2 unités, et une <b>frappe aérienne</b> par coup d'État : son chasseur pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
-    🕶 <b>Chef de la Police Secrète</b> — 2 unités, et surtout <b>un assassinat gratuit chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
-    🗳 <b>Ministre de l'Intérieur</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier.<br>
-    ⚓ <b>Amiral de la Flotte</b> <i>(à 6+)</i> — 2 unités, et une salve de <b>canonnière</b> par coup d'État : elle bombarde le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
-    🎖 <b>Général de la 2e Brigade</b> <i>(à 7)</i> — 3 unités de troupes fraîches. Deux généraux dans une junte, c'est un de trop…
+    <b>Les 5 charges de la cour</b> (attribuées au hasard, redistribuées après chaque révolte réussie) :<br>
+    👑 <b>Le Roi</b> — répartit la taille royale comme il l'entend (le non-alloué file dans sa poche). Garde royale : 3 unités. Toujours fidèle à sa propre couronne.<br>
+    ⚔️ <b>Le Connétable</b> — la force brute : 4 unités, le ban royal. Son camp pèse lourd dans une révolte.<br>
+    🪨 <b>Maître des Engins</b> — 2 unités, et un tir de <b>trébuchet</b> par révolte : il pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
+    🗡 <b>Maître des Assassins</b> — 2 unités, et surtout <b>un assassinat gratuit chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
+    📜 <b>Le Chancelier</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier.<br>
+    ⚓ <b>L'Amiral de France</b> <i>(à 6+)</i> — 2 unités, et une salve de <b>nef de guerre</b> par révolte : elle bombarde le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
+    🎖 <b>Capitaine des Routiers</b> <i>(à 7)</i> — 3 unités de soudards. Deux armées dans un royaume, c'est une de trop…
   </div>
-  <p>Vous jouez contre 4 ministres IA aux personnalités bien trempées. Ils négocient mal, trahissent bien.</p>
+  <p>Vous jouez contre 4 barons IA aux personnalités bien trempées. Ils négocient mal, trahissent bien.</p>
   <div style="margin:4px 0 10px;">
-    <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">VOTRE NOM, MINISTRE</div>
-    <input id="playerName" maxlength="16" placeholder="ex : Comandante Zoé"
+    <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">VOTRE NOM, MESSIRE</div>
+    <input id="playerName" maxlength="16" placeholder="ex : Aliénor de Retz"
       style="background:#10131a; border:2px solid #3a4358; border-radius:8px; color:#ffd166; font-size:16px; font-weight:bold; padding:10px 14px; text-align:center; width:260px; outline:none;">
   </div>
   <div style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center; margin:6px 0 4px;">
     <div>
-      <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">NOMBRE DE MINISTRES</div>
+      <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">NOMBRE DE BARONS</div>
       <div style="display:flex; gap:8px;">
         <button class="mbtn alt selopt sel-count selected-opt" data-count="5" style="border:2px solid #ffd166;">5</button>
         <button class="mbtn alt selopt sel-count" data-count="6" style="border:2px solid transparent;">6</button>
         <button class="mbtn alt selopt sel-count" data-count="7" style="border:2px solid transparent;">7</button>
       </div>
-      <div style="font-size:10px; color:#667; margin-top:4px;">6 = + Amiral ⚓ · 7 = + 2e Brigade 🎖</div>
+      <div style="font-size:10px; color:#667; margin-top:4px;">6 = + Amiral ⚓ · 7 = + Routiers 🎖</div>
     </div>
     <div>
       <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">DIFFICULTÉ DES IA</div>
@@ -402,7 +404,7 @@
       <div style="font-size:10px; color:#667; margin-top:4px;">Difficile : elles complotent mieux… et vous ciblent.</div>
     </div>
   </div>
-  <button class="mbtn" id="startGameBtn" style="font-size:18px; padding:14px 34px;">Prendre ses fonctions</button>
+  <button class="mbtn" id="startGameBtn" style="font-size:18px; padding:14px 34px;">Prêter serment</button>
 </div>
 
 <div id="endScreen" class="bigscreen hidden">
@@ -411,7 +413,7 @@
   <div class="rules" id="endBoard"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
     <button class="mbtn hidden" id="replayBtn">🔄 Rejouer (même salon)</button>
-    <button class="mbtn alt" onclick="location.reload()">Nouvelle république</button>
+    <button class="mbtn alt" onclick="location.reload()">Nouveau royaume</button>
   </div>
   <div id="replayHint" class="hidden" style="margin-top:8px; font-size:12px; color:#8fa3c7;">Restez sur cet écran : si l'hôte relance, vous serez embarqué automatiquement.</div>
 </div>
@@ -420,7 +422,7 @@
 <script>
 "use strict";
 /* =====================================================================
-   REPÚBLICA — jeu de junte, solo contre 4 IA
+   ROYAUME — jeu de barons félons, solo contre 4 IA
    Plateau canvas animé : ville, palmiers, drapeau, jour/nuit,
    pluie de billets, fusillades de coup d'État.
    ===================================================================== */
@@ -430,92 +432,92 @@
 // ---------------------------------------------------------------------
 const IS_TOUCH = window.matchMedia('(pointer: coarse)').matches;
 const TURNS = 8;
-const NAMES = ['Vous', 'Gén. Morales', 'Col. Vásquez', 'Doña Ferreira', 'Dr Ocampo', 'Amiral Bautista', 'Sra Quintero'];
+const NAMES = ['Vous', 'Sire de Montfort', 'Dame Isabeau', 'Baron de Coucy', 'Frère Anselme', 'Cap. La Hire', 'Comtesse Mahaut'];
 const COLORS = ['#ffd166', '#ff6b6b', '#74b9ff', '#a29bfe', '#55efc4', '#fd9644', '#f78fb3'];
 const PERSONALITIES = [null, 'brutal', 'opportuniste', 'cupide', 'prudent', 'brutal', 'opportuniste'];
 
 const ROLES = [
-  { id:'presidente', name:'El Presidente',        units:3, desc:'Répartit le budget. Garde présidentielle (3 unités).' },
-  { id:'general',    name:'Général 1re Brigade',  units:4, desc:'La 1re Brigade (4 unités). Le bras armé du régime.' },
-  { id:'colonel',    name:'Colonel de l\'Air',    units:2, desc:'2 unités. Une fois par coup d\'État : frappe aérienne sur le site de votre choix (détruit jusqu\'à 2 unités ennemies).' },
-  { id:'policia',    name:'Chef de la Police',    units:2, desc:'2 unités. Un assassinat gratuit chaque nuit.' },
-  { id:'interior',   name:'Ministre de l\'Intérieur', units:1, desc:'1 unité. +1 voix au vote, pioche 1 carte de plus.' },
-  { id:'amiral',     name:'Amiral de la Flotte',  units:2, desc:'2 unités. Une fois par coup d\'État : la canonnière bombarde le site de votre choix (détruit jusqu\'à 2 unités ennemies). (6+ joueurs)' },
-  { id:'brigade2',   name:'Général 2e Brigade',   units:3, desc:'La 2e Brigade : 3 unités de troupes fraîches. (7 joueurs)' },
+  { id:'presidente', name:'Le Roi',        units:3, desc:'Répartit la taille royale. Garde royale (3 unités).' },
+  { id:'general',    name:'Le Connétable',        units:4, desc:'Le ban royal (4 unités). Le bras armé de la Couronne.' },
+  { id:'colonel',    name:'Maître des Engins',    units:2, desc:'2 unités. Une fois par révolte : le trébuchet pilonne le site de votre choix (détruit jusqu\'à 2 unités ennemies).' },
+  { id:'policia',    name:'Maître des Assassins', units:2, desc:'2 unités. Un assassinat gratuit chaque nuit.' },
+  { id:'interior',   name:'Le Chancelier',        units:1, desc:'1 unité. +1 voix au vote, pioche 1 carte de plus.' },
+  { id:'amiral',     name:'L\'Amiral de France',  units:2, desc:'2 unités. Une fois par révolte : la nef de guerre bombarde le site de votre choix (détruit jusqu\'à 2 unités ennemies). (6+ joueurs)' },
+  { id:'brigade2',   name:'Capitaine des Routiers', units:3, desc:'Une compagnie de routiers : 3 unités de soudards. (7 joueurs)' },
 ];
 let ROLES_ACTIVE = ROLES.slice(0,5);   // défini au lancement selon le nombre de joueurs
 
 const LOCATIONS = [
-  { id:'residence', icon:'🏠', name:'Résidence',   desc:'Votre bureau et vos dossiers : +1 carte piochée en fin de tour. Mais tout le monde connaît l\'adresse.' },
-  { id:'banque',    icon:'🏦', name:'Banque',      desc:'Déposez votre argent de poche en Suisse. Très prévisible : les tueurs adorent.' },
-  { id:'planque',   icon:'🌙', name:'Chez l\'amante', desc:'Discret : les assassins la trouvent rarement. Et ses relations bien placées vous glissent +1 M$ au petit matin.' },
-  { id:'ambassade', icon:'🏛', name:'Ambassade',   desc:'Intouchable. Mais ni dépôt, ni carte bonus : une nuit perdue.' },
+  { id:'residence', icon:'🏠', name:'Manoir',      desc:'Votre logis et vos parchemins : +1 carte piochée en fin de tour. Mais tout le monde connaît l\'adresse.' },
+  { id:'banque',    icon:'🏦', name:'Templiers',   desc:'Déposez votre poche au coffre de la commanderie. Très prévisible : les tueurs adorent.' },
+  { id:'planque',   icon:'🌙', name:'Chez la favorite', desc:'Discret : les assassins la trouvent rarement. Et ses relations bien placées vous glissent +1 écu au petit matin.' },
+  { id:'ambassade', icon:'⛪', name:'Monastère',   desc:'Droit d\'asile : intouchable. Mais ni dépôt, ni carte bonus : une nuit perdue.' },
 ];
 
 const COUP_SITES = [
-  { id:'palais',  name:'Palais Présidentiel', x:0.50, y:0.46 },
-  { id:'radio',   name:'Radio Nationale',     x:0.24, y:0.30 },
-  { id:'banqueC', name:'Banque Centrale',     x:0.76, y:0.30 },
-  { id:'caserne', name:'Caserne',             x:0.24, y:0.66 },
-  { id:'aeroport',name:'Aéroport',            x:0.76, y:0.66 },
+  { id:'palais',  name:'Château Royal',  x:0.50, y:0.46 },
+  { id:'radio',   name:'Cathédrale',     x:0.24, y:0.30 },
+  { id:'banqueC', name:'Trésor Royal',   x:0.76, y:0.30 },
+  { id:'caserne', name:'Garnison',       x:0.24, y:0.66 },
+  { id:'aeroport',name:'Port',           x:0.76, y:0.66 },
 ];
 
 const CARD_CATS = {
   vote:   { label:'VOTE',   color:'#4da3ff' },
-  argent: { label:'ARGENT', color:'#ffd166' },
+  argent: { label:'ÉCUS',   color:'#ffd166' },
   nuit:   { label:'NUIT',   color:'#a29bfe' },
   passif: { label:'PASSIF', color:'#55efc4' },
-  coup:   { label:'COUP',   color:'#ff6b6b' },
+  coup:   { label:'RÉVOLTE', color:'#ff6b6b' },
 };
 
 const CARD_TYPES = [
   // ---- VOTE ----
-  { id:'fraude',    cat:'vote', name:'Fraude électorale',       phase:'vote',  desc:'+2 voix lors d\'un vote du budget.' },
-  { id:'ambassade', cat:'vote', name:'Soutien de l\'Ambassade',  phase:'vote',  desc:'+3 voix. L\'étranger veille sur ses intérêts.' },
-  { id:'syndicat',  cat:'vote', name:'Syndicat acheté',          phase:'vote',  desc:'+2 voix. Les dockers votent bien.' },
+  { id:'fraude',    cat:'vote', name:'Faux sceaux',              phase:'vote',  desc:'+2 voix lors d\'un vote de la taille.' },
+  { id:'ambassade', cat:'vote', name:'Soutien du Pape',          phase:'vote',  desc:'+3 voix. Rome veille sur ses intérêts.' },
+  { id:'syndicat',  cat:'vote', name:'Guildes achetées',         phase:'vote',  desc:'+2 voix. Les corporations votent bien.' },
   { id:'eveque',    cat:'vote', name:'Bénédiction de l\'Évêque', phase:'vote',  desc:'+2 voix. Dieu est avec vous (moyennant don).' },
-  { id:'scandale',  cat:'vote', name:'Scandale de presse',       phase:'vote',  desc:'Le Presidente perd 2 voix sur ce vote.' },
-  { id:'dossier',   cat:'vote', name:'Dossier compromettant',    phase:'vote',  desc:'Forcez un ministre à voter comme vous.' },
+  { id:'scandale',  cat:'vote', name:'Libelle infamant',         phase:'vote',  desc:'Le Roi perd 2 voix sur ce vote.' },
+  { id:'dossier',   cat:'vote', name:'Lettre compromettante',    phase:'vote',  desc:'Forcez un baron à voter comme vous.' },
   // ---- ARGENT ----
-  { id:'potdevin',  cat:'argent', name:'Pot-de-vin',             phase:'vote',  desc:'+2 M$ dans votre poche, immédiatement.' },
-  { id:'racket',    cat:'argent', name:'Racket des commerçants', phase:'vote',  desc:'+3 M$ dans votre poche. Le marché « participe ».' },
-  { id:'detour',    cat:'argent', name:'Détournement',           phase:'vote',  desc:'Prenez 2 M$ de la poche du Presidente.' },
-  { id:'offshore',  cat:'argent', name:'Compte offshore',        phase:'nuit',  desc:'Déposez votre poche en banque depuis n\'importe quelle planque.' },
-  { id:'valise',    cat:'argent', name:'Valise diplomatique',    phase:'passif',desc:'Si vous êtes tué, votre poche n\'est pas pillée.' },
+  { id:'potdevin',  cat:'argent', name:'Pot-de-vin',             phase:'vote',  desc:'+2 écus dans votre poche, immédiatement.' },
+  { id:'racket',    cat:'argent', name:'Péage sauvage',          phase:'vote',  desc:'+3 écus dans votre poche. Le marché « participe ».' },
+  { id:'detour',    cat:'argent', name:'Détournement de la taille', phase:'vote', desc:'Prenez 2 écus de la poche du Roi.' },
+  { id:'offshore',  cat:'argent', name:'Courrier templier',      phase:'nuit',  desc:'Déposez votre poche au coffre depuis n\'importe quelle planque.' },
+  { id:'valise',    cat:'argent', name:'Coffre scellé',          phase:'passif',desc:'Si vous êtes tué, votre poche n\'est pas pillée.' },
   // ---- NUIT (attaques) ----
-  { id:'assassin',  cat:'nuit', name:'Assassin à gages',         phase:'nuit',  desc:'Tentez d\'éliminer un ministre (devinez sa planque).' },
-  { id:'bombe',     cat:'nuit', name:'Bombe artisanale',         phase:'nuit',  desc:'Tue et DÉTRUIT tout l\'argent de la cible. Brutal et mal vu.' },
+  { id:'assassin',  cat:'nuit', name:'Spadassin',                phase:'nuit',  desc:'Tentez d\'éliminer un baron (devinez sa planque).' },
+  { id:'bombe',     cat:'nuit', name:'Baril de poudre',          phase:'nuit',  desc:'Tue et DÉTRUIT tout l\'argent de la cible. Brutal et mal vu.' },
   { id:'poison',    cat:'nuit', name:'Empoisonneuse',            phase:'nuit',  desc:'Ignore les gardes du corps, mais échoue une fois sur deux.' },
-  { id:'espion',    cat:'nuit', name:'Espion infiltré',          phase:'nuit',  desc:'La planque exacte de la cible est connue : attaque à coup sûr (sauf Ambassade).' },
+  { id:'espion',    cat:'nuit', name:'Espion à la cour',         phase:'nuit',  desc:'La planque exacte de la cible est connue : attaque à coup sûr (sauf Monastère).' },
   // ---- PASSIF (protections) ----
   { id:'garde',     cat:'passif', name:'Garde du corps',         phase:'passif',desc:'Annule automatiquement le prochain assassinat contre vous.' },
-  { id:'doublure',  cat:'passif', name:'Doublure',               phase:'passif',desc:'Un sosie dort à votre place : 50% de survivre à un assassinat.' },
-  { id:'passeport', cat:'passif', name:'Faux passeport',         phase:'passif',desc:'Échappez au peloton d\'exécution (une fois).' },
+  { id:'doublure',  cat:'passif', name:'Sosie',                  phase:'passif',desc:'Un sosie dort à votre place : 50% de survivre à un assassinat.' },
+  { id:'passeport', cat:'passif', name:'Sauf-conduit',           phase:'passif',desc:'Échappez au billot (une fois).' },
   // ---- NOUVELLES (façon grands classiques) ----
-  { id:'cigare',    cat:'nuit', name:'Cigare explosif',          phase:'nuit',  desc:'Livré à domicile : ne fonctionne que si la cible dort à sa Résidence. Boum.' },
-  { id:'embuscade', cat:'nuit', name:'Embuscade à la banque',    phase:'nuit',  desc:'Vos hommes guettent le coffre : ne touche que si la cible va à la Banque.' },
-  { id:'cheque',    cat:'argent', name:'Chèque de Miami',        phase:'vote',  desc:'+4 M$ dans votre poche. Un ami là-bas vous veut du bien.' },
-  { id:'chantage',  cat:'argent', name:'Chantage',               phase:'vote',  desc:'Le ministre le plus riche vous verse 2 M$ de sa poche. Les photos restent au coffre.' },
-  { id:'cousinage', cat:'vote', name:'Cousinage politique',      phase:'vote',  desc:'+2 voix. La famille, c\'est sacré.' },
+  { id:'cigare',    cat:'nuit', name:'Coffret piégé',            phase:'nuit',  desc:'Livré à domicile : ne fonctionne que si la cible dort à son Manoir. Boum.' },
+  { id:'embuscade', cat:'nuit', name:'Embuscade aux Templiers',  phase:'nuit',  desc:'Vos hommes guettent le coffre : ne touche que si la cible va chez les Templiers.' },
+  { id:'cheque',    cat:'argent', name:'Or des Lombards',        phase:'vote',  desc:'+4 écus dans votre poche. Un banquier de Florence vous veut du bien.' },
+  { id:'chantage',  cat:'argent', name:'Chantage',               phase:'vote',  desc:'Le baron le plus riche vous verse 2 écus de sa poche. Les lettres restent au coffre.' },
+  { id:'cousinage', cat:'vote', name:'Cousinage',                phase:'vote',  desc:'+2 voix. La famille, c\'est sacré.' },
   { id:'sabotage',  cat:'coup', name:'Sabotage des arsenaux',    phase:'coup',  desc:'+2 de force : les armes ennemies s\'enrayent mystérieusement.' },
   // ---- COUP ----
-  { id:'mercenaires',cat:'coup', name:'Mercenaires',             phase:'coup',  desc:'+3 de force pendant un coup d\'État.' },
-  { id:'foule',     cat:'coup', name:'Foule en colère',          phase:'coup',  desc:'+2 de force pendant un coup d\'État.' },
-  { id:'garnison',  cat:'coup', name:'Garnison retournée',       phase:'coup',  desc:'+3 de force : une caserne change de camp.' },
-  { id:'cia',       cat:'coup', name:'Appui de la CIA',          phase:'coup',  desc:'+4 de force… mais tout le monde saura qui vous sert (rancunes +1).' },
+  { id:'mercenaires',cat:'coup', name:'Routiers',                phase:'coup',  desc:'+3 de force pendant une révolte.' },
+  { id:'foule',     cat:'coup', name:'Foule en colère',          phase:'coup',  desc:'+2 de force pendant une révolte.' },
+  { id:'garnison',  cat:'coup', name:'Garnison retournée',       phase:'coup',  desc:'+3 de force : une garnison change de camp.' },
+  { id:'cia',       cat:'coup', name:'Or des Anglais',           phase:'coup',  desc:'+4 de force… mais tout le monde saura qui vous paie (rancunes +1).' },
   { id:'barricades',cat:'coup', name:'Barricades',               phase:'coup',  desc:'+2 de force. Le peuple des faubourgs vous couvre.' },
 ];
 const COUP_CARD_POWER = { mercenaires:3, foule:2, garnison:3, cia:4, barricades:2, sabotage:2 };
 
 const EVENTS = [
-  { id:'secheresse', text:'🌵 Sécheresse ! L\'aide du prochain tour est réduite de 3 M$.', fx:(g)=>{ g.aidPenalty += 3; } },
-  { id:'fmi',        text:'💼 Le FMI double sa confiance : +4 M$ d\'aide au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
-  { id:'greve',      text:'✊ Grève générale ! Le climat est insurrectionnel : un coup d\'État devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; } },
-  { id:'purge',      text:'🕵️ La police secrète fouille les résidences : tout ministre resté à sa Résidence perd 1 M$ de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 M$ dans la purge.', 'red'); } }); } },
-  { id:'carnaval',   text:'🎉 Carnaval ! Le peuple oublie tout. Aucun coup d\'État possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
-  { id:'audit',      text:'📋 Audit international : chaque ministre avec plus de 6 M$ en poche en perd 2 (saisis).', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait saisir 2 M$.', 'red'); } }); } },
-  { id:'don',        text:'🎁 Don anonyme : le Presidente reçoit 2 M$ en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 M$ « anonymes ».','gold'); } } },
-  { id:'cyclone',    text:'🌀 Cyclone tropical : la nuit prochaine, la Banque sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
+  { id:'secheresse', text:'🌾 Famine ! La taille du prochain tour est réduite de 3 écus.', fx:(g)=>{ g.aidPenalty += 3; } },
+  { id:'fmi',        text:'💰 Les banquiers lombards font crédit : +4 écus de taille au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
+  { id:'greve',      text:'✊ Jacquerie ! Le climat est insurrectionnel : une révolte devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; } },
+  { id:'purge',      text:'🕯 Les sergents du Roi fouillent les manoirs : tout baron resté à son Manoir perd 1 écu de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 écu dans la fouille.', 'red'); } }); } },
+  { id:'carnaval',   text:'🎪 Grande foire ! Le peuple oublie tout. Aucune révolte possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
+  { id:'audit',      text:'⛪ Légat du Pape : chaque baron avec plus de 6 écus en poche en donne 2 à l\'Église.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait « suggérer » un don de 2 écus.', 'red'); } }); } },
+  { id:'don',        text:'🎁 Tribut d\'un vassal : le Roi reçoit 2 écus en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 écus « anonymes ».','gold'); } } },
+  { id:'cyclone',    text:'☠️ Brigands sur les routes : la nuit prochaine, la commanderie des Templiers sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
 ];
 
 // ---------------------------------------------------------------------
@@ -617,7 +619,7 @@ function renderPlayers(){
       '<div class="dot" style="background:'+p.color+'"></div>' +
       '<div class="pname">'+p.name+'</div>' +
       '<div class="prole" title="'+p.role.desc.replace(/"/g,'&quot;')+'">'+p.role.name+(p.alive?'':' — 💀 éliminé ce tour')+'</div>' +
-      '<div class="pmoney"><span class="pocket">💵 '+(i===MYSEAT ? p.pocket+'M' : '?')+'</span><br><span class="bank">🏦 '+p.bank+'M</span></div>';
+      '<div class="pmoney"><span class="pocket">💰 '+(i===MYSEAT ? p.pocket+' éc.' : '?')+'</span><br><span class="bank">🏦 '+p.bank+' éc.</span></div>';
     wrap.appendChild(d);
   });
   document.getElementById('turnNum').textContent = G.turn;
@@ -631,7 +633,7 @@ function cardHTML(c, extraClass){
     + '<div class="gc-desc">'+c.desc+'</div>'
     + '</div>';
 }
-const PHASE_HINT = { vote:'pendant un vote du budget', nuit:'pendant la nuit', coup:'pendant un coup d\'État', passif:'automatiquement (carte passive)' };
+const PHASE_HINT = { vote:'pendant un vote de la taille', nuit:'pendant la nuit', coup:'pendant une révolte', passif:'automatiquement (carte passive)' };
 function renderHand(){
   const h = document.getElementById('handCards');
   h.innerHTML = '';
@@ -682,19 +684,19 @@ async function phaseBudget(){
   NET.event({ kind:'aid', v:'???' });
   if (pres.remote && pres.alive) NET.event({ kind:'aid', v:aid, only:pres.id });
 
-  setPhase('☀️ Jour — Arrivée de l\'aide étrangère');
+  setPhase('☀️ Jour — Levée de la taille royale');
   fx.setDay();
   fx.pawnsDay();
   log('<span class="turnhdr">— TOUR '+G.turn+' —</span>', 'turnhdr');
   if (humanIsPres){
-    log('✈️ L\'avion de l\'aide atterrit : <b>'+aid+' M$</b>. Vous seul connaissez le montant… à vous d\'en « redistribuer » une partie.', 'gold');
+    log('🐎 Le convoi de la taille arrive au Château : <b>'+aid+' écus</b>. Vous seul connaissez le montant… à vous d\'en « redistribuer » une partie.', 'gold');
   } else {
-    log('✈️ L\'avion de l\'aide étrangère atterrit. Le montant ? <b>Secret d\'État</b> — seul El Presidente ouvre la valise.', 'gold');
+    log('🐎 Le convoi de la taille royale arrive au Château. Le montant ? <b>Secret de la Couronne</b> — seul le Roi ouvre les coffres.', 'gold');
   }
   fx.planeDrop(aid);
   await sleep(3200);
 
-  setPhase('🏛 Conseil des ministres — Budget');
+  setPhase('🏛 Conseil des barons — La taille');
   let alloc;
   if (G.presidentIdx === 0 && pres.alive){
     alloc = await humanBudget(aid);
@@ -716,28 +718,28 @@ async function phaseBudget(){
     alloc = aiBudget(pres, aid);
   }
   if (G.presidentIdx === 0){
-    const detail = G.players.map((p,i)=> p.alive ? p.name+': '+alloc[i]+'M' : null).filter(Boolean).join(' · ');
+    const detail = G.players.map((p,i)=> p.alive ? p.name+': '+alloc[i]+' éc.' : null).filter(Boolean).join(' · ');
     log('📜 Vous proposez : '+detail+' (vous seul voyez le tableau complet).');
   } else if (G.players[0].alive){
-    log('📜 '+pres.name+' distribue les enveloppes une par une, à l\'oreille. La vôtre : <b>'+alloc[0]+' M$</b>. Ce que touchent les autres ? Motus.');
+    log('📜 '+pres.name+' distribue les enveloppes une par une, à l\'oreille. La vôtre : <b>'+alloc[0]+' écus</b>. Ce que touchent les autres ? Motus.');
   } else {
     log('📜 '+pres.name+' distribue ses enveloppes en catimini.');
   }
 
   // vote
-  setPhase('🗳 Vote du budget');
+  setPhase('🗳 Vote de la taille');
   const result = await voteBudget(alloc);
   if (result.passed){
-    log('✅ Budget adopté ('+result.yes+' voix pour, '+result.no+' contre). L\'argent est distribué.', 'green');
+    log('✅ Répartition adoptée ('+result.yes+' voix pour, '+result.no+' contre). L\'or est distribué.', 'green');
     G.players.forEach((p,i)=>{ if(p.alive){ p.pocket += alloc[i]; } });
     fx.moneyRain();
   } else {
-    log('❌ Budget REJETÉ ('+result.yes+' pour, '+result.no+' contre) ! L\'aide repart... et la rue gronde.', 'red');
+    log('❌ Répartition REJETÉE ('+result.yes+' pour, '+result.no+' contre) ! La taille retourne aux coffres... et la rue gronde.', 'red');
     fx.angryCrowd();
     // un rejet ne suffit plus à lui seul : une fois sur deux, l'armée hésite
     if (Math.random() < 0.5){
       G.coupJustified = true;
-      log('🪖 Les casernes s\'agitent : un coup d\'État devient possible ce tour !', 'red');
+      log('🪖 Les garnisons s\'agitent : une révolte devient possible ce tour !', 'red');
     } else {
       log('🪖 Les casernes grondent, mais restent fidèles… pour cette fois.');
     }
@@ -750,20 +752,20 @@ async function phaseBudget(){
 async function humanBudget(aid){
   return new Promise(res=>{
     const alive = G.players.map((p,i)=>({p,i})).filter(o=>o.p.alive);
-    let html = '<h3>Vous êtes El Presidente</h3><div class="mtext">Répartissez les <b>'+aid+' M$</b> de l\'aide. Un cabinet mal payé vote contre… ou pire.</div>';
+    let html = '<h3>Vous êtes le Roi</h3><div class="mtext">Répartissez les <b>'+aid+' écus</b> de la taille. Un Conseil mal payé vote contre… ou pire.</div>';
     alive.forEach(o=>{
       html += '<div class="alloc-row"><div class="dot" style="background:'+o.p.color+'"></div>'
         + '<span style="min-width:110px">'+o.p.name+'</span>'
         + '<input type="range" min="0" max="'+aid+'" value="0" data-i="'+o.i+'" class="alloc">'
         + '<span class="val" id="val'+o.i+'">0M</span></div>';
     });
-    html += '<div class="mtext" style="margin-top:8px">Reste à allouer : <b id="rest">'+aid+'</b> M$ (le reste est « perdu » dans les frais de dossier… c\'est-à-dire dans votre poche)</div>';
-    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer ce budget</button></div>';
+    html += '<div class="mtext" style="margin-top:8px">Reste à allouer : <b id="rest">'+aid+'</b> écus (le reste est « perdu » dans les frais de dossier… c\'est-à-dire dans votre poche)</div>';
+    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer cette répartition</button></div>';
     modal(html);
     const sliders = [...document.querySelectorAll('.alloc')];
     const upd = ()=>{
       let sum = 0;
-      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+'M'; });
+      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+' éc.'; });
       const rest = aid - sum;
       document.getElementById('rest').textContent = rest;
       document.getElementById('okBudget').disabled = rest < 0;
@@ -814,14 +816,14 @@ function applyVoteCard(p, cid, choiceYes, ctx){
       log('🗂 Dossier compromettant : '+t.name+' votera comme '+p.name+'.', 'gold'); }
     return 0;
   }
-  if (cid==='potdevin'){ p.pocket += 2; log('💵 '+p.name+' encaisse un pot-de-vin (+2 M$).', 'gold'); return 0; }
-  if (cid==='racket'){ p.pocket += 3; log('💵 '+p.name+' rackette le marché (+3 M$).', 'gold'); return 0; }
-  if (cid==='cheque'){ p.pocket += 4; log('💵 '+p.name+' encaisse un chèque de Miami (+4 M$).', 'gold'); return 0; }
+  if (cid==='potdevin'){ p.pocket += 2; log('💵 '+p.name+' encaisse un pot-de-vin (+2 écus).', 'gold'); return 0; }
+  if (cid==='racket'){ p.pocket += 3; log('💵 '+p.name+' rackette le marché (+3 écus).', 'gold'); return 0; }
+  if (cid==='cheque'){ p.pocket += 4; log('💵 '+p.name+' encaisse un chèque de Miami (+4 écus).', 'gold'); return 0; }
   if (cid==='detour'){
     const pr = G.players[G.presidentIdx];
     if (pr.alive && pr.id!==p.id && pr.pocket>0){
       const take = Math.min(2, pr.pocket); pr.pocket -= take; p.pocket += take;
-      log('🕳 '+p.name+' détourne '+take+' M$ de la poche du Presidente.', 'red'); pr.grudge[p.id] += 1;
+      log('🕳 '+p.name+' détourne '+take+' écus de la poche du Roi.', 'red'); pr.grudge[p.id] += 1;
     }
     return 0;
   }
@@ -829,7 +831,7 @@ function applyVoteCard(p, cid, choiceYes, ctx){
     const richest = G.players.filter(t=>t.alive && t.id!==p.id).sort((a,b)=>b.pocket-a.pocket)[0];
     if (richest && richest.pocket>0){
       const take = Math.min(2, richest.pocket); richest.pocket -= take; p.pocket += take;
-      log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' M$).', 'red'); richest.grudge[p.id] += 1.5;
+      log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' écus).', 'red'); richest.grudge[p.id] += 1.5;
     }
     return 0;
   }
@@ -847,8 +849,8 @@ async function voteBudget(alloc){
   if (G.players[0].alive){
     const my = alloc[0];
     const voteCards = G.players[0].hand.filter(c=>c.phase==='vote');
-    let html = '<h3>Vote du budget</h3><div class="mtext">On vous propose <b>'+my+' M$</b>. '
-      + (G.presidentIdx===0 ? 'Vous votez évidemment pour votre propre budget ?' : pres.name+' jure avoir presque tout redistribué. Le total de l\'aide ? « Secret d\'État. » À vous de flairer l\'arnaque.')+'</div>';
+    let html = '<h3>Vote de la taille</h3><div class="mtext">On vous propose <b>'+my+' écus</b>. '
+      + (G.presidentIdx===0 ? 'Vous votez évidemment pour votre propre répartition ?' : pres.name+' jure avoir presque tout redistribué. Le total de la taille ? « Secret de la Couronne. » À vous de flairer l\'arnaque.')+'</div>';
     if (voteCards.length){
       html += '<div class="mtext">Cliquez les cartes à jouer :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
       voteCards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
@@ -884,8 +886,8 @@ async function voteBudget(alloc){
     if (p.remote){
       const cards = p.hand.filter(c=>c.phase==='vote');
       const text = (p.id===G.presidentIdx)
-        ? 'Vous votez évidemment pour votre propre budget ?'
-        : 'On vous propose <b>'+alloc[p.id]+' M$</b>. '+escapeHTML(pres.name)+' jure avoir presque tout redistribué. Le total ? « Secret d\'État. »';
+        ? 'Vous votez évidemment pour votre propre répartition ?'
+        : 'On vous propose <b>'+alloc[p.id]+' écus</b>. '+escapeHTML(pres.name)+' jure avoir presque tout redistribué. Le total ? « Secret d\'État. »';
       const ans = (await NET.prompt(p, 'vote', { text, cards: cards.map(c=>({id:c.id,name:c.name,desc:c.desc,cat:c.cat})) })) || { choice:'yes', played:[] };
       let vv = 1 + (p.role.id==='interior'?1:0);
       if (p.id === G.presidentIdx) vv = Math.max(0, vv - presMalusRef.v);
@@ -918,24 +920,24 @@ async function voteBudget(alloc){
     // l'IA joue parfois ses cartes de vote et d'argent
     p.hand.filter(c=>c.phase==='vote').forEach(c=>{
       if (c.cat==='argent'){
-        if (c.id==='potdevin'){ p.pocket+=2; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un pot-de-vin (+2 M$).'); }
-        else if (c.id==='cheque'){ p.pocket+=4; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un chèque de Miami (+4 M$).'); }
+        if (c.id==='potdevin'){ p.pocket+=2; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un pot-de-vin (+2 écus).'); }
+        else if (c.id==='cheque'){ p.pocket+=4; consumeCard(p,c.id); log('💵 '+p.name+' encaisse un chèque de Miami (+4 écus).'); }
         else if (c.id==='chantage'){
           const richest = G.players.filter(pp=>pp.alive&&pp.id!==p.id).sort((a,b)=>b.pocket-a.pocket)[0];
           if (richest && richest.pocket>0){
             const take=Math.min(2,richest.pocket); richest.pocket-=take; p.pocket+=take;
-            consumeCard(p,c.id); log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' M$).','red');
+            consumeCard(p,c.id); log('📸 '+p.name+' fait chanter '+richest.name+' ('+take+' écus).','red');
             richest.grudge[p.id]+=1.5;
           }
         }
-        else if (c.id==='racket'){ p.pocket+=3; consumeCard(p,c.id); log('💵 '+p.name+' rackette le marché (+3 M$).'); }
+        else if (c.id==='racket'){ p.pocket+=3; consumeCard(p,c.id); log('💵 '+p.name+' rackette le marché (+3 écus).'); }
         else if (c.id==='detour' && G.presidentIdx!==p.id && G.players[G.presidentIdx].alive && G.players[G.presidentIdx].pocket>0 && Math.random()<0.7){
           const pr=G.players[G.presidentIdx]; const take=Math.min(2,pr.pocket); pr.pocket-=take; p.pocket+=take;
-          consumeCard(p,c.id); log('🕳 '+p.name+' détourne '+take+' M$ de la poche du Presidente.','red'); pr.grudge[p.id]+=1;
+          consumeCard(p,c.id); log('🕳 '+p.name+' détourne '+take+' écus de la poche du Roi.','red'); pr.grudge[p.id]+=1;
         }
       } else if (Math.random()<0.3){
         if (c.id==='fraude'){ v+=2; consumeCard(p,c.id); log('🗳 '+p.name+' joue Fraude électorale (+2 voix).'); }
-        else if (c.id==='ambassade'){ v+=3; consumeCard(p,c.id); log('🏛 '+p.name+' joue Soutien de l\'Ambassade (+3 voix).'); }
+        else if (c.id==='ambassade'){ v+=3; consumeCard(p,c.id); log('⛪ '+p.name+' joue Soutien du Pape (+3 voix).'); }
         else if (c.id==='syndicat'||c.id==='eveque'||c.id==='cousinage'){ v+=2; consumeCard(p,c.id); log('🗳 '+p.name+' joue '+c.name+' (+2 voix).'); }
       }
     });
@@ -1016,7 +1018,7 @@ async function phaseNight(){
     if (!t.alive) continue;
     const kind = a.kind || 'assassin';
     const guess = kind==='espion' ? t.night : a.guess;
-    const kindTxt = { assassin:'Des hommes armés rôdent', bombe:'Un colis suspect est déposé', poison:'Une silhouette se glisse en cuisine', espion:'Suivie depuis des jours, la cible est localisée', cigare:'Une boîte de havanes est livrée', embuscade:'Des silhouettes guettent le coffre' }[kind] || 'Des hommes armés rôdent';
+    const kindTxt = { assassin:'Des hommes en armes rôdent', bombe:'Un tonneau suspect est déposé', poison:'Une silhouette se glisse en cuisine', espion:'Suivie depuis des jours, la cible est localisée', cigare:'Un coffret cadeau est livré', embuscade:'Des silhouettes guettent le coffre' }[kind] || 'Des hommes en armes rôdent';
     log('🔪 '+kindTxt+' autour de <b>'+LOCATIONS.find(l=>l.id===guess).name+'</b>…');
     await sleep(1900);
     if (t.night === guess && guess !== 'ambassade'){
@@ -1050,19 +1052,19 @@ async function phaseNight(){
       const k = G.players[a.killer];
       if (kind==='bombe' || kind==='cigare'){
         const destroyed = t.pocket; t.pocket = 0;
-        log('💥 <b>'+t.name+'</b> '+(kind==='cigare'?'allume son havane… et saute avec !':'saute avec sa planque !')+(destroyed>0?' Ses '+destroyed+' M$ partent en fumée.':'')+' La méthode choque tout le monde.', 'red');
+        log('💥 <b>'+t.name+'</b> '+(kind==='cigare'?'ouvre le coffret… et saute avec !':'saute avec sa planque !')+(destroyed>0?' Ses '+destroyed+' écus partent en fumée.':'')+' La méthode choque tout le monde.', 'red');
         G.players.forEach(pp=>{ if(pp.alive) pp.grudge[a.killer] += 1.2; });
       } else {
         let loot = 0;
         if (!t.valise){ loot = t.pocket; t.pocket = 0; }
         k.pocket += loot;
         const verb = kind==='poison' ? 'empoisonné' : 'assassiné';
-        log('💀 <b>'+t.name+'</b> est '+verb+' cette nuit !'+(loot>0?' Son magot de '+loot+' M$ disparaît ('+k.name+' siffle innocemment).':' Sa valise diplomatique protège son argent.'), 'red');
+        log('💀 <b>'+t.name+'</b> est '+verb+' cette nuit !'+(loot>0?' Son magot de '+loot+' écus disparaît ('+k.name+' siffle innocemment).':' Sa valise diplomatique protège son argent.'), 'red');
         G.players.forEach(pp=>{ if(pp.alive) pp.grudge[a.killer] += 0.5; });
       }
       if (t.id === G.presidentIdx){
         G.coupJustified = true;
-        log('⚠️ Le Presidente est mort ! Le pouvoir vacille…', 'red');
+        log('⚠️ Le Roi est mort ! La couronne vacille…', 'red');
       }
     } else {
       log('…mais la cible n\'était pas là. Nuit blanche pour les tueurs.');
@@ -1077,8 +1079,8 @@ async function phaseNight(){
     if (!hasOff) continue;
     let use = false;
     if (p.id===0){
-      use = await ask('<h3>💼 Compte offshore</h3><div class="mtext">Transférer vos <b>'+p.pocket+' M$</b> en Suisse depuis votre planque, sans passer par la banque ?</div>',
-        [ {label:'Transférer ('+p.pocket+' M$)', value:true}, {label:'Garder la carte', value:false, cls:'alt'} ]);
+      use = await ask('<h3>📜 Courrier templier</h3><div class="mtext">Faire porter vos <b>'+p.pocket+' écus</b> au coffre depuis votre planque, sans passer par la commanderie ?</div>',
+        [ {label:'Transférer ('+p.pocket+' écus)', value:true}, {label:'Garder la carte', value:false, cls:'alt'} ]);
     } else if (p.remote){
       use = !!(await NET.prompt(p, 'offshore', { pocket: p.pocket }));
     } else {
@@ -1086,7 +1088,7 @@ async function phaseNight(){
     }
     if (use){
       consumeCard(p,'offshore');
-      log('💼 '+p.name+' fait transiter <b>'+p.pocket+' M$</b> par un compte offshore. Propre.', 'green');
+      log('💼 '+p.name+' fait transiter <b>'+p.pocket+' écus</b> par un compte offshore. Propre.', 'green');
       p.bank += p.pocket; p.pocket = 0;
       fx.deposit();
     }
@@ -1096,22 +1098,22 @@ async function phaseNight(){
   G.players.forEach(p=>{
     if (!p.alive) return;
     if (p.night==='banque' && !G.bankClosed && p.pocket>0){
-      log('🏦 '+p.name+' dépose <b>'+p.pocket+' M$</b> sur son compte suisse.', 'green');
+      log('🏦 '+p.name+' dépose <b>'+p.pocket+' écus</b> sur son compte suisse.', 'green');
       p.bank += p.pocket; p.pocket = 0;
       fx.deposit();
     }
   });
   if (G.bankClosed){
     const frustrated = G.players.filter(p=>p.alive&&p.night==='banque');
-    if (frustrated.length) log('🌀 La banque était fermée à cause du cyclone ! '+frustrated.map(p=>p.name).join(', ')+' repart(ent) bredouille(s).', 'red');
+    if (frustrated.length) log('☠️ La commanderie était fermée à cause des brigands ! '+frustrated.map(p=>p.name).join(', ')+' repart(ent) bredouille(s).', 'red');
   }
   G.bankClosed = false;
 
-  // chez l'amante : ses relations bien placées rapportent 1 M$ au petit matin
+  // chez l'amante : ses relations bien placées rapportent 1 écus au petit matin
   const choyes = G.players.filter(p=>p.alive && p.night==='planque');
   if (choyes.length){
     choyes.forEach(p=>{ p.pocket += 1; });
-    log('🌙 Nuit douce pour '+choyes.map(p=>'<b>'+p.name+'</b>').join(', ')+' : les relations de l\'amante rapportent <b>+1 M$</b> (en poche).', 'gold');
+    log('🌙 Nuit douce pour '+choyes.map(p=>'<b>'+p.name+'</b>').join(', ')+' : les relations de l\'amante rapportent <b>+1 écus</b> (en poche).', 'gold');
   }
   renderPlayers();
   await sleep(900);
@@ -1119,7 +1121,7 @@ async function phaseNight(){
 
 async function humanNight(){
   const me = G.players[0];
-  let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+me.pocket+' M$</b>. La banque permet de sécuriser votre magot… mais tout le monde le sait.</div><div class="opt-grid" id="optGrid">';
+  let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+me.pocket+' écus</b>. Le coffre des Templiers permet de sécuriser votre magot… mais tout le monde le sait.</div><div class="opt-grid" id="optGrid">';
   LOCATIONS.forEach(l=>{
     html += '<div class="opt" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span><b>'+l.name+'</b><span class="odesc">'+l.desc+'</span></div>';
   });
@@ -1154,7 +1156,7 @@ async function humanAssassin(){
   if (isPolice) means.push({ key:'police', kind:'assassin', label:'Police Secrète (gratuit)', desc:'Un assassinat classique offert par votre poste.' });
   attackCards.forEach(c=> means.push({ key:c.id, kind:c.id, label:c.name, desc:c.desc, card:c }));
 
-  let html = '<h3>🔪 Opération nocturne ?</h3><div class="mtext">Une seule tentative par nuit. Choisissez votre méthode, la cible, puis devinez sa planque (l\'Espion vise à coup sûr). L\'Ambassade est intouchable.</div>';
+  let html = '<h3>🗡 Opération nocturne ?</h3><div class="mtext">Une seule tentative par nuit. Choisissez votre méthode, la cible, puis devinez sa planque (l\'Espion vise à coup sûr). Le Monastère est intouchable.</div>';
   html += '<div class="mtext"><b>Méthode :</b></div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
   means.forEach((mn,mi)=>{
     const cat = mn.card ? CARD_CATS[mn.card.cat] : { label:'POLICE', color:'#8fa3c7' };
@@ -1247,9 +1249,9 @@ function aiAssassin(p){
 // PHASE 3 : ÉVÉNEMENT
 // ---------------------------------------------------------------------
 async function phaseEvent(){
-  setPhase('📻 Radio Nationale — Événement du jour');
+  setPhase('📯 Le héraut — Événement du jour');
   const ev = pick(EVENTS);
-  log('📻 <i>« Ici Radio Nationale… »</i> '+ev.text, 'gold');
+  log('📯 <i>« Oyez, oyez, bonnes gens !… »</i> '+ev.text, 'gold');
   fx.radioWave();
   ev.fx(G);
   renderPlayers();
@@ -1264,11 +1266,11 @@ async function maybeCoup(){
   if (!G.coupJustified) return;
   G.coupJustified = false;
 
-  setPhase('🔥 COUP D\'ÉTAT !');
-  log('🔥 <b>LES CHARS SORTENT ! Le coup d\'État est lancé !</b>', 'red');
-  G.players.forEach(p=>{ p.strikeUsed = false; });   // frappe aérienne / canonnière : une par coup
+  setPhase('🔥 RÉVOLTE DES BARONS !');
+  log('🔥 <b>LES BANNIÈRES SE LÈVENT ! La révolte embrase le royaume !</b>', 'red');
+  G.players.forEach(p=>{ p.strikeUsed = false; });   // trébuchet / nef de guerre : une frappe par révolte
   fx.startCoup();
-  toast('⚠️ COUP D\'ÉTAT ⚠️', 2600);
+  toast('⚠️ RÉVOLTE ⚠️', 2600);
   await sleep(1600);
 
   // choix des camps
@@ -1279,7 +1281,7 @@ async function maybeCoup(){
   if (G.players[0].alive && G.presidentIdx !== 0){
     const choice = await ask(
       '<h3>Choisissez votre camp</h3><div class="mtext">'+ (pres.alive ? pres.name+' s\'accroche au pouvoir.' : 'Le pouvoir est vacant !') +
-      ' Rejoignez-vous les <b>rebelles</b> (si vous gagnez, le plus gradé des rebelles prend le palais) ou les <b>loyalistes</b> ?<br><br>Votre force militaire : <b>'+coupStrength(G.players[0],false)+'</b></div>',
+      ' Rejoignez-vous les <b>félons</b> (si vous gagnez, le plus gradé des félons prend le château) ou les <b>royaux</b> ?<br><br>Votre force militaire : <b>'+coupStrength(G.players[0],false)+'</b></div>',
       [ {label:'⚔️ REBELLION', value:'rebel', cls:'danger'}, {label:'🛡 LOYAUTÉ', value:'loyal'} ]
     );
     sides[0] = choice;
@@ -1346,16 +1348,16 @@ async function maybeCoup(){
 
   const rebels = G.players.filter(p=>p.alive && sides[p.id]==='rebel');
   const loyals = G.players.filter(p=>p.alive && sides[p.id]==='loyal');
-  log('⚔️ Rebelles : '+(rebels.map(p=>p.name).join(', ')||'personne')+' — 🛡 Loyalistes : '+(loyals.map(p=>p.name).join(', ')||'personne'));
+  log('⚔️ Félons : '+(rebels.map(p=>p.name).join(', ')||'personne')+' — 🛡 Royaux : '+(loyals.map(p=>p.name).join(', ')||'personne'));
 
   let rebelForce = rebels.reduce((s,p)=>s+coupStrength(p,true),0);
   let loyalForce = loyals.reduce((s,p)=>s+coupStrength(p,true),0);
-  log('Forces en présence — Rebelles : <b>'+rebelForce+'</b> · Loyalistes : <b>'+loyalForce+'</b>');
+  log('Forces en présence — Félons : <b>'+rebelForce+'</b> · Royaux : <b>'+loyalForce+'</b>');
 
   if (rebels.length===0 || loyals.length===0){
     document.getElementById('coupSides').classList.add('hidden');
     NET.event({ kind:'coupsides', html:'', show:false });
-    log(rebels.length===0 ? '🕊 Personne n\'ose bouger. Le régime survit.' : '🏳 Le régime s\'effondre sans combattre !', 'gold');
+    log(rebels.length===0 ? '🕊 Personne n\'ose bouger. La Couronne survit.' : '🏳 La Couronne s\'effondre sans combattre !', 'gold');
     if (loyals.length===0 && rebels.length>0){ await installNewPresident(rebels); }
     fx.endCoup();
     G.players.forEach(p=>p.coupBonus=0);
@@ -1373,9 +1375,9 @@ async function maybeCoup(){
   // panneau "qui est avec qui"
   const sidesPanel = document.getElementById('coupSides');
   sidesPanel.innerHTML =
-    '<b style="color:#ff6b6b">⚔️ REBELLES ('+rebelForce+' u.)</b><br>' +
+    '<b style="color:#ff6b6b">⚔️ FÉLONS ('+rebelForce+' u.)</b><br>' +
     (rebels.map(p=>'<span style="color:'+p.color+'">●</span> '+p.name+(p.id===0?' (vous)':'')).join('<br>')||'—') +
-    '<br><b style="color:#4da3ff">🛡 LOYALISTES ('+loyalForce+' u.)</b><br>' +
+    '<br><b style="color:#4da3ff">🛡 ROYAUX ('+loyalForce+' u.)</b><br>' +
     (loyals.map(p=>'<span style="color:'+p.color+'">●</span> '+p.name+(p.id===0?' (vous)':'')).join('<br>')||'—');
   sidesPanel.classList.remove('hidden');
   NET.event({ kind:'coupsides', html: sidesPanel.innerHTML, show:true });
@@ -1388,7 +1390,7 @@ async function maybeCoup(){
   V.coupUnits = units;   // le rendu lit directement cette structure
   NET.syncUnits();
 
-  log('🪖 <b>Manche 1 : déploiement.</b> Les loyalistes tiennent la ville ; les rebelles entrent par les faubourgs (pas de déploiement direct au Palais). Ensuite, les troupes se déplacent de site en site adjacent, comme sur le plateau.');
+  log('🪖 <b>Manche 1 : déploiement.</b> Les royaux tiennent la ville ; les félons entrent par les faubourgs (pas de déploiement direct au Château). Ensuite, les troupes se déplacent de site en site adjacent, comme sur le plateau.');
 
   // ---- MANCHE 1 : chaque ministre déploie SES unités, chacun son tour ----
   const deployOrder = G.players.filter(p=>p.alive && sides[p.id]);
@@ -1407,11 +1409,69 @@ async function maybeCoup(){
   }
   await sleep(1200);
 
+  // ---- pouvoirs des sites : contrôler un lieu (occupation exclusive) rapporte ----
+  const controlledBy = (siteId)=>{
+    const u = units[siteId];
+    if (u.r>0 && u.l===0) return 'rebel';
+    if (u.l>0 && u.r===0) return 'loyal';
+    return null;   // contesté ou vide
+  };
+  const campTxt = s => s==='rebel' ? 'félons' : 'royaux';
+  const applySitePowers = async ()=>{
+    // 🏰 Garnison : 1 renfort par manche
+    const gSide = controlledBy('caserne');
+    if (gSide){
+      units.caserne[gSide==='rebel'?'r':'l']++;
+      log('🏰 <b>Garnison</b> : les '+campTxt(gSide)+' lèvent 1 renfort.', gSide==='rebel'?'red':'green');
+      NET.syncUnits(); await sleep(700);
+    }
+    // ⛪ Cathédrale : le prêche fait déserter 1 unité ennemie (le plus gros paquet)
+    const cSide = controlledBy('radio');
+    if (cSide){
+      const foeKey = cSide==='rebel' ? 'l' : 'r';
+      const tgt = COUP_SITES.filter(s=>units[s.id][foeKey]>0).sort((a,b)=>units[b.id][foeKey]-units[a.id][foeKey])[0];
+      if (tgt){
+        units[tgt.id][foeKey]--;
+        log('⛪ <b>Cathédrale</b> : le prêche des '+campTxt(cSide)+' fait déserter 1 unité ennemie à '+tgt.name+'.', cSide==='rebel'?'red':'green');
+        NET.syncUnits(); await sleep(700);
+      }
+    }
+    // 💰 Trésor Royal : recruter 1 routier pour 2 écus de poche
+    const tSide = controlledBy('banqueC');
+    if (tSide){
+      const camp = tSide==='rebel' ? rebels : loyals;
+      const human = camp.find(p=> (p.id===0 || p.remote) && p.alive && p.pocket>=2);
+      let buyer = null;
+      if (human){
+        let yes;
+        if (human.id===0){
+          yes = await ask('<h3>💰 Trésor Royal</h3><div class="mtext">Votre camp tient le Trésor. Payer <b>2 écus</b> de votre poche pour recruter <b>1 routier</b> (posé sur le Trésor) ?</div>',
+            [ {label:'⚔️ Recruter (2 écus)', value:true}, {label:'Garder mes écus', value:false, cls:'alt'} ]);
+        } else {
+          yes = !!(await NET.prompt(human, 'recruit', { pocket: human.pocket }));
+        }
+        if (yes) buyer = human;
+      } else {
+        const rich = camp.filter(p=>p.alive && p.id!==0 && !p.remote && p.pocket>=4).sort((a,b)=>b.pocket-a.pocket)[0];
+        if (rich) buyer = rich;
+      }
+      if (buyer){
+        buyer.pocket -= 2;
+        units.banqueC[tSide==='rebel'?'r':'l']++;
+        log('💰 <b>Trésor Royal</b> : '+buyer.name+' paie 2 écus — 1 routier rejoint les '+campTxt(tSide)+'.', tSide==='rebel'?'red':'green');
+        renderPlayers();
+        NET.syncUnits(); await sleep(700);
+      }
+    }
+    // (⚓ le Port donne l'embarquement : géré dans la phase de mouvements)
+  };
+
   for (let round=1; round<=3; round++){
     const rTot = COUP_SITES.reduce((n,s)=>n+units[s.id].r,0);
     const lTot = COUP_SITES.reduce((n,s)=>n+units[s.id].l,0);
     if (rTot===0 || lTot===0) break;
-    log('<b>— MANCHE '+round+'/3 — Rebelles : '+rTot+' u. · Loyalistes : '+lTot+' u. —</b>', 'gold');
+    log('<b>— MANCHE '+round+'/3 — Félons : '+rTot+' u. · Royaux : '+lTot+' u. —</b>', 'gold');
+    if (round >= 2) await applySitePowers();
 
     // ---- déplacements (à partir de la manche 2) : le contrôleur du camp manœuvre ----
     if (round >= 2){
@@ -1432,13 +1492,15 @@ async function maybeCoup(){
           const moves = (await NET.prompt(ctrl, 'move', { side:sideName, round })) || [];
           const arrived = {};
           for (const mv of moves){
-            if (!mv || !ADJ[mv.from] || !ADJ[mv.from].includes(mv.to)) continue;
+            if (!mv || !ADJ[mv.from]) continue;
+            const portOK = mv.from==='aeroport' && mv.to!=='aeroport' && controlledBy('aeroport')===sideName;
+            if (!ADJ[mv.from].includes(mv.to) && !portOK) continue;
             const avail = units[mv.from][key] - (arrived[mv.from]||0);
             if (avail <= 0) continue;
             units[mv.from][key]--; units[mv.to][key]++;
             arrived[mv.to] = (arrived[mv.to]||0) + 1;
           }
-          if (moves.length) log('🪖 '+(sideName==='rebel'?'Les rebelles':'Les loyalistes')+' redéploient leurs forces ('+ctrl.name+').');
+          if (moves.length) log('🪖 '+(sideName==='rebel'?'Les félons':'Les royaux')+' redéploient leurs forces ('+ctrl.name+').');
         } else {
           aiMove(units, sideName, ctrl.ai);
         }
@@ -1456,10 +1518,10 @@ async function maybeCoup(){
       const foeKey = sides[p.id]==='rebel' ? 'l' : 'r';
       const targets = COUP_SITES.filter(s=> units[s.id][foeKey] > 0);
       if (!targets.length) return;
-      const lbl = kind==='air' ? '✈️ Frappe aérienne' : '⚓ Canonnière';
+      const lbl = kind==='air' ? '🪨 Tir de trébuchet' : '⚓ Nef de guerre';
       let choice = null;
       if (p.id===0){
-        choice = await ask('<h3>'+lbl+'</h3><div class="mtext">Une seule fois par coup d\'État : frapper un site maintenant '
+        choice = await ask('<h3>'+lbl+'</h3><div class="mtext">Une seule fois par révolte : frapper un site maintenant '
           + '(détruit jusqu\'à <b>2 unités ennemies</b>), ou garder pour une prochaine manche ?</div>',
           targets.map(s=>({ label:'🎯 '+s.name+' ('+units[s.id][foeKey]+' ennemi'+(units[s.id][foeKey]>1?'s':'')+')', value:s.id, cls:'danger' }))
             .concat([{ label:'🕰 Garder', value:null, cls:'alt' }]));
@@ -1494,7 +1556,7 @@ async function maybeCoup(){
       const u = units[s.id];
       if (u.r>0 && u.l>0){
         const r0 = u.r, l0 = u.l;
-        log('🎲 <b>'+s.name+'</b> : '+r0+' rebelles contre '+l0+' loyalistes…');
+        log('🎲 <b>'+s.name+'</b> : '+r0+' félons contre '+l0+' royaux…');
         const d = await rollSiteDice(r0, l0, s.name, coupRollers);
         const rScore = r0 + d.r, lScore = l0 + d.l;
         const rebelWin = rScore > lScore || (rScore===lScore && owner[s.id]==='rebel');
@@ -1521,8 +1583,8 @@ async function maybeCoup(){
           }
         }
         fx.battle(s, rebelWin);
-        log('💥 Rebelles '+r0+'+🎲'+d.r+'=<b>'+rScore+'</b> vs Loyalistes '+l0+'+🎲'+d.l+'=<b>'+lScore+'</b> → '
-          +(rebelWin?'<span class="red">les rebelles prennent '+s.name+'</span>':'<span class="green">les loyalistes tiennent '+s.name+'</span>')
+        log('💥 Félons '+r0+'+🎲'+d.r+'=<b>'+rScore+'</b> vs Royaux '+l0+'+🎲'+d.l+'=<b>'+lScore+'</b> → '
+          +(rebelWin?'<span class="red">les félons prennent '+s.name+'</span>':'<span class="green">les royaux tiennent '+s.name+'</span>')
           +' (pertes : '+loserLoss+' / '+winnerLoss+').'+retreatTxt);
         NET.syncUnits();
         await sleep(900);
@@ -1540,24 +1602,24 @@ async function maybeCoup(){
   }
   await sleep(1000);
 
-  // décompte : Palais = 2 points, autres sites = 1 point (6 points au total)
+  // décompte : Château = 2 points, autres sites = 1 point (6 points au total)
   let rebelPts = 0;
   COUP_SITES.forEach(s=>{ if (owner[s.id]==='rebel') rebelPts += (s.id==='palais'?2:1); });
   G.siteOwners = owner;
   const rebelSites = Object.values(owner).filter(o=>o==='rebel').length;
-  log('📊 Décompte final : rebelles <b>'+rebelPts+'</b>/6 points (Palais ×2). Majorité requise : 4.');
+  log('📊 Décompte final : félons <b>'+rebelPts+'</b>/6 points (Château ×2). Majorité requise : 4.');
   sidesPanel.classList.add('hidden');
   NET.event({ kind:'coupsides', html:'', show:false });
   V.coupUnits = null;
   NET.event({ kind:'units', units:null, flags:V.flags });
   const rebelsWin = rebelPts >= 4;
   if (rebelsWin){
-    log('🏴 <b>LES REBELLES CONTRÔLENT LA CAPITALE ('+rebelSites+'/5 sites) !</b>', 'red');
+    log('🏴 <b>LES FÉLONS CONTRÔLENT LA CAPITALE ('+rebelSites+'/5 sites) !</b>', 'red');
     await installNewPresident(rebels);
     // exécution d'un loyaliste
     await execution(rebels, loyals);
   } else {
-    log('🛡 <b>Le régime tient bon ('+(5-rebelSites)+'/5 sites). La rébellion est écrasée.</b>', 'green');
+    log('🛡 <b>La Couronne tient bon ('+(5-rebelSites)+'/5 sites). La révolte est écrasée.</b>', 'green');
     await execution(loyals, rebels);
   }
   fx.endCoup();
@@ -1567,7 +1629,7 @@ async function maybeCoup(){
 
 const DIE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
-// -------- ADJACENCE DES SITES (le Palais au centre, les 4 autres en carré) --------
+// -------- ADJACENCE DES SITES (le Château au centre, les 4 autres en carré) --------
 const ADJ = {
   palais:  ['radio','banqueC','caserne','aeroport'],
   radio:   ['palais','banqueC','caserne'],
@@ -1579,7 +1641,7 @@ const ADJ = {
 // -------- déploiement humain : place SES unités (celles des alliés sont déjà sur la carte) --------
 function humanDeploy(army, side){
   return new Promise(res=>{
-    const sideTxt = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const sideTxt = side==='rebel' ? '⚔️ FÉLONS' : '🛡 ROYAUX';
     const key = side==='rebel' ? 'r' : 'l';
     const alloc = {}; COUP_SITES.forEach(s=> alloc[s.id]=0);
     V.deploy = { mode:'deploy', side, key, alloc, rest: army };
@@ -1603,7 +1665,8 @@ function humanDeploy(army, side){
       });
       bar.innerHTML = '<b>'+sideTxt+'</b> — répartissez vos <b>'+army+'</b> unités · reste : <b>'+V.deploy.rest+'</b>'
         + '<div class="dep-sites">'+rows+'</div>'
-        + '<div class="dep-hint">Chaque site vaut 1 point, le <b>Palais 2</b> — majorité à 4/6 pour les rebelles. Ensuite : 2 manches de mouvements, et chaque site disputé se joue aux dés (unités + 1d6).'
+        + '<div class="dep-hint">Chaque site vaut 1 point, le <b>Château 2</b> — majorité à 4/6 pour les félons. Ensuite : 2 manches de mouvements, et chaque site disputé se joue aux dés (unités + 1d6).'
+        + ' <b>Pouvoirs des sites tenus</b> : 🏰 Garnison +1 renfort/manche · ⛪ Cathédrale 1 déserteur ennemi/manche · 💰 Trésor recruter (2 écus) · ⚓ Port embarquer vers tout site.'
         + ' Les boutons et la carte '+(IS_TOUCH?'(toucher un site)':'(clic / clic droit)')+' font la même chose.</div>'
         + '<button class="mbtn danger" id="depOk"'+(V.deploy.rest>0?' disabled':'')+'>EN POSITION</button>';
       bar.querySelectorAll('.dep-btn').forEach(btn=>{
@@ -1657,7 +1720,7 @@ function aiDeploy(army, side, persona){
   COUP_SITES.forEach(s=>{
     if (side==='rebel' && s.id==='palais'){ weights[s.id] = 0; return; }
     let w = s.id==='palais' ? 2.6 : 1;
-    // les rebelles se massent près du palais (radio/caserne adjacentes), les loyalistes défendent
+    // les félons se massent près du palais (radio/caserne adjacentes), les royaux défendent
     if (side==='rebel' && ADJ.palais.includes(s.id)) w += 0.4;
     w *= rand(0.75, 1.25);
     weights[s.id] = w;
@@ -1675,11 +1738,13 @@ function aiDeploy(army, side, persona){
 // -------- MANCHES 2-3 : déplacements adjacents (sélection puis destination) --------
 function humanMove(units, side, round){
   return new Promise(res=>{
-    const sideTxt = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const sideTxt = side==='rebel' ? '⚔️ FÉLONS' : '🛡 ROYAUX';
     const key = side==='rebel' ? 'r' : 'l';
     V.deploy = { mode:'move', side, key, sel:null, moved:{} };  // moved[siteId] = unités déjà arrivées (ne rebougent pas)
     const bar = document.getElementById('deployBar');
     const foe = key==='r' ? 'l' : 'r';
+    // ⚓ Port contrôlé : on peut embarquer depuis le Port vers N'IMPORTE QUEL site
+    V.deploy.portFree = !!(units && units.aeroport && units.aeroport[key]>0 && units.aeroport[foe]===0);
     const render = ()=>{
       const u = V.coupUnits;
       const sel = V.deploy.sel;
@@ -1696,8 +1761,10 @@ function humanMove(units, side, round){
       } else {
         const sName = COUP_SITES.find(s=>s.id===sel).name;
         const mob = u[sel][key] - (V.deploy.moved[sel]||0);
-        body = '<div class="dep-hint"><b>2.</b> Depuis <b>'+sName+'</b> ('+mob+' mobile(s)) — chaque ➜ envoie 1 unité vers un site voisin :</div><div class="dep-sites">'
-          + ADJ[sel].map(a=>{ const s = COUP_SITES.find(c=>c.id===a);
+        const embark = (sel==='aeroport' && V.deploy.portFree);
+        const dests = embark ? COUP_SITES.filter(s=>s.id!=='aeroport').map(s=>s.id) : ADJ[sel];
+        body = '<div class="dep-hint"><b>2.</b> Depuis <b>'+sName+'</b> ('+mob+' mobile(s)) — chaque ➜ envoie 1 unité'+(embark?' — <b>⚓ embarquement : tout site accessible !</b>':' vers un site voisin :')+'</div><div class="dep-sites">'
+          + dests.map(a=>{ const s = COUP_SITES.find(c=>c.id===a);
               return '<div class="dep-row"><b>'+s.name+(a==='palais'?' ×2':'')+'</b>'
                 + '<span class="dinfo">vous '+u[a][key]+' · ennemis '+u[a][foe]+'</span>'
                 + '<button class="dep-btn plus" data-s="'+a+'">➜ 1</button></div>'; }).join('')
@@ -1745,7 +1812,7 @@ function aiMove(units, side, persona){
       units[s.id][key] -= n;
       units[target][key] = (units[target][key]||0) + n;
       arrived[target] = (arrived[target]||0) + n;
-      log('🪖 '+(side==='rebel'?'Les rebelles déplacent':'Les loyalistes déplacent')+' '+n+' unité(s) de '+COUP_SITES.find(c=>c.id===s.id).name+' vers '+COUP_SITES.find(c=>c.id===target).name+'.');
+      log('🪖 '+(side==='rebel'?'Les félons déplacent':'Les royaux déplacent')+' '+n+' unité(s) de '+COUP_SITES.find(c=>c.id===s.id).name+' vers '+COUP_SITES.find(c=>c.id===target).name+'.');
     }
   });
 }
@@ -1760,7 +1827,7 @@ function coupMapClick(best, rightClick){
     if (rightClick){
       if (D.alloc[best.id] > 0){ D.alloc[best.id]--; D.rest++; if (u) u[best.id][D.key]--; }
     } else {
-      if (D.side==='rebel' && best.id==='palais'){ toast('Le Palais est verrouillé : impossible d\'y déployer !', 1800); return; }
+      if (D.side==='rebel' && best.id==='palais'){ toast('Le Château est verrouillé : impossible d\'y déployer !', 1800); return; }
       if (D.rest > 0){ D.alloc[best.id]++; D.rest--; if (u) u[best.id][D.key]++; }
       else toast('Plus d\'unités à placer !', 1400);
     }
@@ -1779,7 +1846,7 @@ function coupMapClick(best, rightClick){
       return;
     }
     // destination : doit être adjacente
-    if (!ADJ[D.sel].includes(best.id)){ toast('Site non adjacent !', 1400); return; }
+    if (!ADJ[D.sel].includes(best.id) && !(D.portFree && D.sel==='aeroport')){ toast('Site non adjacent !', 1400); return; }
     const movable = u[D.sel][D.key] - (D.moved[D.sel]||0);
     if (movable <= 0){ D.sel = null; D.render(); return; }
     u[D.sel][D.key]--;
@@ -1798,7 +1865,7 @@ function setDiceStatus(txt){
   if (typeof NET !== 'undefined') NET.event({ kind:'dicestatus', txt });
 }
 
-// chaque camp lance SES dés à tour de rôle : rebelles d'abord, puis loyalistes.
+// chaque camp lance SES dés à tour de rôle : félons d'abord, puis royaux.
 // rollers = { rebel: joueur|null, loyal: joueur|null } — l'hôte clique lui-même,
 // un joueur distant reçoit le bouton chez lui, une IA lance toute seule.
 async function rollSiteDice(rUnits, lUnits, siteName, rollers){
@@ -1822,7 +1889,7 @@ async function rollSiteDice(rUnits, lUnits, siteName, rollers){
   const vals = {};
   for (const side of ['rebel','loyal']){
     const roller = rollers && rollers[side];
-    const lbl = side==='rebel' ? '⚔️ REBELLES' : '🛡 LOYALISTES';
+    const lbl = side==='rebel' ? '⚔️ FÉLONS' : '🛡 ROYAUX';
     const val = randInt(1,6);
     vals[side] = val;
     if (roller && roller.id === 0){
@@ -1905,14 +1972,14 @@ async function installNewPresident(winners){
   const leader = winners.slice().sort((a,b)=>coupStrength(b,false)-coupStrength(a,false))[0];
   leader.role = ROLES[0];
   G.presidentIdx = leader.id;
-  log('👑 <b>'+leader.name+'</b> s\'autoproclame nouveau Presidente ! La foule applaudit (sous la contrainte).', 'gold');
+  log('👑 <b>'+leader.name+'</b> se couronne lui-même nouveau Roi ! La foule acclame (sous la contrainte).', 'gold');
   fx.newPresident();
   toast('👑 '+leader.name+' prend le pouvoir');
   await sleep(1400);
   await assignCabinet();   // le nouveau président remanie tout le cabinet
 }
 
-// -------- le Presidente distribue les 4 autres postes --------
+// -------- le Roi distribue les autres charges de la cour --------
 async function assignCabinet(){
   const pres = G.players[G.presidentIdx];
   const others = G.players.filter(p=>p.id !== pres.id);
@@ -1923,7 +1990,7 @@ async function assignCabinet(){
     // le joueur humain distribue poste par poste
     for (const role of rolesToGive){
       const choice = await ask(
-        '<h3>👑 Formez votre cabinet</h3><div class="mtext">À qui confiez-vous le poste de <b>'+role.name+'</b> ?<br><span style="color:#9ab; font-size:12px;">'+role.desc+'</span></div>',
+        '<h3>👑 Composez votre cour</h3><div class="mtext">À qui confiez-vous la charge de <b>'+role.name+'</b> ?<br><span style="color:#9ab; font-size:12px;">'+role.desc+'</span></div>',
         remaining.map(p=>({ label:p.name, value:p.id }))
       );
       const chosen = G.players[choice];
@@ -1965,7 +2032,7 @@ async function execution(winners, losers){
     || winners.slice().sort((a,b)=>coupStrength(b,true)-coupStrength(a,true))[0];
   if (chooser && chooser.id===0){
     const v = await ask(
-      '<h3>⚖️ Le peloton d\'exécution attend</h3><div class="mtext">En tant que vainqueur, vous pouvez faire fusiller un vaincu (il perd tout son argent de poche et rate le reste du tour — sa famille le remplace au prochain tour). Ou faire preuve de clémence.</div>',
+      '<h3>⚖️ Le bourreau attend</h3><div class="mtext">En tant que vainqueur, vous pouvez envoyer un vaincu au billot (il perd tout son or de poche et rate le reste du tour — sa famille reprend le fief au prochain tour). Ou faire preuve de clémence.</div>',
       aliveLosers.map(p=>({label:'🎯 '+p.name, value:p.id, cls:'danger'}))
         .concat([{label:'🕊 Clémence', value:-1, cls:'alt'}])
     );
@@ -1980,11 +2047,11 @@ async function execution(winners, losers){
   } else {
     // IA choisit : le plus riche en poche, ou le joueur humain si rancune
     victim = aliveLosers.slice().sort((a,b)=> (b.pocket + (b.id===0?1:0)) - a.pocket)[0];
-    if (Math.random()<0.25){ log('🕊 Les vainqueurs, magnanimes (ou fatigués), ne fusillent personne.'); return; }
+    if (Math.random()<0.25){ log('🕊 Les vainqueurs, magnanimes (ou fatigués), n\'exécutent personne.'); return; }
   }
   if (victim.passeport){
     consumeCard(victim, 'passeport');
-    log('🛂 Au pied du mur, <b>'+victim.name+'</b> exhibe un faux passeport panaméen et disparaît dans la nuit ! Le peloton tire dans le vide.', 'gold');
+    log('📜 Au pied du billot, <b>'+victim.name+'</b> exhibe un sauf-conduit scellé et disparaît dans la nuit ! Le bourreau frappe dans le vide.', 'gold');
     return;
   }
   victim.alive = false;
@@ -1993,7 +2060,7 @@ async function execution(winners, losers){
   const newPres = G.players[G.presidentIdx];
   if (seized>0 && newPres.alive){ newPres.pocket += seized; }
   fx.execution();
-  log('☠️ <b>'+victim.name+'</b> est passé par les armes contre le mur du Palais.'+(seized>0?' Ses '+seized+' M$ « reviennent à l\'État » (c\'est-à-dire au Presidente).':''), 'red');
+  log('☠️ <b>'+victim.name+'</b> finit sur le billot dans la cour du Château.'+(seized>0?' Ses '+seized+' écus « reviennent à la Couronne » (c\'est-à-dire au Roi).':''), 'red');
   G.players.forEach(p=>{ if(p.alive) p.grudge[G.presidentIdx]+=0.5; });
   await sleep(1200);
 }
@@ -2040,16 +2107,16 @@ function endGame(){
   const winner = ranking[0];
   if (NET.active){
     document.getElementById('endTitle').textContent = '🏆 '+winner.name.toUpperCase()+' L\'EMPORTE';
-    document.getElementById('endTag').textContent = 'Son compte suisse déborde. La République applaudit (sous la contrainte).';
+    document.getElementById('endTag').textContent = 'Son coffre déborde chez les Templiers. Le royaume s\'incline (sous la contrainte).';
   } else {
     document.getElementById('endTitle').textContent = winner.id===0 ? '🏆 VICTOIRE' : 'DÉFAITE';
     document.getElementById('endTag').textContent = winner.id===0
-      ? 'Votre compte suisse déborde. La République vous remercie (elle n\'a pas le choix).'
-      : winner.name+' finit sa carrière sur la Côte d\'Azur. Pas vous.';
+      ? 'Votre coffre déborde chez les Templiers. Le royaume vous acclame (il n\'a pas le choix).'
+      : winner.name+' finit ses jours dans un château en Touraine. Pas vous.';
   }
-  let html = '<b>Classement final (compte en banque) :</b><br><br>';
+  let html = '<b>Classement final (or au coffre des Templiers) :</b><br><br>';
   ranking.forEach((p,i)=>{
-    html += (i+1)+'. <span style="color:'+p.color+'"><b>'+p.name+'</b></span> — 🏦 '+p.bank+' M$ (poche : '+p.pocket+' M$)<br>';
+    html += (i+1)+'. <span style="color:'+p.color+'"><b>'+p.name+'</b></span> — 🏦 '+p.bank+' écus (poche : '+p.pocket+' écus)<br>';
   });
   document.getElementById('endBoard').innerHTML = html;
   showEndButtons();
@@ -2063,7 +2130,7 @@ function endGame(){
 
 // ---------- tchat du cabinet (local pour l'instant, branchable au réseau) ----------
 const CHAT_REPLIES = {
-  brutal:       ['On règle ça au peloton, si tu veux.', 'Cause toujours. Mes chars écoutent.', 'Le premier qui bouge, je le fusille.', 'Intéressant. Continue, ça m\'aide à viser.'],
+  brutal:       ['On règle ça au billot, si tu veux.', 'Cause toujours. Mes lances écoutent.', 'Le premier qui bouge, je le pends.', 'Intéressant. Continue, ça m\'aide à viser.'],
   opportuniste: ['Je suis d\'accord avec le plus offrant.', 'Ça dépend. Tu proposes combien ?', 'Excellente idée. C\'était la mienne, non ?', 'Je note. Ça peut servir. Contre toi.'],
   cupide:       ['Et ma part, dans tout ça ?', 'Parle en millions, pas en promesses.', 'Le patriotisme, c\'est bien. Le cash, c\'est mieux.', 'Je t\'écoute dès que tu paies.'],
   prudent:      ['Restons calmes. Et armés.', 'Je préfère attendre de voir.', 'Pas de vagues. Surtout la nuit.', 'Méfie-toi de ceux qui parlent fort.'],
@@ -2132,9 +2199,9 @@ document.getElementById('startGameBtn').onclick = async ()=>{
   initPlayers(selCount);
   renderPlayers();
   renderHand();
-  log('🇺🇳 La communauté internationale « salue la stabilité » de la République. Que la fête commence.');
+  log('⚜️ Les grands du royaume « saluent la sagesse » de la Couronne. Que la fête commence.');
   const pres = G.players[G.presidentIdx];
-  log('👑 <b>'+pres.name+'</b> '+(G.presidentIdx===0?'(vous !) ':'')+'occupe le fauteuil présidentiel et forme son cabinet…', 'gold');
+  log('👑 <b>'+pres.name+'</b> '+(G.presidentIdx===0?'(vous !) ':'')+'ceint la couronne et compose sa cour…', 'gold');
   await assignCabinet();
   gameLoop();
 };
@@ -2243,7 +2310,7 @@ const grass = new THREE.Mesh(new THREE.CylinderGeometry(16.6, 17.4, 0.5, 10), M(
 grass.position.y = -0.05; grass.receiveShadow = true;
 scene.add(grass);
 
-// positions 3D des sites (le Palais au centre)
+// positions 3D des sites (le Château au centre)
 const SITE3D = {
   palais:  new THREE.Vector3( 0.0, 0,  0.0),
   radio:   new THREE.Vector3(-8.5, 0, -5.0),
@@ -2286,16 +2353,28 @@ function buildSites(){
     siteGroups[s.id] = g;
 
     if (s.id === 'palais'){
-      box(5.2, 2.2, 3.6, 0xe8dcc0, 0, 1.1, 0, g);
-      for (let i=0;i<5;i++) box(0.35, 2.2, 0.35, 0xd8c9a5, -2+i*1, 1.1, 1.95, g);
-      const dome = new THREE.Mesh(new THREE.SphereGeometry(1.25, 18, 12, 0, Math.PI*2, 0, Math.PI/2), M(0xc9a02f));
-      dome.position.y = 2.2; dome.castShadow = true; g.add(dome);
-      box(4.6, 0.35, 3.2, 0xd8c9a5, 0, 2.35, 0, g);
+      // château fort : corps de logis, courtine, donjon à toit d'ardoise, tours d'angle
+      box(5.2, 2.2, 3.6, 0xd8cfc0, 0, 1.1, 0, g);
+      for (let i=0;i<5;i++) box(0.35, 2.2, 0.35, 0xbfb49c, -2+i*1, 1.1, 1.95, g);
+      box(4.6, 0.35, 3.2, 0xbfb49c, 0, 2.35, 0, g);
+      box(1.7, 2.2, 1.7, 0xcfc4ae, 0, 3.1, 0, g);   // donjon
+      const keep = new THREE.Mesh(new THREE.ConeGeometry(1.3, 1.5, 8), M(0x3f5f8a));
+      keep.position.y = 4.9; keep.castShadow = true; g.add(keep);
+      [[-2.4,-1.55],[2.4,-1.55],[-2.4,1.55],[2.4,1.55]].forEach(([tx,tz])=>{
+        const tw = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 3.0, 8), M(0xcfc4ae));
+        tw.position.set(tx, 1.5, tz); tw.castShadow = true; g.add(tw);
+        const tr = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.8, 8), M(0x3f5f8a));
+        tr.position.set(tx, 3.35, tz); tr.castShadow = true; g.add(tr);
+      });
     } else if (s.id === 'radio'){
+      // cathédrale : nef, clocher, flèche et croix dorée
       box(3, 1.8, 2.4, 0xcfc4ae, 0, 0.9, 0, g);
-      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 3.4, 6), M(0x888888));
-      mast.position.set(0.8, 3.3, 0); g.add(mast);
-      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color:0xff4444 }));
+      box(1.1, 3.4, 1.1, 0xbfb49c, 0.8, 1.7, 0, g);
+      const fleche = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.3, 4), M(0x3f5f8a));
+      fleche.position.set(0.8, 4.05, 0); fleche.rotation.y = Math.PI/4; fleche.castShadow = true; g.add(fleche);
+      box(0.06, 0.7, 0.06, 0xd9c06b, 0.8, 4.95, 0, g);
+      box(0.4, 0.06, 0.06, 0xd9c06b, 0.8, 5.0, 0, g);
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), new THREE.MeshBasicMaterial({ color:0xffd166 }));
       beacon.position.set(0.8, 5.05, 0); g.add(beacon);
       g.userData.beacon = beacon;
       const win = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.6, 0.05), windowMat());
@@ -2305,8 +2384,8 @@ function buildSites(){
       const ped = new THREE.Mesh(new THREE.CylinderGeometry(0, 2.15, 0.9, 4), M(0xcabf9f));
       ped.position.y = 2.35; ped.rotation.y = Math.PI/4; ped.castShadow = true; g.add(ped);
       for (let i=0;i<4;i++) box(0.28, 2.0, 0.28, 0xcabf9f, -1.2+i*0.8, 1.0, 1.4, g);
-      const dollar = textSprite('$', '#ffd166', 0.8);
-      dollar.position.set(0, 1.4, 1.55); g.add(dollar);
+      const lys = textSprite('⚜', '#ffd166', 0.8);
+      lys.position.set(0, 1.4, 1.55); g.add(lys);
     } else if (s.id === 'caserne'){
       box(4.2, 1.4, 2.2, 0x5f6b4f, 0, 0.7, 0, g);
       box(1.4, 1.0, 2.2, 0x515c43, 2.0, 0.5, 0.6, g);
@@ -2314,11 +2393,17 @@ function buildSites(){
       const win = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.5, 0.05), windowMat());
       win.position.set(0, 0.85, 1.12); g.add(win);
     } else if (s.id === 'aeroport'){
-      box(3.4, 1.3, 2.2, 0xb9bfc8, 0, 0.65, 0, g);
-      box(0.6, 2.6, 0.6, 0x9aa4b5, 1.6, 1.3, -0.6, g);
-      box(1.2, 0.7, 1.2, 0x5c88b5, 1.6, 2.9, -0.6, g);
-      const strip = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.6), M(0x3c3a36));
+      // le Port : halle aux marchandises, tour de guet, jetée de bois et tonneaux
+      box(3.4, 1.3, 2.2, 0xb9a684, 0, 0.65, 0, g);
+      box(0.6, 2.6, 0.6, 0xa89473, 1.6, 1.3, -0.6, g);
+      const guet = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.9, 6), M(0x3f5f8a));
+      guet.position.set(1.6, 3.0, -0.6); guet.castShadow = true; g.add(guet);
+      const strip = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.6), M(0x7a5c3b));
       strip.rotation.x = -Math.PI/2; strip.position.set(0, 0.02, 2.6); g.add(strip);
+      for (let i=0;i<3;i++){
+        const t = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.4, 8), M(0x8a6a45));
+        t.position.set(-1.6+i*0.6, 0.2, 2.4); t.castShadow = true; g.add(t);
+      }
       const win = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, 0.05), windowMat());
       win.position.set(0, 0.75, 1.12); g.add(win);
     }
@@ -2332,9 +2417,10 @@ function buildSites(){
     siteFlags[s.id] = flag;
     flag.userData.base = flag.geometry.attributes.position.array.slice();
 
-    // nom du site
+    // nom du site (hauteur adaptée aux bâtiments hauts : donjon, flèche…)
+    const labelY = { palais:6.3, radio:6.0, aeroport:4.2 }[s.id] || 3.6;
     const label = textSprite(s.name, '#f2ead2', 1.05);
-    label.position.set(0, 3.6, 0);
+    label.position.set(0, labelY, 0);
     g.add(label);
     siteLabels[s.id] = label;
 
@@ -2361,7 +2447,7 @@ const NIGHT3D = {
   planque:   new THREE.Vector3( 3.5, 0, 12.0),
   ambassade: new THREE.Vector3(10.5, 0, 10.5),
 };
-const NIGHT_META = { residence:['Résidence','🏠'], banque:['Banque','🏦'], planque:['Amante','🌙'], ambassade:['Ambassade','🏛'] };
+const NIGHT_META = { residence:['Manoir','🏠'], banque:['Templiers','🏦'], planque:['Favorite','🌙'], ambassade:['Monastère','⛪'] };
 Object.entries(NIGHT3D).forEach(([id, p])=>{
   const g = new THREE.Group(); g.position.copy(p); scene.add(g);
   box(2.0, 1.1, 1.6, id==='ambassade' ? 0xd9d3c4 : 0xc4b394, 0, 0.55, 0, g);
@@ -2478,32 +2564,40 @@ function refreshUnits(){
   });
 }
 
-// ---------- canonnière de l'Amiral (au mouillage) & chasseur du Colonel (parqué) ----------
+// ---------- nef de guerre de l'Amiral (au mouillage) & trébuchet du Maître des Engins ----------
 const gunboat = new THREE.Group();
 {
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 1.1), M(0x5a6b7a));
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 1.1), M(0x6b4f30));
   hull.position.y = 0.1; gunboat.add(hull);
-  box(1.3, 0.5, 0.8, 0x77879a, -0.3, 0.55, 0, gunboat);                 // superstructure
-  box(0.1, 0.9, 0.1, 0x3d4a56, 0.1, 1.15, 0, gunboat);                  // mât
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8), M(0x2f3942));
-  barrel.rotation.z = Math.PI/2 - 0.4; barrel.position.set(1.2, 0.6, 0);
+  box(1.1, 0.55, 0.8, 0x8a6a45, -0.9, 0.55, 0, gunboat);                // château arrière
+  box(0.08, 2.3, 0.08, 0x5a4a30, 0.2, 1.5, 0, gunboat);                 // grand mât
+  const sail = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.4), M(0xe8dcc0, { side:THREE.DoubleSide }));
+  sail.position.set(0.2, 1.7, 0); sail.rotation.y = Math.PI/2;
+  gunboat.add(sail);
+  const fanion = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), M(0x3f5f8a, { side:THREE.DoubleSide }));
+  fanion.position.set(0.45, 2.6, 0); gunboat.add(fanion);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.1, 8), M(0x3d3427));   // bombarde
+  barrel.rotation.z = Math.PI/2 - 0.4; barrel.position.set(1.2, 0.55, 0);
   gunboat.add(barrel);
   gunboat.position.set(-14, -0.35, -14);   // au mouillage au nord de l'île, visible en vue par défaut
   gunboat.rotation.y = 0.8;
   scene.add(gunboat);
 }
-const FIGHTER_PARK = SITE3D.aeroport.clone().add(new THREE.Vector3(1.8, 0.35, 2.4));
-const fighter = new THREE.Group();
+const FIGHTER_PARK = SITE3D.caserne.clone().add(new THREE.Vector3(2.6, 0, 2.6));
+const fighter = new THREE.Group();   // le trébuchet (nom conservé pour le canal réseau)
 {
-  const fus = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 2.1, 8), M(0x8a9a6b));
-  fus.rotation.z = Math.PI/2; fighter.add(fus);
-  box(2.5, 0.06, 0.55, 0x76865c, 0.1, 0, 0, fighter);                   // ailes
-  box(0.45, 0.4, 0.06, 0x76865c, -0.95, 0.25, 0, fighter);              // dérive
+  box(1.7, 0.25, 1.1, 0x6b5636, 0, 0.15, 0, fighter);                   // châssis
+  box(0.12, 1.5, 0.12, 0x7a6543, 0, 0.95, 0.42, fighter);               // montants
+  box(0.12, 1.5, 0.12, 0x7a6543, 0, 0.95, -0.42, fighter);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 0.12), M(0x8a6a45));
+  arm.position.set(0.3, 1.65, 0); arm.rotation.z = -0.5;
+  fighter.add(arm); fighter.userData.arm = arm;
+  box(0.55, 0.55, 0.55, 0x5a4a30, -0.8, 1.25, 0, fighter);              // contrepoids
   fighter.position.copy(FIGHTER_PARK);
   fighter.rotation.y = 0.6;
   scene.add(fighter);
 }
-let fighterAnim = null;   // {tgt, dropped, done} : vol de frappe aérienne en cours
+let fighterAnim = null;   // {tgt, from, stone, t, dur, done} : boulet de trébuchet en vol
 
 // ---------- particules & effets ----------
 const particles = [];   // {mesh, vel, life, spin, kind}
@@ -2599,7 +2693,7 @@ function faceUpQuat(v){
 const diceSim = [];   // {mesh, vel, angVel, targetQ, phase:'fly'|'settle'|'done', settleT}
 let diceResolve = null;
 
-// zone d'atterrissage : la pelouse dégagée entre le Palais et les planques (x -4..4, z 5.5..9.5)
+// zone d'atterrissage : la pelouse dégagée entre le Château et les planques (x -4..4, z 5.5..9.5)
 function throwOneDie(color, value, x0){
   const die = makeDie(color);
   die.position.set(x0, 7.5, 15.5);
@@ -2665,15 +2759,22 @@ fx = {
   setDay(){ V.dayTarget = 1; },
   setNight(){ V.dayTarget = 0; },
   planeDrop(){
+    // le convoi de la taille : une charrette tirée par un cheval traverse l'île
     if (!plane3d){
       const g = new THREE.Group();
-      const fus = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.28, 3.4, 10), M(0xdfe4ea));
-      fus.rotation.z = Math.PI/2; g.add(fus);
-      box(0.12, 0.06, 4.4, 0xc4ccd6, 0, 0.1, 0, g);
-      box(1.4, 0.5, 0.08, 0xc4ccd6, -1.5, 0.35, 0, g);
+      box(1.8, 0.55, 0.95, 0x7a5c3b, 0, 0.62, 0, g);                     // caisse
+      box(1.7, 0.15, 0.85, 0x8a6a45, 0, 0.95, 0, g);                     // bâche de toile
+      for (const dx of [-0.55, 0.55]) for (const dz of [-0.5, 0.5]){
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.1, 10), M(0x4a3a26));
+        w.rotation.x = Math.PI/2; w.position.set(dx, 0.3, dz); g.add(w);
+      }
+      box(1.1, 0.12, 0.1, 0x5a4a30, 1.4, 0.55, 0, g);                    // timon
+      box(1.0, 0.55, 0.42, 0x6b4f30, 2.2, 0.65, 0, g);                   // cheval : corps
+      box(0.3, 0.55, 0.26, 0x6b4f30, 2.75, 1.05, 0, g);                  //          encolure
+      box(0.34, 0.2, 0.2, 0x5a4230, 2.95, 1.3, 0, g);                    //          tête
       plane3d = g; scene.add(g);
     }
-    plane3d.position.set(-40, 12, -2);
+    plane3d.position.set(-40, 0, -2);
     plane3d.userData.active = true;
   },
   moneyRain(){
@@ -2730,17 +2831,21 @@ fx = {
     document.body.classList.add('coupview');    // mobile : priorité à la carte
     setTimeout(resize3d, 60);
   },
-  // frappe aérienne du Colonel : le chasseur décolle, survole le site et largue sa bombe
+  // trébuchet du Maître des Engins : le boulet décrit une cloche jusqu'à la cible
   airstrike(siteId){
     const tgt = (SITE3D[siteId] || SITE3D.palais).clone();
-    fx.focus(siteId, 3.2);
+    fx.focus(siteId, 3.0);
     return new Promise(done=>{
-      fighter.position.set(tgt.x - 30, 5.5, tgt.z);
-      fighter.rotation.set(0, 0, 0);
-      fighterAnim = { tgt, dropped:false, done };
+      const from = fighter.position.clone().setY(1.7);
+      const stone = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), M(0x776f60));
+      stone.castShadow = true;
+      stone.position.copy(from);
+      scene.add(stone);
+      if (fighter.userData.arm) fighter.userData.arm.rotation.z = 0.95;   // le bras claque
+      fighterAnim = { tgt, from, stone, t:0, dur:1.5, done };
     });
   },
-  // canonnière de l'Amiral : trois salves depuis le large
+  // nef de guerre de l'Amiral : trois salves depuis le large
   navalStrike(siteId){
     const tgt = (SITE3D[siteId] || SITE3D.palais).clone();
     fx.focus(siteId, 3.0);
@@ -2827,7 +2932,7 @@ fx = {
     return new Promise(r=>{ diceResolve = r; });
   },
   throwDie(side, val){
-    // un seul dé, pour les lancers à tour de rôle (rebelles puis loyalistes)
+    // un seul dé, pour les lancers à tour de rôle (félons puis royaux)
     throwOneDie(side==='rebel' ? '#e5b3b3' : '#b3c6e5', val, side==='rebel' ? -1.6 : 1.6);
     camLookTarget = new THREE.Vector3(0, 0.3, 7.5);
     camFocusT = 4.0;
@@ -2981,37 +3086,37 @@ function animate(now){
     }
   });
 
-  // avion de l'aide
+  // convoi de la taille (charrette au sol, cahots compris)
   if (plane3d && plane3d.userData.active){
-    plane3d.position.x += dt*9;
-    plane3d.position.y = 12 + Math.sin(t*2)*0.4;
-    if (plane3d.position.x > -14 && plane3d.position.x < 14 && Math.random() < 0.1){
-      const crate = box(0.4, 0.4, 0.4, 0xa0793e, plane3d.position.x, plane3d.position.y-0.6, plane3d.position.z);
+    plane3d.position.x += dt*7;
+    plane3d.position.y = Math.abs(Math.sin(t*9))*0.05;
+    if (plane3d.position.x > -14 && plane3d.position.x < 14 && Math.random() < 0.08){
+      const crate = box(0.4, 0.4, 0.4, 0xa0793e, plane3d.position.x-1.0, 1.2, plane3d.position.z);
       scene.remove(crate); // retiré de la scène directe, géré en particule
-      spawnParticle(crate, new THREE.Vector3(0, -1.6, 0), 6, 'crate');
+      spawnParticle(crate, new THREE.Vector3(-0.3, -1.2, 0), 5, 'crate');
     }
     if (plane3d.position.x > 45) plane3d.userData.active = false;
   }
 
-  // canonnière : tangage au mouillage
+  // nef : tangage au mouillage
   gunboat.position.y = -0.35 + Math.sin(t*1.2)*0.12;
   gunboat.rotation.z = Math.sin(t*0.9)*0.03;
 
-  // chasseur : vol de frappe aérienne
+  // trébuchet : boulet en cloche vers la cible
   if (fighterAnim){
-    fighter.position.x += dt*14;
-    fighter.position.y = 5.5 + Math.sin(t*3)*0.15;
-    if (!fighterAnim.dropped && fighter.position.x >= fighterAnim.tgt.x - 0.4){
-      fighterAnim.dropped = true;
+    fighterAnim.t += dt;
+    const k = Math.min(1, fighterAnim.t / fighterAnim.dur);
+    const p = fighterAnim.from.clone().lerp(fighterAnim.tgt, k);
+    p.y = 1.7 + Math.sin(k*Math.PI)*7 - k*1.2;
+    fighterAnim.stone.position.copy(p);
+    if (fighter.userData.arm) fighter.userData.arm.rotation.z = Math.max(-0.5, 0.95 - fighterAnim.t*3);
+    if (k >= 1){
+      scene.remove(fighterAnim.stone);
       explosion(fighterAnim.tgt.clone(), true);
       fire(fighterAnim.tgt.clone().add(new THREE.Vector3((Math.random()-0.5)*1.5, 0, (Math.random()-0.5)*1.5)));
       camShake = Math.max(camShake, 0.5);
-    }
-    if (fighter.position.x > fighterAnim.tgt.x + 26){
       const d = fighterAnim.done; fighterAnim = null;
-      fighter.position.copy(FIGHTER_PARK);   // retour au parking de l'aéroport
-      fighter.rotation.set(0, 0.6, 0);
-      if (d) d();
+      if (d) setTimeout(d, 400);
     }
   }
 
@@ -3199,6 +3304,7 @@ const NET = {
       case 'role':     return payload.candidates[0].id;
       case 'roll':     return true;
       case 'strike':   return null;   // l'IA de secours garde la frappe
+      case 'recruit':  return p.pocket >= 4;
       default: return null;
     }
   },
@@ -3385,7 +3491,7 @@ function clientStart(config){
   document.getElementById('endScreen').classList.add('hidden');
   document.getElementById('log').innerHTML = '';
   pauseHide();
-  setPhase('Connexion à la République…');
+  setPhase('Connexion au Royaume…');
 }
 
 // ---------------------------------------------------------------------
@@ -3402,16 +3508,18 @@ async function runClientPrompt(pr){
     case 'side':   answer = await ask('<h3>Choisissez votre camp</h3><div class="mtext">'+P.text+'</div>',
                       [ {label:'⚔️ REBELLION', value:'rebel', cls:'danger'}, {label:'🛡 LOYAUTÉ', value:'loyal'} ]); break;
     case 'coupCards': answer = await cpCoupCards(P); break;
-    case 'offshore': answer = await ask('<h3>💼 Compte offshore</h3><div class="mtext">Transférer vos <b>'+P.pocket+' M$</b> en Suisse depuis votre planque ?</div>',
+    case 'offshore': answer = await ask('<h3>📜 Courrier templier</h3><div class="mtext">Faire porter vos <b>'+P.pocket+' écus</b> au coffre depuis votre planque ?</div>',
                       [ {label:'Transférer', value:true}, {label:'Garder la carte', value:false, cls:'alt'} ]); break;
-    case 'exec':   answer = await ask('<h3>⚖️ Le peloton attend</h3><div class="mtext">Faire fusiller un vaincu, ou clémence ?</div>',
+    case 'exec':   answer = await ask('<h3>⚖️ Le bourreau attend</h3><div class="mtext">Envoyer un vaincu au billot, ou clémence ?</div>',
                       P.targets.map(t=>({label:'🎯 '+t.name, value:t.id, cls:'danger'})).concat([{label:'🕊 Clémence', value:-1, cls:'alt'}])); break;
-    case 'role':   answer = await ask('<h3>👑 Formez votre cabinet</h3><div class="mtext">Poste de <b>'+P.roleName+'</b><br><span style="color:#9ab; font-size:12px;">'+P.roleDesc+'</span></div>',
+    case 'role':   answer = await ask('<h3>👑 Composez votre cour</h3><div class="mtext">Charge de <b>'+P.roleName+'</b><br><span style="color:#9ab; font-size:12px;">'+P.roleDesc+'</span></div>',
                       P.candidates.map(c=>({label:c.name, value:c.id}))); break;
     case 'deploy': answer = await humanDeploy(P.army, P.side); break;
     case 'move':   answer = await humanMove(V.coupUnits, P.side, P.round); break;
     case 'roll':   answer = await cpRoll(P); break;
-    case 'strike': answer = await ask('<h3>'+P.label+'</h3><div class="mtext">Une seule fois par coup d\'État : frapper un site maintenant '
+    case 'recruit': answer = await ask('<h3>💰 Trésor Royal</h3><div class="mtext">Votre camp tient le Trésor. Payer <b>2 écus</b> de votre poche ('+P.pocket+' écus) pour recruter <b>1 routier</b> ?</div>',
+      [ {label:'⚔️ Recruter (2 écus)', value:true}, {label:'Garder mes écus', value:false, cls:'alt'} ]); break;
+    case 'strike': answer = await ask('<h3>'+P.label+'</h3><div class="mtext">Une seule fois par révolte : frapper un site maintenant '
       + '(détruit jusqu\'à <b>2 unités ennemies</b>), ou garder pour une prochaine manche ?</div>',
       P.sites.map(s=>({ label:'🎯 '+s.name+' ('+s.foes+' ennemi'+(s.foes>1?'s':'')+')', value:s.id, cls:'danger' }))
         .concat([{ label:'🕰 Garder', value:null, cls:'alt' }])); break;
@@ -3434,20 +3542,20 @@ function cpRoll(P){
 
 function cpBudget(P){
   return new Promise(res=>{
-    let html = '<h3>Vous êtes El Presidente</h3><div class="mtext">Répartissez les <b>'+P.aid+' M$</b> de l\'aide. Le reste file dans votre poche.</div>';
+    let html = '<h3>Vous êtes le Roi</h3><div class="mtext">Répartissez les <b>'+P.aid+' écus</b> de la taille. Le reste file dans votre poche.</div>';
     P.players.forEach(o=>{
       html += '<div class="alloc-row"><div class="dot" style="background:'+o.color+'"></div>'
         + '<span style="min-width:110px">'+escapeHTML(o.name)+'</span>'
         + '<input type="range" min="0" max="'+P.aid+'" value="0" data-i="'+o.seat+'" class="alloc">'
         + '<span class="val" id="val'+o.seat+'">0M</span></div>';
     });
-    html += '<div class="mtext" style="margin-top:8px">Reste (pour vous) : <b id="rest">'+P.aid+'</b> M$</div>';
-    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer ce budget</button></div>';
+    html += '<div class="mtext" style="margin-top:8px">Reste (pour vous) : <b id="rest">'+P.aid+'</b> écus</div>';
+    html += '<div class="mbtns"><button class="mbtn" id="okBudget">Proposer cette répartition</button></div>';
     modal(html);
     const sliders = [...document.querySelectorAll('.alloc')];
     const upd = ()=>{
       let sum = 0;
-      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+'M'; });
+      sliders.forEach(s=>{ sum += +s.value; document.getElementById('val'+s.dataset.i).textContent = s.value+' éc.'; });
       document.getElementById('rest').textContent = P.aid - sum;
       document.getElementById('okBudget').disabled = (P.aid - sum) < 0;
     };
@@ -3461,7 +3569,7 @@ function cpBudget(P){
 }
 function cpVote(P){
   return new Promise(res=>{
-    let html = '<h3>Vote du budget</h3><div class="mtext">'+P.text+'</div>';
+    let html = '<h3>Vote de la taille</h3><div class="mtext">'+P.text+'</div>';
     if (P.cards.length){
       html += '<div class="mtext">Cliquez les cartes à jouer :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
       P.cards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
@@ -3479,7 +3587,7 @@ function cpVote(P){
 }
 function cpNight(P){
   return new Promise(res=>{
-    let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+P.pocket+' M$</b>.</div><div class="opt-grid">';
+    let html = '<h3>Où passez-vous la nuit ?</h3><div class="mtext">Poche actuelle : <b>'+P.pocket+' écus</b>.</div><div class="opt-grid">';
     LOCATIONS.forEach(l=>{ html += '<div class="opt" data-id="'+l.id+'"><span class="oicon">'+l.icon+'</span><b>'+l.name+'</b><span class="odesc">'+l.desc+'</span></div>'; });
     html += '</div><div class="mbtns"><button class="mbtn" id="okNight" disabled>Valider</button></div>';
     modal(html);
@@ -3631,7 +3739,7 @@ document.getElementById('pauseIA').onclick = ()=>{
 };
 document.getElementById('pauseQuit').onclick = ()=>{
   if (!NET.isHost) return;
-  const board = '<i>La République attendra des jours meilleurs. Relancez un salon pour rejouer.</i>';
+  const board = '<i>Le Royaume attendra des jours meilleurs. Relancez un salon pour rejouer.</i>';
   NET.event({ kind:'end', title:'PARTIE INTERROMPUE', tag:'L\'hôte a mis fin à la partie.', board });
   pauseHide();
   document.getElementById('endTitle').textContent = 'PARTIE INTERROMPUE';
@@ -3666,7 +3774,7 @@ document.addEventListener('visibilitychange', ()=>{
 try{ document.getElementById('lobbyServer').value = localStorage.getItem('repServer') || ''; }catch(e){}
 try{ document.getElementById('lobbyName').value = localStorage.getItem('repName') || ''; }catch(e){}
 function lobbyPrep(){
-  const name = (document.getElementById('lobbyName').value||'').trim() || 'Ministre';
+  const name = (document.getElementById('lobbyName').value||'').trim() || 'Messire';
   const url = (document.getElementById('lobbyServer').value||'').trim();
   try{ localStorage.setItem('repServer', url); localStorage.setItem('repName', name); }catch(e){}
   return { name, url };
@@ -3731,7 +3839,7 @@ async function hostStart(humans, count, difficulty){
   // remise à zéro de l'état global (utile au REJOUER)
   G.aidPenalty = 0; G.coupJustified = false; G.coupBlocked = false; G.bankClosed = false; G.siteOwners = {};
   G.difficulty = difficulty;
-  const defaults = ['Gén. Morales','Col. Vásquez','Doña Ferreira','Dr Ocampo','Amiral Bautista','Sra Quintero'];
+  const defaults = ['Sire de Montfort','Dame Isabeau','Baron de Coucy','Frère Anselme','Cap. La Hire','Comtesse Mahaut'];
   humans.forEach((h,i)=> NAMES[i] = h.name);
   for (let i=humans.length; i<count; i++) NAMES[i] = defaults[(i-1) % defaults.length];
   initPlayers(count);
