@@ -518,6 +518,61 @@ const EVENTS = [
   { id:'audit',      text:'⛪ Légat du Pape : chaque baron avec plus de 6 écus en poche en donne 2 à l\'Église.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait « suggérer » un don de 2 écus.', 'red'); } }); } },
   { id:'don',        text:'🎁 Tribut d\'un vassal : le Roi reçoit 2 écus en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 écus « anonymes ».','gold'); } } },
   { id:'cyclone',    text:'☠️ Brigands sur les routes : la nuit prochaine, la commanderie des Templiers sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
+  { id:'tournoi',    text:'🏇 Grand tournoi ! Chaque baron mise 1 écu de poche ; le champion du jour rafle la bourse.', fx:(g)=>{
+      const joueurs = g.players.filter(p=>p.alive && p.pocket>0);
+      if (joueurs.length < 2){ log('Trop peu de bourses pleines : le tournoi est annulé.'); return; }
+      joueurs.forEach(p=> p.pocket--);
+      const champ = pick(joueurs);
+      champ.pocket += joueurs.length;
+      log('🏆 <b>'+champ.name+'</b> désarçonne tout le monde et rafle <b>'+joueurs.length+' écus</b> !', 'gold');
+    } },
+  { id:'mariage',    text:'💍 Mariage princier : deux barons tirés au sort reçoivent 1 écu de dot chacun.', fx:(g)=>{
+      const vivants = g.players.filter(p=>p.alive);
+      const a = pick(vivants); let b = pick(vivants); if (vivants.length>1) while (b===a) b = pick(vivants);
+      a.pocket++; if (b!==a) b.pocket++;
+      log('💍 '+a.name+' et '+b.name+' célèbrent l\'union : +1 écu chacun.', 'gold');
+    } },
+  { id:'peste',      text:'🤢 La peste rôde en ville : chaque baron défausse une carte au hasard (les serviteurs fuient).', fx:(g)=>{
+      g.players.forEach(p=>{ if (p.alive && p.hand.length){ const i = randInt(0, p.hand.length-1); log(p.name+' perd « '+p.hand[i].name+' ».'); p.hand.splice(i,1); } });
+      renderHand();
+    } },
+  { id:'comete',     text:'☄️ Une comète raye le ciel : mauvais présage pour la Couronne, les rancunes s\'aiguisent.', fx:(g)=>{
+      g.players.forEach(p=>{ if (p.alive && p.id!==g.presidentIdx) p.grudge[g.presidentIdx] += 0.5; });
+    } },
+  { id:'fausse',     text:'🪙 Fausse monnaie dans le royaume ! Tout baron avec 5 écus ou plus en poche en perd 1 (rogné).', fx:(g)=>{
+      g.players.forEach(p=>{ if (p.alive && p.pocket>=5){ p.pocket--; log(p.name+' se fait rogner 1 écu.', 'red'); } });
+    } },
+  { id:'pelerinage', text:'🚶 Grand pèlerinage : la nuit prochaine, dormir au Monastère rapporte la bénédiction (+1 écu).', fx:(g)=>{ g.pilgrim = true; } },
+  { id:'moisson',    text:'🌾 Moisson généreuse : chaque baron vivant reçoit 1 écu en poche.', fx:(g)=>{
+      g.players.forEach(p=>{ if (p.alive) p.pocket++; });
+    } },
+  { id:'inquisition',text:'🕯 L\'Inquisition enquête : le baron à la plus grosse bourse est « invité » à donner 1 écu à l\'Église.', fx:(g)=>{
+      const riche = g.players.filter(p=>p.alive && p.pocket>0).sort((a,b)=>b.pocket-a.pocket)[0];
+      if (riche){ riche.pocket--; log(riche.name+' fait un don « spontané » de 1 écu.', 'red'); }
+    } },
+  { id:'troubadours',text:'🎶 Les troubadours chantent le baron le plus démuni : la quête lui rapporte 1 écu.', fx:(g)=>{
+      const pauvre = g.players.filter(p=>p.alive).sort((a,b)=>(a.bank+a.pocket)-(b.bank+b.pocket))[0];
+      if (pauvre){ pauvre.pocket++; log(pauvre.name+' reçoit 1 écu de la quête.', 'gold'); }
+    } },
+  { id:'brume',      text:'🌫 Brume épaisse sur le royaume : la nuit prochaine, les assassins y voient mal (une attaque sur deux se perd).', fx:(g)=>{ g.brume = true; } },
+];
+
+// ---------------------------------------------------------------------
+// AMBITIONS SECRÈTES — une par baron, révélées et payées en fin de partie
+// ---------------------------------------------------------------------
+const AMBITIONS = [
+  { id:'regicide',  name:'Le Régicide',       bonus:4, desc:'Un Roi meurt de votre main.', check:(p,g)=> p.stats.kingKills>=1 },
+  { id:'sanglant',  name:'La Main sanglante', bonus:4, desc:'Réussissez au moins 2 assassinats.', check:(p,g)=> p.stats.kills>=2 },
+  { id:'eminence',  name:'L\'Éminence grise', bonus:3, desc:'Ne soyez jamais Roi de toute la partie, et survivez au dernier tour.', check:(p,g)=> p.alive && !p.stats.startedKing && p.stats.becameKing===0 },
+  { id:'croise',    name:'Le Croisé',         bonus:3, desc:'Votre camp tient la Cathédrale à la fin d\'une révolte.', check:(p,g)=> p.stats.cathedraleWin>=1 },
+  { id:'fidele',    name:'Le Loyal',          bonus:3, desc:'Traversez au moins une révolte sans jamais rejoindre les félons.', check:(p,g)=> p.stats.loyalJoined>=1 && p.stats.rebelJoined===0 },
+  { id:'felon',     name:'Le Grand Félon',    bonus:3, desc:'Gagnez une révolte dans le camp des félons.', check:(p,g)=> p.stats.wonAsRebel>=1 },
+  { id:'usurpateur',name:'L\'Usurpateur',     bonus:3, desc:'Finissez la partie sur le trône sans l\'avoir commencé.', check:(p,g)=> p.alive && !p.stats.startedKing && g.presidentIdx===p.id },
+  { id:'prudent',   name:'L\'Insaisissable',  bonus:3, desc:'Qu\'aucun assassin ne soit jamais envoyé contre vous de toute la partie.', check:(p,g)=> p.stats.targeted===0 },
+  { id:'discret',   name:'L\'Increvable',     bonus:2, desc:'Ne mourez jamais, pas même une fois.', check:(p,g)=> p.stats.deaths===0 },
+  { id:'courtisan', name:'Le Courtisan',      bonus:2, desc:'Passez au moins 3 nuits chez la Favorite.', check:(p,g)=> p.stats.nightsFavorite>=3 },
+  { id:'moine',     name:'Le Pénitent',       bonus:2, desc:'Passez au moins 2 nuits au Monastère.', check:(p,g)=> p.stats.nightsMonastere>=2 },
+  { id:'templier',  name:'Le Templier',       bonus:2, desc:'Finissez avec 0 écu en poche et au moins 6 écus au coffre.', check:(p,g)=> p.pocket===0 && p.bank>=6 },
 ];
 
 // ---------------------------------------------------------------------
@@ -526,6 +581,7 @@ const EVENTS = [
 const G = {
   players: [], turn: 1, presidentIdx: 0,
   aidPenalty: 0, coupJustified: false, coupBlocked: false, bankClosed: false,
+  pilgrim: false, brume: false,   // événements « pèlerinage » et « brume »
   siteOwners: {}, // pendant un coup
 };
 let deck = [];
@@ -568,6 +624,16 @@ function initPlayers(count){
     grudge: new Array(count).fill(0),   // rancunes envers les autres
   }));
   G.presidentIdx = G.players.findIndex(p=>p.role.id==='presidente');
+  // statistiques de partie (ambitions & titres) + ambition secrète de chacun
+  const ambDeck = AMBITIONS.slice();
+  for (let i=ambDeck.length-1;i>0;i--){ const j=randInt(0,i); [ambDeck[i],ambDeck[j]]=[ambDeck[j],ambDeck[i]]; }
+  G.players.forEach((p,i)=>{
+    p.stats = { kills:0, kingKills:0, deaths:0, targeted:0, becameKing:0, startedKing:false,
+      rebelJoined:0, loyalJoined:0, wonAsRebel:0, cathedraleWin:0, nightsFavorite:0, nightsMonastere:0 };
+    p.ambition = ambDeck[i % ambDeck.length];
+  });
+  G.players[G.presidentIdx].stats.startedKing = true;
+  G.pilgrim = false; G.brume = false;
   makeDeck();
   G.players.forEach(p=>{
     draw(p, p.role.id==='interior' ? 3 : 2);
@@ -1016,11 +1082,16 @@ async function phaseNight(){
   for (const a of attempts){
     const t = G.players[a.target];
     if (!t.alive) continue;
+    t.stats.targeted++;
     const kind = a.kind || 'assassin';
     const guess = kind==='espion' ? t.night : a.guess;
     const kindTxt = { assassin:'Des hommes en armes rôdent', bombe:'Un tonneau suspect est déposé', poison:'Une silhouette se glisse en cuisine', espion:'Suivie depuis des jours, la cible est localisée', cigare:'Un coffret cadeau est livré', embuscade:'Des silhouettes guettent le coffre' }[kind] || 'Des hommes en armes rôdent';
     log('🔪 '+kindTxt+' autour de <b>'+LOCATIONS.find(l=>l.id===guess).name+'</b>…');
     await sleep(1900);
+    if (G.brume && Math.random() < 0.5){
+      log('🌫 La brume avale les tueurs : ils se perdent dans les ruelles.', 'gold');
+      await sleep(1300); continue;
+    }
     if (t.night === guess && guess !== 'ambassade'){
       // 1) échec du poison ?
       if (kind==='poison' && Math.random()<0.5){
@@ -1048,8 +1119,10 @@ async function phaseNight(){
 
       // 4) mort
       t.alive = false;
+      t.stats.deaths++;
       fx.gunFlash(t.night, true);
       const k = G.players[a.killer];
+      if (k){ k.stats.kills++; if (t.id === G.presidentIdx) k.stats.kingKills++; }
       if (kind==='bombe' || kind==='cigare'){
         const destroyed = t.pocket; t.pocket = 0;
         log('💥 <b>'+t.name+'</b> '+(kind==='cigare'?'ouvre le coffret… et saute avec !':'saute avec sa planque !')+(destroyed>0?' Ses '+destroyed+' écus partent en fumée.':'')+' La méthode choque tout le monde.', 'red');
@@ -1109,12 +1182,21 @@ async function phaseNight(){
   }
   G.bankClosed = false;
 
-  // chez l'amante : ses relations bien placées rapportent 1 écus au petit matin
+  // chez la favorite : ses relations bien placées rapportent 1 écu au petit matin
   const choyes = G.players.filter(p=>p.alive && p.night==='planque');
   if (choyes.length){
-    choyes.forEach(p=>{ p.pocket += 1; });
-    log('🌙 Nuit douce pour '+choyes.map(p=>'<b>'+p.name+'</b>').join(', ')+' : les relations de l\'amante rapportent <b>+1 écus</b> (en poche).', 'gold');
+    choyes.forEach(p=>{ p.pocket += 1; p.stats.nightsFavorite++; });
+    log('🌙 Nuit douce pour '+choyes.map(p=>'<b>'+p.name+'</b>').join(', ')+' : les relations de la favorite rapportent <b>+1 écu</b> (en poche).', 'gold');
   }
+  // pèlerinage & nuits au Monastère
+  const moines = G.players.filter(p=>p.alive && p.night==='ambassade');
+  moines.forEach(p=> p.stats.nightsMonastere++);
+  if (G.pilgrim && moines.length){
+    moines.forEach(p=> p.pocket += 1);
+    log('🚶 Bénédiction du pèlerinage : '+moines.map(p=>'<b>'+p.name+'</b>').join(', ')+' reçoit(vent) <b>+1 écu</b>.', 'gold');
+  }
+  G.pilgrim = false;
+  G.brume = false;
   renderPlayers();
   await sleep(900);
 }
@@ -1348,6 +1430,8 @@ async function maybeCoup(){
 
   const rebels = G.players.filter(p=>p.alive && sides[p.id]==='rebel');
   const loyals = G.players.filter(p=>p.alive && sides[p.id]==='loyal');
+  rebels.forEach(p=> p.stats.rebelJoined++);
+  loyals.forEach(p=> p.stats.loyalJoined++);
   log('⚔️ Félons : '+(rebels.map(p=>p.name).join(', ')||'personne')+' — 🛡 Royaux : '+(loyals.map(p=>p.name).join(', ')||'personne'));
 
   let rebelForce = rebels.reduce((s,p)=>s+coupStrength(p,true),0);
@@ -1612,7 +1696,10 @@ async function maybeCoup(){
   NET.event({ kind:'coupsides', html:'', show:false });
   V.coupUnits = null;
   NET.event({ kind:'units', units:null, flags:V.flags });
+  // stats d'ambitions : qui tient la Cathédrale à l'issue de la révolte, victoire des félons
+  (owner.radio==='rebel' ? rebels : loyals).forEach(p=>{ if (p.alive) p.stats.cathedraleWin++; });
   const rebelsWin = rebelPts >= 4;
+  if (rebelsWin) rebels.forEach(p=>{ if (p.alive) p.stats.wonAsRebel++; });
   if (rebelsWin){
     log('🏴 <b>LES FÉLONS CONTRÔLENT LA CAPITALE ('+rebelSites+'/5 sites) !</b>', 'red');
     await installNewPresident(rebels);
@@ -1971,6 +2058,7 @@ function coupStrength(p, withBonus){
 async function installNewPresident(winners){
   const leader = winners.slice().sort((a,b)=>coupStrength(b,false)-coupStrength(a,false))[0];
   leader.role = ROLES[0];
+  leader.stats.becameKing++;
   G.presidentIdx = leader.id;
   log('👑 <b>'+leader.name+'</b> se couronne lui-même nouveau Roi ! La foule acclame (sous la contrainte).', 'gold');
   fx.newPresident();
@@ -2055,6 +2143,7 @@ async function execution(winners, losers){
     return;
   }
   victim.alive = false;
+  victim.stats.deaths++;
   const seized = victim.valise ? 0 : victim.pocket;
   victim.pocket = victim.valise ? victim.pocket : 0;
   const newPres = G.players[G.presidentIdx];
@@ -2069,6 +2158,14 @@ async function execution(winners, losers){
 // BOUCLE PRINCIPALE
 // ---------------------------------------------------------------------
 async function gameLoop(){
+  // révéler au joueur humain (siège 0) son ambition secrète
+  const me = G.players[0];
+  if (me && me.ambition){
+    await ask('<h3>🎭 Votre ambition secrète</h3><div class="mtext"><b style="color:#ffd166">'+me.ambition.name+'</b><br>'
+      + me.ambition.desc+'<br><br>Accomplie à la fin de la partie : <b>+'+me.ambition.bonus+' écus au coffre</b>. '
+      + 'Gardez-la pour vous… (rappel dans « ℹ️ Rôles »)</div>',
+      [ {label:'Motus et bouche cousue', value:1} ]);
+  }
   for (G.turn=1; G.turn<=TURNS; G.turn++){
     // résurrections (les morts reviennent : « un cousin reprend le poste »)
     G.players.forEach(p=>{
@@ -2103,6 +2200,34 @@ async function gameLoop(){
 }
 
 function endGame(){
+  // 🎭 révélation des ambitions secrètes (payées au coffre AVANT le classement)
+  let ambHtml = '';
+  G.players.forEach(p=>{
+    if (!p.ambition || !p.stats) return;
+    let ok = false;
+    try { ok = !!p.ambition.check(p, G); } catch(e){}
+    if (ok) p.bank += p.ambition.bonus;
+    ambHtml += '<span style="color:'+p.color+'">'+p.name+'</span> — <b>'+p.ambition.name+'</b> <span style="color:#9ab; font-size:11px;">('+p.ambition.desc+')</span> : '
+      + (ok ? '<span style="color:#7bed9f">accomplie ! +'+p.ambition.bonus+' écus</span>' : '<span style="color:#ff9b9b">manquée</span>')+'<br>';
+  });
+
+  // 🏅 titres d'honneur (+1 écu chacun, au détenteur du record)
+  const TITLES = [
+    ['⚔️ Le Sanguinaire', p=> p.stats ? p.stats.kills : 0],
+    ['🛡 Le Vétéran des révoltes', p=> p.stats ? p.stats.rebelJoined + p.stats.loyalJoined : 0],
+    ['🌙 Le Noctambule', p=> p.stats ? p.stats.nightsFavorite : 0],
+    ['💰 Le Grippe-sou', p=> p.pocket],
+  ];
+  let titleHtml = '';
+  TITLES.forEach(([tname, metric])=>{
+    const sorted = G.players.slice().sort((a,b)=> metric(b) - metric(a));
+    const best = sorted[0];
+    if (!best || metric(best) <= 0) return;
+    if (sorted[1] && metric(sorted[1]) === metric(best)) return;   // égalité : personne
+    best.bank += 1;
+    titleHtml += tname+' : <span style="color:'+best.color+'">'+best.name+'</span> ('+metric(best)+') +1 écu<br>';
+  });
+
   const ranking = G.players.slice().sort((a,b)=> b.bank - a.bank || b.pocket - a.pocket);
   const winner = ranking[0];
   if (NET.active){
@@ -2114,7 +2239,10 @@ function endGame(){
       ? 'Votre coffre déborde chez les Templiers. Le royaume vous acclame (il n\'a pas le choix).'
       : winner.name+' finit ses jours dans un château en Touraine. Pas vous.';
   }
-  let html = '<b>Classement final (or au coffre des Templiers) :</b><br><br>';
+  let html = '';
+  if (ambHtml) html += '<b>🎭 Les ambitions se révèlent :</b><br>'+ambHtml+'<br>';
+  if (titleHtml) html += '<b>🏅 Titres d\'honneur :</b><br>'+titleHtml+'<br>';
+  html += '<b>Classement final (or au coffre des Templiers) :</b><br><br>';
   ranking.forEach((p,i)=>{
     html += (i+1)+'. <span style="color:'+p.color+'"><b>'+p.name+'</b></span> — 🏦 '+p.bank+' écus (poche : '+p.pocket+' écus)<br>';
   });
@@ -2166,7 +2294,12 @@ document.getElementById('chatInput').addEventListener('keydown', e=>{
 const ROLE_ICONS = { presidente:'👑', general:'🎖', colonel:'✈️', policia:'🕶', interior:'🗳', amiral:'⚓', brigade2:'🎖' };
 document.getElementById('helpBtn').onclick = ()=>{
   const div = document.getElementById('helpRoles');
-  div.innerHTML = (G.players.length ? ROLES_ACTIVE : ROLES).map(r=>{
+  // rappel privé de votre ambition secrète
+  const myAmb = G.myAmbition || (G.players[MYSEAT] && G.players[MYSEAT].ambition) || (G.players[0] && G.players[0].ambition);
+  const ambBlock = myAmb
+    ? '<div style="background:#221c10; border:1px solid #ffd166; border-radius:8px; padding:8px 12px; margin-bottom:12px;">🎭 <b style="color:#ffd166">Votre ambition secrète — '+myAmb.name+'</b><br><span style="color:#cbd3e1; font-size:12px;">'+myAmb.desc+' (+'+myAmb.bonus+' écus au coffre en fin de partie)</span></div>'
+    : '';
+  div.innerHTML = ambBlock + (G.players.length ? ROLES_ACTIVE : ROLES).map(r=>{
     const holder = G.players.length ? G.players.find(p=>p.role.id===r.id) : null;
     const who = holder ? ' — <span style="color:'+holder.color+'">'+holder.name+(holder.id===0?' (vous)':'')+'</span>' : '';
     return ROLE_ICONS[r.id]+' <b style="color:#ffd166">'+r.name+'</b>'+who+'<br><span style="color:#9ab; font-size:12px;">'+r.desc+'</span>';
@@ -3347,6 +3480,7 @@ const NET = {
           NET.updatePause();
           log('🔌 <b>'+p.name+'</b> est de retour et reprend son poste !', 'green');
           renderPlayers(); renderHand();   // resynchronise banque/poche/main chez lui
+          if (p.ambition) NET.event({ kind:'ambition', only:seat, a:{ name:p.ambition.name, desc:p.ambition.desc, bonus:p.ambition.bonus } });
           // relancer les questions encore en attente pour ce siège
           Object.entries(NET.pending).forEach(([pid, pd])=>{
             if (pd.seat === seat) NET.event({ kind:'prompt', only:seat, prompt:{ id:+pid, kind:pd.kind, payload:pd.payload } });
@@ -3467,6 +3601,14 @@ function clientEvent(d){
       let args = d.args || [];
       if (d.fn === 'battle') args = [ COUP_SITES.find(s=>s.id===args[0]), args[1] ];
       try{ fx[d.fn] && fx[d.fn](...args); }catch(e){}
+      break;
+    }
+    case 'ambition': {
+      G.myAmbition = d.a;
+      ask('<h3>🎭 Votre ambition secrète</h3><div class="mtext"><b style="color:#ffd166">'+d.a.name+'</b><br>'
+        + d.a.desc+'<br><br>Accomplie à la fin de la partie : <b>+'+d.a.bonus+' écus au coffre</b>. '
+        + 'Gardez-la pour vous… (rappel dans « ℹ️ Rôles »)</div>',
+        [ {label:'Motus et bouche cousue', value:1} ]);
       break;
     }
     case 'prompt': runClientPrompt(d.prompt); break;
@@ -3855,6 +3997,13 @@ async function hostStart(humans, count, difficulty){
   NET.event({ kind:'init', count, difficulty,
     players: G.players.map(p=>({ name:p.name, color:p.color, roleId:p.role.id })),
     presidentIdx: G.presidentIdx });
+  // ambitions secrètes : chacun ne reçoit que la sienne
+  humans.forEach((h,i)=>{
+    if (i>0 && G.players[i] && G.players[i].ambition){
+      const a = G.players[i].ambition;
+      NET.event({ kind:'ambition', only:i, a:{ name:a.name, desc:a.desc, bonus:a.bonus } });
+    }
+  });
   netifyHost();
   renderPlayers(); renderHand();
   log('🌐 Partie en ligne — salon '+NET.roomCode+' : '+humans.map(h=>escapeHTML(h.name)).join(', ')+' + '+(count-humans.length)+' IA.');
