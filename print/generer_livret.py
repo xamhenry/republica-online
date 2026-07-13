@@ -7,7 +7,7 @@ from reportlab.lib.colors import HexColor
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph,
-                                Spacer, Table, TableStyle, PageBreak)
+                                Spacer, Table, TableStyle, PageBreak, Flowable)
 from reportlab.lib.styles import ParagraphStyle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -83,6 +83,184 @@ def normal_page(c, doc):
     c.setFont(F, 8); c.drawCentredString(W/2, 8*mm, '— ' + str(doc.page) + ' —')
     c.restoreState()
 
+# =====================================================================
+# SCHÉMAS (dessin vectoriel dans le PDF)
+# =====================================================================
+BACK = HexColor('#241b12')
+
+class Diagram(Flowable):
+    def __init__(self, w, h, fn, caption=''):
+        super().__init__()
+        self.width, self.height, self.fn, self.caption = w, h, fn, caption
+    def draw(self):
+        c = self.canv
+        c.saveState()
+        self.fn(c)
+        if self.caption:
+            c.setFillColor(HexColor('#8a7a5a')); c.setFont(FI if HAS_GI else F, 7.5)
+            c.drawCentredString(self.width/2, 1*mm, self.caption)
+        c.restoreState()
+
+def _wrapc(c, x, y, w, txt, font, size, color, lead=None):
+    lead = lead or size*1.25
+    c.setFillColor(color); c.setFont(font, size)
+    words, line = txt.split(' '), ''
+    lines = []
+    for wd in words:
+        t = (line+' '+wd).strip()
+        if c.stringWidth(t, font, size) <= w: line = t
+        else: lines.append(line); line = wd
+    if line: lines.append(line)
+    for i, ln in enumerate(lines):
+        c.drawCentredString(x, y-i*lead, ln)
+    return len(lines)
+
+def _pile(c, x, y, w, h, label, col, n=3, face='down'):
+    for i in range(n):     # effet de pile
+        ox = i*0.7*mm
+        c.setFillColor(BACK if face=='down' else PARCH)
+        c.setStrokeColor(col); c.setLineWidth(0.8)
+        c.roundRect(x+ox, y+ox, w, h, 1.2*mm, stroke=1, fill=1)
+    cx, cy = x+(n-1)*0.7*mm+w/2, y+(n-1)*0.7*mm+h/2
+    if face=='down':
+        c.setFillColor(GOLD); c.setFont(SY, 8); c.drawCentredString(cx, cy+1*mm, '⚜')
+    _wrapc(c, cx, y-2.5*mm, w+8*mm, label, FB, 5.6, INK)
+
+def _card(c, x, y, w, h, label, col=INK, face='up', icon=''):
+    c.setFillColor(BACK if face=='down' else PARCH)
+    c.setStrokeColor(GOLD if face=='down' else col); c.setLineWidth(0.9)
+    c.roundRect(x, y, w, h, 1.2*mm, stroke=1, fill=1)
+    if face=='down':
+        c.setFillColor(GOLD); c.setFont(SY, 8); c.drawCentredString(x+w/2, y+h/2-1*mm, '⚜')
+    else:
+        if icon:
+            c.setFillColor(col); c.setFont(SY, 9); c.drawCentredString(x+w/2, y+h/2+1*mm, icon)
+        _wrapc(c, x+w/2, y+h-3.2*mm, w+4*mm, label, FB, 5.4, col)
+
+def _coin(c, x, y, r=2.4*mm):
+    c.setFillColor(HexColor('#e8c25a')); c.setStrokeColor(HexColor('#8a6a1a')); c.setLineWidth(0.6)
+    c.circle(x, y, r, stroke=1, fill=1)
+
+def _token(c, x, y, glyph, ring, r=2.6*mm):
+    c.setFillColor(BACK); c.setStrokeColor(ring); c.setLineWidth(0.8)
+    c.circle(x, y, r, stroke=1, fill=1)
+    c.setFillColor(HexColor('#e8dcc0')); c.setFont(SY, 6); c.drawCentredString(x, y-2, glyph)
+
+def _label(c, x, y, txt, size=6.5, color=HexColor('#7a1f1f'), font=None):
+    c.setFillColor(color); c.setFont(font or FB, size); c.drawString(x, y, txt)
+
+# ---- Schéma 1 : mise en place (vue de table) ----
+def diagram_setup(c):
+    W, H = 174*mm, 92*mm
+    # table
+    c.setFillColor(HexColor('#efe4c8')); c.setStrokeColor(HexColor('#d8c9a5')); c.setLineWidth(1)
+    c.roundRect(2*mm, 6*mm, W-4*mm, H-8*mm, 3*mm, stroke=1, fill=1)
+    # plateau au centre
+    cx, cy = W/2, 46*mm
+    c.setFillColor(HexColor('#7ba05b')); c.setStrokeColor(HexColor('#5f7d43')); c.setLineWidth(1.2)
+    c.roundRect(cx-30*mm, cy-19*mm, 60*mm, 38*mm, 3*mm, stroke=1, fill=1)
+    c.setFillColor(HexColor('#255')); c.setFillColor(HexColor('#1f5f7a'))
+    for (dx,dy,nm) in [(-19,10,'Cathédrale'),(19,10,'Trésor'),(-19,-10,'Garnison'),(19,-10,'Port')]:
+        c.setFillColor(HexColor('#efe4c8')); c.setStrokeColor(INK); c.setLineWidth(0.5)
+        c.circle(cx+dx*mm, cy+dy*mm, 5*mm, stroke=1, fill=1)
+        c.setFillColor(INK); c.setFont(F, 4.2); c.drawCentredString(cx+dx*mm, cy+dy*mm-1, nm)
+    c.setFillColor(HexColor('#7a1f1f')); c.setStrokeColor(GOLD); c.setLineWidth(0.8)
+    c.circle(cx, cy, 6.5*mm, stroke=1, fill=1)
+    c.setFillColor(GOLD); c.setFont(SY, 8); c.drawCentredString(cx, cy+1.5*mm, '♛')
+    c.setFillColor(HexColor('#f3e9d2')); c.setFont(FB, 4.6); c.drawCentredString(cx, cy-3.5*mm, 'CHÂTEAU')
+    c.setFillColor(HexColor('#1a3a1a')); c.setFont(FB, 6); c.drawCentredString(cx, cy+15*mm, 'PLATEAU')
+    # pioches en haut
+    cw, ch = 13*mm, 18*mm
+    _pile(c, 20*mm, 68*mm, cw, ch, 'Pioche TAILLE', CATS_taille := HexColor('#8a6a1a'))
+    _pile(c, 44*mm, 68*mm, cw, ch, 'Pioche ACTION', GOLD)
+    _pile(c, 110*mm, 68*mm, cw, ch, 'Pioche ÉVÉNEMENT', HexColor('#8a5a2b'))
+    # réserve d'écus
+    c.setFillColor(HexColor('#f6eed2')); c.setStrokeColor(HexColor('#8a6a1a')); c.setLineWidth(0.9)
+    c.roundRect(134*mm, 68*mm, 20*mm, 18*mm, 2*mm, stroke=1, fill=1)
+    for (dx,dy) in [(6,12),(11,12),(8,8),(13,8),(6,5),(11,5)]:
+        _coin(c, 134*mm+dx*mm, 68*mm+dy*mm)
+    _wrapc(c, 144*mm, 66*mm, 26*mm, 'Réserve d’écus + unités', FB, 5.4, INK)
+    # 5 zones joueurs autour
+    def baron(x, y, n, king=False):
+        c.setFillColor(HexColor('#f6eed2')); c.setStrokeColor(HexColor('#b9a97e')); c.setLineWidth(0.8)
+        c.roundRect(x, y, 30*mm, 15*mm, 2*mm, stroke=1, fill=1)
+        _card(c, x+1.5*mm, y+2*mm, 7*mm, 10*mm, 'Charge', col=HexColor('#7a1f1f'), icon='♛' if king else '')
+        # coffre (écus sur la charge)
+        _coin(c, x+3*mm, y+13.5*mm); _coin(c, x+6*mm, y+13.5*mm)
+        _card(c, x+10*mm, y+2*mm, 7*mm, 10*mm, '', face='down')   # ambition
+        _card(c, x+18.5*mm, y+3.5*mm, 9*mm, 7*mm, 'main', col=INK)
+        c.setFillColor(HexColor('#7a1f1f') if king else INK); c.setFont(FB, 5)
+        c.drawString(x+1.5*mm, y+16*mm, ('LE ROI' if king else 'Baron '+str(n)))
+    baron(8*mm,   40*mm, 1, king=True)
+    baron(8*mm,   16*mm, 2)
+    baron(72*mm,  9*mm, 3)
+    baron(136*mm, 40*mm, 4)
+    baron(136*mm, 16*mm, 5)
+    c.setFillColor(HexColor('#8a7a5a')); c.setFont(F, 5); c.drawCentredString(W/2, 11*mm, '(6-7 joueurs : deux barons de plus autour de la table)')
+
+# ---- Schéma 2 : la zone de jeu d’un baron ----
+def diagram_player(c):
+    W, H = 174*mm, 62*mm
+    c.setFillColor(HexColor('#f6eed6')); c.setStrokeColor(HexColor('#d8c9a5')); c.setLineWidth(1)
+    c.roundRect(2*mm, 5*mm, W-4*mm, H-7*mm, 3*mm, stroke=1, fill=1)
+    y0 = 30*mm
+    # 1 Charge + coffre
+    _card(c, 8*mm, y0, 16*mm, 23*mm, 'CHARGE (face visible)', col=HexColor('#7a1f1f'), icon='♛')
+    for (dx,dy) in [(3,3),(7,3),(11,3),(5,7),(9,7)]:
+        _coin(c, 8*mm+dx*mm, y0+dy*mm)
+    _label(c, 8*mm, y0+25*mm, 'Charge + COFFRE', 6)
+    _label(c, 8*mm, y0-4*mm, 'écus déposés = visibles', 5.2, HexColor('#3e8e6b'), F)
+    # 2 Ambition face down
+    _card(c, 30*mm, y0, 15*mm, 21*mm, '', face='down')
+    _label(c, 30*mm, y0+23*mm, 'AMBITION', 6)
+    _label(c, 30*mm, y0-4*mm, 'secrète, face cachée', 5.2, HexColor('#5b3a6b'), F)
+    # 3 Planque (nuit)
+    _card(c, 51*mm, y0, 15*mm, 21*mm, '', face='down')
+    _label(c, 51*mm, y0+23*mm, 'PLANQUE', 6)
+    _label(c, 51*mm, y0-4*mm, 'la nuit, face cachée', 5.2, HexColor('#4a6b3a'), F)
+    # 4 main
+    for i in range(4):
+        _card(c, 72*mm+i*7*mm, y0+i*0.0, 14*mm, 20*mm, '' , col=INK, face='down')
+    _label(c, 72*mm, y0+23*mm, 'MAIN (cartes Action)', 6)
+    _label(c, 72*mm, y0-4*mm, 'cachée des autres', 5.2, INK, F)
+    # 5 écus de poche (derrière paravent)
+    c.setFillColor(HexColor('#e9dcbc')); c.setStrokeColor(INK); c.setLineWidth(0.8); c.setDash(2,2)
+    c.roundRect(112*mm, y0, 24*mm, 21*mm, 2*mm, stroke=1, fill=1); c.setDash()
+    for (dx,dy) in [(5,5),(10,5),(15,5),(19,5),(7,11),(13,11)]:
+        _coin(c, 112*mm+dx*mm, y0+dy*mm)
+    _label(c, 112*mm, y0+23*mm, 'POCHE (cachée)', 6)
+    _label(c, 112*mm, y0-4*mm, 'derrière le paravent', 5.2, HexColor('#8a6a1a'), F)
+    # 6 jetons de trace
+    gl = [('☠',HexColor('#a63a3a')),('☾',HexColor('#8b7fd9')),('☦',HexColor('#4eb98f')),('♛',GOLD),('⚔',HexColor('#a63a3a')),('★',HexColor('#4eb98f'))]
+    for i,(g,r) in enumerate(gl):
+        _token(c, 145*mm+(i%3)*7*mm, y0+16*mm-(i//3)*7*mm, g, r)
+    _label(c, 142*mm, y0+23*mm, 'JETONS DE TRACE', 6)
+    _label(c, 142*mm, y0-4*mm, 'preuves publiques', 5.2, INK, F)
+
+# ---- Schéma 3 : la nuit — poser une attaque ----
+def diagram_night(c):
+    W, H = 174*mm, 46*mm
+    c.setFillColor(HexColor('#171b25')); c.setStrokeColor(HexColor('#3a4358')); c.setLineWidth(1)
+    c.roundRect(2*mm, 5*mm, W-4*mm, H-7*mm, 3*mm, stroke=1, fill=1)
+    # attaquant à gauche
+    _label(c, 10*mm, 34*mm, 'VOUS (l’attaquant)', 6.5, HexColor('#ffd166'))
+    _card(c, 10*mm, 12*mm, 15*mm, 20*mm, 'Carte d’ATTAQUE', col=HexColor('#6b5b95'), icon='☠')
+    _card(c, 28*mm, 12*mm, 15*mm, 20*mm, 'FILATURE (le lieu deviné)', col=HexColor('#4a6b3a'), icon='☾')
+    # flèche
+    c.setStrokeColor(HexColor('#ffd166')); c.setLineWidth(1.4)
+    c.line(46*mm, 22*mm, 96*mm, 22*mm)
+    c.setFillColor(HexColor('#ffd166'))
+    p = c.beginPath(); p.moveTo(96*mm,22*mm); p.lineTo(92*mm,24.5*mm); p.lineTo(92*mm,19.5*mm); p.close(); c.drawPath(p, fill=1, stroke=0)
+    c.setFillColor(HexColor('#ffd166')); c.setFont(FI if HAS_GI else F, 6)
+    c.drawCentredString(71*mm, 24*mm, 'posées FACE CACHÉE sur la cible')
+    # cible à droite
+    _label(c, 104*mm, 34*mm, 'LA CIBLE', 6.5, HexColor('#ff9b9b'))
+    _card(c, 104*mm, 12*mm, 15*mm, 20*mm, 'sa CHARGE', col=HexColor('#7a1f1f'), icon='♛')
+    _card(c, 122*mm, 12*mm, 15*mm, 20*mm, 'sa PLANQUE', face='down')
+    _card(c, 140*mm, 12*mm, 15*mm, 20*mm, "votre attaque\n+ filature", face='down')
+    c.setFillColor(HexColor('#8fa3c7')); c.setFont(F, 5.4)
+    c.drawCentredString(147*mm, 9*mm, 'révélées ensemble')
+
 def build():
     path = os.path.join(HERE, 'livret-regles-royaume.pdf')
     doc = BaseDocTemplate(path, pagesize=A4, title='ROYAUME — Livret de règles')
@@ -139,6 +317,13 @@ def build():
         'Le Maître des Engins prend le jeton trébuchet, l’Amiral le jeton nef.',
     ]:
         st.append(LI(tx))
+    st.append(Spacer(1, 3*mm))
+    st.append(Diagram(174*mm, 96*mm, diagram_setup,
+        'Schéma 1 — La table en début de partie (exemple à 5 barons).'))
+    st.append(Spacer(1, 2*mm))
+    st.append(P('Votre zone de jeu — où poser chaque carte :', S_H2))
+    st.append(Diagram(174*mm, 66*mm, diagram_player,
+        'Schéma 2 — Devant vous : Charge (avec le coffre visible), Ambition et Planque face cachées, main d’Action, poche cachée, et vos jetons de trace.'))
 
     # ---------- 4. TOUR DE JEU ----------
     st.append(P('4. Le tour de jeu — cinq phases', S_H1))
@@ -189,6 +374,10 @@ def build():
                 'une carte d’attaque de leur main (Spadassin, Baril de poudre…) et une carte <b>FILATURE</b> '
                 '(le lieu où ils pensent trouver la cible). Le Maître des Assassins peut attaquer sans carte '
                 'd’attaque (son privilège, une fois par nuit) — il pose seulement sa Filature.'))
+    st.append(Spacer(1, 2*mm))
+    st.append(Diagram(174*mm, 48*mm, diagram_night,
+        'Schéma 3 — Une attaque : posez votre carte d’attaque + votre Filature, face cachée, sur la zone de la cible. Tout se révèle ensuite en même temps.'))
+    st.append(Spacer(1, 2*mm))
     st.append(P('B. Révélation', S_H2))
     st.append(P('Toutes les planques se révèlent en même temps. Puis chaque attaque se résout, dans le sens '
                 'horaire en partant du Roi :'))
