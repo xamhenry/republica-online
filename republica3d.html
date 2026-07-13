@@ -1961,12 +1961,14 @@ async function rollSiteDice(rUnits, lUnits, siteName, rollers){
   const btn = document.getElementById('diceBtn');
   const dr1=document.getElementById('dr1'), dl1=document.getElementById('dl1');
   const drT=document.getElementById('drTotal'), dlT=document.getElementById('dlTotal');
-  // en 3D, les dés unicode sont masqués : ils roulent SUR l'île
-  document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display = has3d ? 'none' : 'flex');
+  // le dé chiffré du bandeau est TOUJOURS affiché (lisible), même quand les dés 3D
+  // roulent en plus sur l'île : c'est lui qui indique le résultat noir sur blanc.
+  document.querySelectorAll('#diceTray .ds-dice').forEach(el=> el.style.display = 'flex');
   document.getElementById('dr2').style.display='none';
   document.getElementById('dl2').style.display='none';
   dr1.textContent='⚀'; dl1.textContent='⚀';
-  drT.textContent='…'; dlT.textContent='…';
+  dr1.style.opacity = dl1.style.opacity = '0.4';
+  drT.textContent='—'; dlT.textContent='—';
   btn.style.display='none';
   tray.classList.remove('hidden');
   if (has3d){ tray.style.top = '78%'; fx.clearDice(); }   // laisser voir l'île derrière
@@ -1993,16 +1995,18 @@ async function rollSiteDice(rUnits, lUnits, siteName, rollers){
       setDiceStatus('🏛 '+(siteName||'—')+' — '+lbl+' lancent…');
       await sleep(800);
     }
+    // le dé du bandeau tourne toujours (lisible) ; en 3D, un vrai dé roule EN PLUS
+    // sur l'île, avec un filet de sécurité pour ne jamais bloquer la partie.
+    const d = side==='rebel' ? dr1 : dl1;
+    d.style.opacity = '1'; d.classList.add('rolling');
+    const spin = setInterval(()=>{ d.textContent = DIE_FACES[randInt(0,5)]; }, 70);
     if (has3d){
-      await fx.throwDie(side, val);
+      await Promise.race([ Promise.resolve(fx.throwDie(side, val)), sleep(4000) ]);
     } else {
-      const d = side==='rebel' ? dr1 : dl1;
-      d.classList.add('rolling');
-      await new Promise(fin=>{
-        const spin = setInterval(()=>{ d.textContent = DIE_FACES[randInt(0,5)]; }, 70);
-        setTimeout(()=>{ clearInterval(spin); d.textContent = DIE_FACES[val-1]; d.classList.remove('rolling'); fin(); }, 900);
-      });
+      await sleep(900);
     }
+    clearInterval(spin);
+    d.textContent = DIE_FACES[val-1]; d.classList.remove('rolling');
     const u = side==='rebel' ? rUnits : lUnits;
     (side==='rebel' ? drT : dlT).textContent = u+' + '+val+' = '+(u+val);
     if (typeof NET !== 'undefined') NET.event({ kind:'diceresult', rT: drT.textContent, lT: dlT.textContent });
