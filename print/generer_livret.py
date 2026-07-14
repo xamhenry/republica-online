@@ -261,6 +261,102 @@ def diagram_night(c):
     c.setFillColor(HexColor('#8fa3c7')); c.setFont(F, 5.4)
     c.drawCentredString(147*mm, 9*mm, 'révélées ensemble')
 
+def _cube(c, x, y, col, s=2.6*mm):
+    c.setFillColor(col); c.setStrokeColor(HexColor('#2b2118')); c.setLineWidth(0.4)
+    c.rect(x-s/2, y-s/2, s, s, stroke=1, fill=1)
+
+def _die(c, x, y, pips, s=8*mm):
+    c.setFillColor(HexColor('#f4efe2')); c.setStrokeColor(INK); c.setLineWidth(0.8)
+    c.roundRect(x-s/2, y-s/2, s, s, 1.4*mm, stroke=1, fill=1)
+    P = {1:[(0,0)], 2:[(-1,1),(1,-1)], 3:[(-1,1),(0,0),(1,-1)],
+         4:[(-1,1),(1,1),(-1,-1),(1,-1)], 5:[(-1,1),(1,1),(0,0),(-1,-1),(1,-1)],
+         6:[(-1,1),(1,1),(-1,0),(1,0),(-1,-1),(1,-1)]}
+    c.setFillColor(INK)
+    for (dx,dy) in P[pips]:
+        c.circle(x+dx*s*0.26, y+dy*s*0.26, s*0.07, stroke=0, fill=1)
+
+RED = HexColor('#c0392b'); BLUE = HexColor('#2f6fbe')
+
+# ---- Schéma 4 : la révolte — déploiement, routes, mouvements ----
+def diagram_revolt(c):
+    W, H = 174*mm, 84*mm
+    c.setFillColor(HexColor('#eef3e6')); c.setStrokeColor(HexColor('#c9d6b8')); c.setLineWidth(1)
+    c.roundRect(2*mm, 5*mm, W-4*mm, H-7*mm, 3*mm, stroke=1, fill=1)
+    S = {'chateau':(52,45,'Château','♛','#7a1f1f',True),
+         'cathedrale':(24,66,'Cathédrale','☦','#5b3a6b',False),
+         'tresor':(80,66,'Trésor','⚜','#8a6a1a',False),
+         'garnison':(24,23,'Garnison','⚔','#3e6b3e',False),
+         'port':(80,23,'Port','⚓','#3f6fae',False)}
+    def pos(k): return (S[k][0]*mm, S[k][1]*mm)
+    routes = [('chateau','cathedrale'),('chateau','tresor'),('chateau','garnison'),('chateau','port'),
+              ('cathedrale','tresor'),('tresor','port'),('port','garnison'),('garnison','cathedrale')]
+    c.setStrokeColor(HexColor('#b9a97e')); c.setLineWidth(2.4); c.setLineCap(1)
+    for a,b in routes:
+        (x1,y1),(x2,y2) = pos(a), pos(b); c.line(x1,y1,x2,y2)
+    def cubes(k, nred, nblue):
+        x,y = pos(k); xs = x-4.2*mm
+        for i in range(nred):  _cube(c, xs+i*3.2*mm, y-1.5*mm, RED)
+        for i in range(nblue): _cube(c, xs+i*3.2*mm, y-5.0*mm, BLUE)
+    for k,(fx,fy,nm,ic,col,big) in S.items():
+        x,y = fx*mm,fy*mm; r = (11.5 if big else 9.5)*mm
+        c.setFillColor(HexColor('#efe4c8')); c.setStrokeColor(HexColor(col)); c.setLineWidth(1.4)
+        c.circle(x,y,r,stroke=1,fill=1)
+        c.setFillColor(HexColor(col)); c.setFont(SY,8); c.drawCentredString(x,y+r-4*mm,ic)
+        c.setFont(FB,5.2); c.drawCentredString(x,y+r-8.3*mm,nm+(' ×2 pts' if big else ''))
+    cubes('chateau',0,3); cubes('cathedrale',2,0); cubes('garnison',2,0); cubes('tresor',0,1); cubes('port',1,0)
+    # flèche de mouvement Garnison -> Château (assaut félon)
+    (gx,gy),(cx,cy) = pos('garnison'), pos('chateau')
+    import math
+    ang = math.atan2(cy-gy, cx-gx); sx,sy = gx+11*mm*math.cos(ang), gy+11*mm*math.sin(ang)
+    ex,ey = cx-13*mm*math.cos(ang), cy-13*mm*math.sin(ang)
+    c.setStrokeColor(RED); c.setLineWidth(1.6); c.setDash(3,2); c.line(sx,sy,ex,ey); c.setDash()
+    c.setFillColor(RED)
+    p=c.beginPath(); p.moveTo(ex,ey)
+    p.lineTo(ex-3.4*mm*math.cos(ang-0.4), ey-3.4*mm*math.sin(ang-0.4))
+    p.lineTo(ex-3.4*mm*math.cos(ang+0.4), ey-3.4*mm*math.sin(ang+0.4)); p.close(); c.drawPath(p,fill=1,stroke=0)
+    c.setFillColor(RED); c.setFont(FI if HAS_GI else F,5.4); c.drawString(30*mm,36*mm,'assaut')
+    # légende à droite
+    lx = 100*mm
+    c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,74*mm,'LÉGENDE')
+    _cube(c, lx+2*mm, 67*mm, RED); c.setFillColor(INK); c.setFont(F,6.4); c.drawString(lx+6*mm,65.6*mm,'unité félonne (rouge)')
+    _cube(c, lx+2*mm, 60*mm, BLUE); c.setFillColor(INK); c.drawString(lx+6*mm,58.6*mm,'unité royale (bleu)')
+    c.setStrokeColor(RED); c.setLineWidth(1.6); c.setDash(3,2); c.line(lx,52*mm,lx+4*mm,52*mm); c.setDash()
+    c.setFillColor(INK); c.drawString(lx+6*mm,50.6*mm,'mouvement vers un site adjacent')
+    c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,42*mm,'DÉCOMPTE')
+    c.setFillColor(INK); c.setFont(F,6.4)
+    for i,t in enumerate(['Chaque site tenu = 1 point.','Le Château = 2 points.',
+                          'Total : 6 points.','Félons vainqueurs à 4 points ou +.']):
+        c.drawString(lx,36*mm-i*4.4*mm,'• '+t)
+    c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,15.5*mm,'ORDRE D’UNE MANCHE')
+    c.setFillColor(INK); c.setFont(F,6.2); c.drawString(lx,11*mm,'pouvoirs · mouvements · frappes · batailles')
+
+# ---- Schéma 5 : un exemple de bataille chiffré ----
+def diagram_battle(c):
+    W, H = 174*mm, 40*mm
+    c.setFillColor(HexColor('#f6eed6')); c.setStrokeColor(HexColor('#d8c9a5')); c.setLineWidth(1)
+    c.roundRect(2*mm, 4*mm, W-4*mm, H-6*mm, 3*mm, stroke=1, fill=1)
+    # AVANT
+    c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,6.5); c.drawString(8*mm,31*mm,'GARNISON contestée')
+    for i in range(3): _cube(c, 9*mm+i*3.2*mm, 24*mm, RED)
+    c.setFillColor(RED); c.setFont(FB,6); c.drawString(9*mm,19*mm,'3 félons')
+    for i in range(2): _cube(c, 9*mm+i*3.2*mm, 13*mm, BLUE)
+    c.setFillColor(BLUE); c.setFont(FB,6); c.drawString(9*mm,8*mm,'2 royaux')
+    # DÉS
+    _die(c, 52*mm, 25*mm, 5); c.setFillColor(RED); c.setFont(FB,6.5); c.drawString(60*mm,23.5*mm,'3 + 5 = 8')
+    _die(c, 52*mm, 12*mm, 4); c.setFillColor(BLUE); c.setFont(FB,6.5); c.drawString(60*mm,10.5*mm,'2 + 4 = 6')
+    c.setFillColor(INK); c.setFont(FI if HAS_GI else F,6); c.drawString(46*mm,32*mm,'chacun lance 1d6')
+    # flèche
+    c.setStrokeColor(GOLD); c.setLineWidth(1.6); c.line(88*mm,20*mm,102*mm,20*mm)
+    c.setFillColor(GOLD); p=c.beginPath(); p.moveTo(102*mm,20*mm); p.lineTo(98*mm,22.5*mm); p.lineTo(98*mm,17.5*mm); p.close(); c.drawPath(p,fill=1,stroke=0)
+    # APRÈS
+    c.setFillColor(HexColor('#3e8e6b')); c.setFont(FB,6.5); c.drawString(106*mm,31*mm,'FÉLONS l’emportent (8 > 6)')
+    c.setFillColor(INK); c.setFont(F,6)
+    for i,t in enumerate(['Royaux (perdant) : moitié détruite',
+                          '(arrondi sup.) : 1 tué, 1 survivant recule.',
+                          'Félons (vainqueur) : un quart (arrondi inf.) : 0 perte.',
+                          'La Garnison passe aux félons (3 unités).']):
+        c.drawString(106*mm,25.5*mm-i*4.4*mm,t)
+
 def build():
     path = os.path.join(HERE, 'livret-regles-royaume.pdf')
     doc = BaseDocTemplate(path, pagesize=A4, title='ROYAUME — Livret de règles')
@@ -417,6 +513,9 @@ def build():
                 'le Roi puis dans le sens horaire, chacun pose TOUTES ses unités (cubes de la couleur de son camp) '
                 'sur les sites de son choix. <b>Le Château est interdit au déploiement félon</b> — il faudra le '
                 'prendre d’assaut. Posez un marqueur de contrôle bleu sur chaque site au début (le royaume tient la ville).'))
+    st.append(Spacer(1, 2*mm))
+    st.append(Diagram(174*mm, 86*mm, diagram_revolt,
+        'Schéma 4 — Une révolte en cours : cubes déployés, routes et mouvements (assaut félon sur le Château).'))
     st.append(P('C. Manches 2 et 3', S_H2))
     st.append(P('Dans l’ordre : <b>pouvoirs des sites</b>, puis <b>mouvements</b>, puis <b>frappes</b>, puis <b>batailles</b>.'))
     for tx in [
@@ -426,6 +525,9 @@ def build():
         '<b>Batailles</b> — sur chaque site où les deux camps sont présents : dé rouge + unités félonnes contre dé bleu + unités royales. Égalité : le camp qui contrôlait le site tient. Le perdant détruit la moitié de ses unités (arrondi supérieur), les survivants reculent vers un site adjacent ami (sinon anéantis). Le vainqueur perd un quart (arrondi inférieur). Mettez à jour les marqueurs de contrôle.',
     ]:
         st.append(LI(tx))
+    st.append(Spacer(1, 2*mm))
+    st.append(Diagram(174*mm, 42*mm, diagram_battle,
+        'Schéma 5 — Exemple de bataille résolue aux dés (chaque camp : ses unités + 1d6, félons d’abord).'))
     st.append(P('D. Le décompte', S_H2))
     st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>le Château 2</b> (6 points en tout). '
                 'Les félons l’emportent avec <b>4 points ou plus</b>. Distribuez alors les traces de la révolte : '
