@@ -389,6 +389,7 @@ def build():
         ['52', 'écus (40 × « 1 », 12 × « 5 »)'],
         ['40', 'unités (20 cubes rouges félons, 20 cubes bleus royaux)'],
         ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ favorite, ☦ monastère, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ cathédrale)'],
+        ['40', 'jetons de VOTE (20 POUR or, 20 CONTRE rouge) + 1 sac opaque pour le bulletin secret'],
         ['10', 'marqueurs de contrôle (5 rouges, 5 bleus)'],
         ['2',  'jetons de frappe (trébuchet, nef de guerre) + 1 marqueur de tour'],
         ['2',  'dés à six faces (1 rouge félon, 1 bleu royal)'],
@@ -429,10 +430,13 @@ def build():
                 'haute une répartition : « tant pour untel, tant pour untel… ». Il n’annonce pas le total — '
                 'les barons votent sans savoir combien le Roi garde pour lui. <i>Ce qui n’est pas donné file dans '
                 'sa poche.</i>'))
-    st.append(P('② Le vote du Conseil', S_H2))
-    st.append(P('Chacun peut d’abord jouer des cartes VOTE ou ÉCUS de sa main (elles se défaussent). '
-                'Puis tous votent <b>simultanément</b> au compte de trois : pouce levé (pour) ou baissé (contre). '
-                'Chaque baron vivant = 1 voix, le Chancelier = 2, plus les bonus de cartes. Le Roi vote aussi.'))
+    st.append(P('② Le vote du Conseil — à bulletin secret', S_H2))
+    st.append(P('Chacun peut d’abord jouer des cartes VOTE ou ÉCUS de sa main, face visible (elles se défaussent). '
+                'Puis on vote <b>à bulletin secret</b> : chaque baron glisse dans le sac commun autant de jetons '
+                '<b>POUR</b> (or) <b>ou</b> <b>CONTRE</b> (rouge) qu’il a de voix — <i>tous de la même couleur</i>. '
+                'Voix : 1 par baron vivant, <b>2 pour le Chancelier</b>, plus les bonus des cartes jouées. Le Roi vote aussi.'))
+    st.append(P('Mélangez le sac, videz-le : on compte les jetons. <b>Personne ne sait qui a voté quoi</b> — '
+                'le Roi apprend qu’on l’a trahi, jamais par qui. Plus de POUR que de CONTRE = adopté.', S_NOTE))
     st.append(P('<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend discrètement le reste '
                 '(valeur de la carte moins les dons) et <b>glisse la carte TAILLE face cachée devant lui</b>, '
                 'dans sa réserve royale — <i>sans la montrer</i>. Le total reste secret : nul ne sait vraiment '

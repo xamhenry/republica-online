@@ -500,6 +500,9 @@ def tokens_pdf():
     # marqueurs de contrôle des sites
     for _ in range(5):  circle_token(HexColor('#f3d5d5'), HexColor('#a63a3a'), '⚑', SY, 10, HexColor('#a63a3a'), 'FÉLONS')
     for _ in range(5):  circle_token(HexColor('#d5e2f3'), HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#3f6fae'), 'ROYAUX')
+    # jetons de VOTE à bulletin secret (glissés dans le sac, comptés anonymement)
+    for _ in range(20): circle_token(HexColor('#e8c25a'), HexColor('#8a6a1a'), '✓', SY, 10, HexColor('#5a4210'), 'POUR')
+    for _ in range(20): circle_token(HexColor('#d98b8b'), HexColor('#8a2a2a'), '✗', SY, 10, HexColor('#6b1a1a'), 'CONTRE')
     # frappes uniques & tour
     circle_token(PARCH, INK, '⚒', SY, 11, INK, 'TRÉBUCHET')
     circle_token(PARCH, INK, '⚓', SY, 11, INK, 'NEF')
@@ -515,8 +518,8 @@ def tokens_pdf():
     for _ in range(14): circle_token(dark, HexColor('#a63a3a'), '⚔', SY, 10, HexColor('#f3b5b5'), 'FÉLON')
     for _ in range(14): circle_token(dark, HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#b5cdf3'), 'ROYAL')
     # victoire de révolte (couleur du camp vainqueur) & Cathédrale tenue en fin de révolte
-    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', FB, 11, HexColor('#f3b5b5'), 'VICT. FÉLONNE')
-    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', FB, 11, HexColor('#b5cdf3'), 'VICT. ROYALE')
+    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', SY, 11, HexColor('#f3b5b5'), 'VICT. FÉLONNE')
+    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', SY, 11, HexColor('#b5cdf3'), 'VICT. ROYALE')
     for _ in range(8):  circle_token(dark, HexColor('#5b3a6b'), '✠', SY, 10, HexColor('#d9c9f0'), 'CATHÉDRALE')
     c.showPage()
     c.save()
