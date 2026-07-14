@@ -389,7 +389,7 @@ def build():
         ['52', 'écus (40 × « 1 », 12 × « 5 »)'],
         ['40', 'unités (20 cubes rouges félons, 20 cubes bleus royaux)'],
         ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ favorite, ☦ monastère, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ cathédrale)'],
-        ['40', 'jetons de VOTE (20 POUR or, 20 CONTRE rouge) + 1 sac opaque pour le bulletin secret'],
+        ['14', 'cartes de VOTE : pour chaque joueur, 1 carte POUR + 1 carte CONTRE'],
         ['10', 'marqueurs de contrôle (5 rouges, 5 bleus)'],
         ['2',  'jetons de frappe (trébuchet, nef de guerre) + 1 marqueur de tour'],
         ['2',  'dés à six faces (1 rouge félon, 1 bleu royal)'],
@@ -409,7 +409,7 @@ def build():
     for tx in [
         'Placez le plateau au centre. Mélangez séparément la pioche ACTION, la pile ÉVÉNEMENT et la pioche TAILLE, toutes face cachée. Marqueur de tour sur la case 1.',
         'À 5 joueurs, retirez l’Amiral de France et le Capitaine des Routiers ; à 6, retirez seulement le Capitaine. Mélangez les cartes CHARGE et distribuez-en une à chacun, face visible. Celui qui reçoit <b>Le Roi</b> prend la couronne.',
-        'Chacun reçoit ses 8 cartes LIEU (4 Planque, 4 Filature), une aide de jeu, et pioche <b>2 cartes ACTION</b> (3 pour le Chancelier).',
+        'Chacun reçoit ses 8 cartes LIEU (4 Planque, 4 Filature), ses <b>2 cartes de vote</b> (POUR / CONTRE), une aide de jeu, et pioche <b>2 cartes ACTION</b> (3 pour le Chancelier).',
         'Mélangez les AMBITIONS et distribuez-en une à chacun, <b>face cachée</b>. Regardez-la, ne la montrez à personne.',
         'Le Maître des Engins prend le jeton trébuchet, l’Amiral le jeton nef.',
     ]:
@@ -430,13 +430,14 @@ def build():
                 'haute une répartition : « tant pour untel, tant pour untel… ». Il n’annonce pas le total — '
                 'les barons votent sans savoir combien le Roi garde pour lui. <i>Ce qui n’est pas donné file dans '
                 'sa poche.</i>'))
-    st.append(P('② Le vote du Conseil — à bulletin secret', S_H2))
-    st.append(P('Chacun peut d’abord jouer des cartes VOTE ou ÉCUS de sa main, face visible (elles se défaussent). '
-                'Puis on vote <b>à bulletin secret</b> : chaque baron glisse dans le sac commun autant de jetons '
-                '<b>POUR</b> (or) <b>ou</b> <b>CONTRE</b> (rouge) qu’il a de voix — <i>tous de la même couleur</i>. '
-                'Voix : 1 par baron vivant, <b>2 pour le Chancelier</b>, plus les bonus des cartes jouées. Le Roi vote aussi.'))
-    st.append(P('Mélangez le sac, videz-le : on compte les jetons. <b>Personne ne sait qui a voté quoi</b> — '
-                'le Roi apprend qu’on l’a trahi, jamais par qui. Plus de POUR que de CONTRE = adopté.', S_NOTE))
+    st.append(P('② Le vote du Conseil', S_H2))
+    st.append(P('Chacun peut d’abord jouer, face visible, ses <b>cartes bonus</b> de la main (VOTE ou ÉCUS ; '
+                'elles se défaussent) — Fraude, Soutien du Pape, etc. ajoutent des voix. Puis chaque baron prend '
+                'sa carte <b>POUR</b> ou sa carte <b>CONTRE</b> et la pose <b>face cachée</b> devant lui.'))
+    st.append(P('Quand tout le monde est prêt, on <b>retourne toutes les cartes en même temps</b>. Les votes sont '
+                '<b>visibles de tous</b> — mais comme chacun s’est engagé en aveugle, impossible de suivre le '
+                'mouvement à la dernière seconde. Voix : 1 par baron vivant, <b>2 pour le Chancelier</b>, plus les '
+                'cartes bonus. Le Roi vote aussi. Plus de POUR que de CONTRE = <b>adopté</b>.', S_NOTE))
     st.append(P('<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend discrètement le reste '
                 '(valeur de la carte moins les dons) et <b>glisse la carte TAILLE face cachée devant lui</b>, '
                 'dans sa réserve royale — <i>sans la montrer</i>. Le total reste secret : nul ne sait vraiment '

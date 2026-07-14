@@ -46,6 +46,8 @@ CATS = {
     'ambition': ('AMBITION',  HexColor('#5b3a6b')),
     'charge':   ('CHARGE',    HexColor('#7a1f1f')),
     'lieu':     ('LIEU',      HexColor('#4a6b3a')),
+    'pour':     ('VOTE',      HexColor('#3e8e6b')),
+    'contre':   ('VOTE',      HexColor('#a63a3a')),
     'taille':   ('TAILLE ROYALE', HexColor('#8a6a1a')),
     'aide':     ('AIDE DE JEU', HexColor('#555555')),
 }
@@ -296,6 +298,15 @@ def cards_pdf():
                           corner='FILATURE — joueur '+str(pi+1), edge=pc))
     emit('LIEU', CATS['lieu'][1], fns)
 
+    # ---- 14 cartes de VOTE : 1 POUR + 1 CONTRE par joueur (couleur du joueur) ----
+    fns = []
+    for pi, pc in enumerate(PLAYER_COLORS):
+        fns.append(lambda c,x,y,pc=pc,pi=pi: draw_card(c, x, y, 'pour', 'POUR', '✓',
+            'Abattez-la face cachée puis révélez : vous votez POUR la répartition.', corner='Joueur '+str(pi+1), edge=pc))
+        fns.append(lambda c,x,y,pc=pc,pi=pi: draw_card(c, x, y, 'contre', 'CONTRE', '✗',
+            'Abattez-la face cachée puis révélez : vous votez CONTRE la répartition.', corner='Joueur '+str(pi+1), edge=pc))
+    emit('VOTE', GOLD, fns)
+
     # ---- 18 cartes TAILLE (paquet du Roi, révélées après le vote) ----
     def draw_taille(c, x, y, val):
         label, col = CATS['taille']
@@ -500,9 +511,6 @@ def tokens_pdf():
     # marqueurs de contrôle des sites
     for _ in range(5):  circle_token(HexColor('#f3d5d5'), HexColor('#a63a3a'), '⚑', SY, 10, HexColor('#a63a3a'), 'FÉLONS')
     for _ in range(5):  circle_token(HexColor('#d5e2f3'), HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#3f6fae'), 'ROYAUX')
-    # jetons de VOTE à bulletin secret (glissés dans le sac, comptés anonymement)
-    for _ in range(20): circle_token(HexColor('#e8c25a'), HexColor('#8a6a1a'), '✓', SY, 10, HexColor('#5a4210'), 'POUR')
-    for _ in range(20): circle_token(HexColor('#d98b8b'), HexColor('#8a2a2a'), '✗', SY, 10, HexColor('#6b1a1a'), 'CONTRE')
     # frappes uniques & tour
     circle_token(PARCH, INK, '⚒', SY, 11, INK, 'TRÉBUCHET')
     circle_token(PARCH, INK, '⚓', SY, 11, INK, 'NEF')

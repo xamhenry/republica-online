@@ -917,7 +917,7 @@ async function voteBudget(alloc){
     const voteCards = G.players[0].hand.filter(c=>c.phase==='vote');
     let html = '<h3>Vote de la taille</h3><div class="mtext">On vous propose <b>'+my+' écus</b>. '
       + (G.presidentIdx===0 ? 'Vous votez évidemment pour votre propre répartition ?' : pres.name+' jure avoir presque tout redistribué. Le total de la taille ? « Secret de la Couronne. » À vous de flairer l\'arnaque.')
-      + '<br><span style="color:#8fa3c7; font-size:12px;">🗳 Bulletin secret : personne ne saura pour qui vous avez voté.</span></div>';
+      + '<br><span style="color:#8fa3c7; font-size:12px;">🃏 Abattez votre carte POUR ou CONTRE (les cartes bonus ci-dessous ajoutent des voix).</span></div>';
     if (voteCards.length){
       html += '<div class="mtext">Cliquez les cartes à jouer :</div><div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">';
       voteCards.forEach((c,ci)=>{ html += cardHTML(c).replace('data-cid','data-ci="'+ci+'" data-cid'); });
@@ -944,7 +944,7 @@ async function voteBudget(alloc){
     }
     renderPlayers();
     if (choice==='yes') yes += myVotes; else no += myVotes;
-    log('🗳 Vous glissez votre bulletin dans l\'urne.');
+    log('🃏 Vous abattez votre carte : '+(choice==='yes'?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+myVotes+' voix).');
   }
 
   // votes des joueurs distants puis des IA
@@ -955,7 +955,7 @@ async function voteBudget(alloc){
       const text = ((p.id===G.presidentIdx)
         ? 'Vous votez évidemment pour votre propre répartition ?'
         : 'On vous propose <b>'+alloc[p.id]+' écus</b>. '+escapeHTML(pres.name)+' jure avoir presque tout redistribué. Le total ? « Secret d\'État. »')
-        + '<br><span style="color:#8fa3c7; font-size:12px;">🗳 Bulletin secret : votre vote reste anonyme.</span>';
+        + '<br><span style="color:#8fa3c7; font-size:12px;">🃏 Abattez votre carte POUR ou CONTRE (+ cartes bonus).</span>';
       const ans = (await NET.prompt(p, 'vote', { text, cards: cards.map(c=>({id:c.id,name:c.name,desc:c.desc,cat:c.cat})) })) || { choice:'yes', played:[] };
       let vv = 1 + (p.role.id==='interior'?1:0);
       if (p.id === G.presidentIdx) vv = Math.max(0, vv - presMalusRef.v);
@@ -966,7 +966,7 @@ async function voteBudget(alloc){
         consumeCard(p, cid);
       });
       if (cy) yes += vv; else no += vv;
-      log('🗳 '+p.name+' glisse son bulletin dans l\'urne.');
+      log('🃏 '+p.name+' abat sa carte : '+(cy?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+vv+' voix).');
       renderPlayers();
       await sleep(800);
       continue;
@@ -1010,11 +1010,9 @@ async function voteBudget(alloc){
       }
     });
     if (voteYes) yes += v; else no += v;
-    log('🗳 '+p.name+' glisse son bulletin dans l\'urne.');
+    log('🃏 '+p.name+' abat sa carte : '+(voteYes?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+v+' voix).');
     await sleep(800);
   }
-  log('🗳 <b>On dépouille l\'urne…</b>');
-  await sleep(1100);
   return { passed: yes > no, yes, no };
 }
 
