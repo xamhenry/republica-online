@@ -512,7 +512,7 @@ const COUP_CARD_POWER = { mercenaires:3, foule:2, garnison:3, cia:4, barricades:
 const EVENTS = [
   { id:'secheresse', text:'🌾 Famine ! La taille du prochain tour est réduite de 3 écus.', fx:(g)=>{ g.aidPenalty += 3; } },
   { id:'fmi',        text:'💰 Les banquiers lombards font crédit : +4 écus de taille au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
-  { id:'greve',      text:'✊ Jacquerie ! Le climat est insurrectionnel : une révolte devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; } },
+  { id:'greve',      text:'✊ Jacquerie ! Le climat est insurrectionnel : une révolte devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; g.coupTrigger = 'jacquerie'; } },
   { id:'purge',      text:'🕯 Les sergents du Roi fouillent les manoirs : tout baron resté à son Manoir perd 1 écu de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 écu dans la fouille.', 'red'); } }); } },
   { id:'carnaval',   text:'🎪 Grande foire ! Le peuple oublie tout. Aucune révolte possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
   { id:'audit',      text:'⛪ Légat du Pape : chaque baron avec plus de 6 écus en poche en donne 2 à l\'Église.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait « suggérer » un don de 2 écus.', 'red'); } }); } },
@@ -629,7 +629,9 @@ function initPlayers(count){
   for (let i=ambDeck.length-1;i>0;i--){ const j=randInt(0,i); [ambDeck[i],ambDeck[j]]=[ambDeck[j],ambDeck[i]]; }
   G.players.forEach((p,i)=>{
     p.stats = { kills:0, kingKills:0, deaths:0, targeted:0, becameKing:0, startedKing:false,
-      rebelJoined:0, loyalJoined:0, wonAsRebel:0, cathedraleWin:0, nightsFavorite:0, nightsMonastere:0 };
+      rebelJoined:0, loyalJoined:0, wonAsRebel:0, cathedraleWin:0,
+      nightsFavorite:0, nightsMonastere:0, nightsManoir:0, nightsTempliers:0,
+      votesPour:0, votesContre:0, cardsPlayed:0 };
     p.ambition = ambDeck[i % ambDeck.length];
   });
   G.players[G.presidentIdx].stats.startedKing = true;
@@ -792,9 +794,14 @@ async function phaseBudget(){
     log('📜 '+pres.name+' distribue ses enveloppes en catimini.');
   }
 
+  // télémétrie : taille du tour + ce que le Roi se garde (cupidité)
+  const donsAutres = G.players.reduce((s,p,i)=> s + (i===G.presidentIdx?0:(alloc[i]||0)), 0);
+  statsBudget(aid, Math.max(0, aid - donsAutres));
+
   // vote
   setPhase('🗳 Vote de la taille');
   const result = await voteBudget(alloc);
+  statsVote(result.yes, result.no, result.passed);
   if (result.passed){
     log('✅ Répartition adoptée ('+result.yes+' voix pour, '+result.no+' contre). L\'or est distribué.', 'green');
     G.players.forEach((p,i)=>{ if(p.alive){ p.pocket += alloc[i]; } });
@@ -804,7 +811,7 @@ async function phaseBudget(){
     fx.angryCrowd();
     // un rejet ne suffit plus à lui seul : une fois sur deux, l'armée hésite
     if (Math.random() < 0.5){
-      G.coupJustified = true;
+      G.coupJustified = true; G.coupTrigger = 'budget_rejete';
       log('🪖 Les garnisons s\'agitent : une révolte devient possible ce tour !', 'red');
     } else {
       log('🪖 Les casernes grondent, mais restent fidèles… pour cette fois.');
@@ -944,6 +951,7 @@ async function voteBudget(alloc){
     }
     renderPlayers();
     if (choice==='yes') yes += myVotes; else no += myVotes;
+    if (G.players[0].stats){ choice==='yes' ? G.players[0].stats.votesPour++ : G.players[0].stats.votesContre++; }
     log('🃏 Vous abattez votre carte : '+(choice==='yes'?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+myVotes+' voix).');
   }
 
@@ -966,6 +974,7 @@ async function voteBudget(alloc){
         consumeCard(p, cid);
       });
       if (cy) yes += vv; else no += vv;
+      if (p.stats){ cy ? p.stats.votesPour++ : p.stats.votesContre++; }
       log('🃏 '+p.name+' abat sa carte : '+(cy?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+vv+' voix).');
       renderPlayers();
       await sleep(800);
@@ -1010,6 +1019,7 @@ async function voteBudget(alloc){
       }
     });
     if (voteYes) yes += v; else no += v;
+    if (p.stats){ voteYes ? p.stats.votesPour++ : p.stats.votesContre++; }
     log('🃏 '+p.name+' abat sa carte : '+(voteYes?'<span class="green">POUR</span>':'<span class="red">CONTRE</span>')+' ('+v+' voix).');
     await sleep(800);
   }
@@ -1138,7 +1148,7 @@ async function phaseNight(){
         G.players.forEach(pp=>{ if(pp.alive) pp.grudge[a.killer] += 0.5; });
       }
       if (t.id === G.presidentIdx){
-        G.coupJustified = true;
+        G.coupJustified = true; G.coupTrigger = 'roi_tue';
         log('⚠️ Le Roi est mort ! La couronne vacille…', 'red');
       }
     } else {
@@ -1183,6 +1193,11 @@ async function phaseNight(){
     if (frustrated.length) log('☠️ La commanderie était fermée à cause des brigands ! '+frustrated.map(p=>p.name).join(', ')+' repart(ent) bredouille(s).', 'red');
   }
   G.bankClosed = false;
+
+  // télémétrie : compter les nuits par type de planque
+  G.players.forEach(p=>{ if (!p.alive || !p.stats) return;
+    if (p.night==='residence') p.stats.nightsManoir++;
+    else if (p.night==='banque') p.stats.nightsTempliers++; });
 
   // chez la favorite : ses relations bien placées rapportent 1 écu au petit matin
   const choyes = G.players.filter(p=>p.alive && p.night==='planque');
@@ -1704,6 +1719,9 @@ async function maybeCoup(){
   (owner.radio==='rebel' ? rebels : loyals).forEach(p=>{ if (p.alive) p.stats.cathedraleWin++; });
   const rebelsWin = rebelPts >= 4;
   if (rebelsWin) rebels.forEach(p=>{ if (p.alive) p.stats.wonAsRebel++; });
+  statsRevolte({ declencheur: G.coupTrigger||'?', felonsGagnent: rebelsWin, pointsFelons: rebelPts,
+    felons: rebels.length, royaux: loyals.length });
+  G.coupTrigger = null;
   if (rebelsWin){
     log('🏴 <b>LES FÉLONS CONTRÔLENT LA CAPITALE ('+rebelSites+'/5 sites) !</b>', 'red');
     await installNewPresident(rebels);
@@ -2163,9 +2181,59 @@ async function execution(winners, losers){
 }
 
 // ---------------------------------------------------------------------
+// TÉLÉMÉTRIE — collecte des stats de partie (envoyées à un Google Sheet)
+// Renseignez STATS_URL avec l'URL de votre Web App Apps Script pour activer.
+// Seul l'hôte (ou le joueur solo) envoie : une ligne par partie.
+// ---------------------------------------------------------------------
+const STATS_URL = '';   // ← collez ici l'URL de votre Google Apps Script (voir notice)
+const STATS = { t0:0, timeline:[], cur:null };
+function statsStart(){ STATS.t0 = Date.now(); STATS.timeline = []; STATS.cur = null; }
+function statsTurn(turn){ STATS.cur = { turn, taille:null, roiGarde:null, votePour:null, voteContre:null, vote:null, revolte:null }; STATS.timeline.push(STATS.cur); }
+function statsBudget(taille, roiGarde){ if (STATS.cur){ STATS.cur.taille = taille; STATS.cur.roiGarde = roiGarde; } }
+function statsVote(yes, no, passed){ if (STATS.cur){ STATS.cur.votePour = yes; STATS.cur.voteContre = no; STATS.cur.vote = passed?'adopte':'rejete'; } }
+function statsRevolte(o){ if (STATS.cur) STATS.cur.revolte = o; }
+function statsSend(winner, ranking){
+  if (!STATS_URL) return;   // télémétrie désactivée tant qu'aucune URL n'est fournie
+  try {
+    const humains = G.players.filter(p=>p.id===0 || p.remote).length;
+    const tl = STATS.timeline;
+    const tailles = tl.filter(t=>t.taille>0);
+    const cupidite = tailles.length ? Math.round(100 * tailles.reduce((s,t)=>s + (t.roiGarde/t.taille),0) / tailles.length) : null;
+    const sum = (f)=> G.players.reduce((s,p)=> s + (p.stats?f(p.stats):0), 0);
+    const rev = tl.filter(t=>t.revolte);
+    const rec = {
+      date: new Date().toISOString(),
+      duree_min: Math.round((Date.now()-STATS.t0)/60000),
+      tours: STATS.timeline.length,
+      joueurs: G.players.length, humains, ia: G.players.length - humains,
+      difficulte: G.difficulty || 'normal',
+      vainqueur: winner ? winner.name : '', vainqueur_humain: !!(winner && (winner.id===0 || winner.remote)),
+      score_1er: ranking[0] ? ranking[0].bank : 0,
+      score_2e: ranking[1] ? ranking[1].bank : 0,
+      ecart: ranking[1] ? (ranking[0].bank - ranking[1].bank) : 0,
+      cupidite_roi_pct: cupidite,
+      nuits_manoir: sum(s=>s.nightsManoir), nuits_templiers: sum(s=>s.nightsTempliers),
+      nuits_favorite: sum(s=>s.nightsFavorite), nuits_monastere: sum(s=>s.nightsMonastere),
+      votes_pour: sum(s=>s.votesPour), votes_contre: sum(s=>s.votesContre),
+      budgets_rejetes: tl.filter(t=>t.vote==='rejete').length,
+      revoltes: rev.length,
+      revoltes_felons_gagnees: rev.filter(t=>t.revolte.felonsGagnent).length,
+      assassinats: sum(s=>s.kills), morts: sum(s=>s.deaths),
+      detail_json: JSON.stringify({
+        joueurs: G.players.map(p=>({ nom:p.name, humain:(p.id===0||p.remote), roleFinal:p.role.id,
+          coffre:p.bank, poche:p.pocket, ambition:p.ambition&&p.ambition.name, stats:p.stats })),
+        timeline: tl,
+      }),
+    };
+    fetch(STATS_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(rec) });
+  } catch(e) {}
+}
+
+// ---------------------------------------------------------------------
 // BOUCLE PRINCIPALE
 // ---------------------------------------------------------------------
 async function gameLoop(){
+  statsStart();
   // révéler au joueur humain (siège 0) son ambition secrète
   const me = G.players[0];
   if (me && me.ambition){
@@ -2175,6 +2243,7 @@ async function gameLoop(){
       [ {label:'Motus et bouche cousue', value:1} ]);
   }
   for (G.turn=1; G.turn<=TURNS; G.turn++){
+    statsTurn(G.turn);
     // résurrections (les morts reviennent : « un cousin reprend le poste »)
     G.players.forEach(p=>{
       if (!p.alive){
@@ -2261,6 +2330,7 @@ function endGame(){
     title: document.getElementById('endTitle').textContent,
     tag: document.getElementById('endTag').textContent,
     board: html });
+  statsSend(winner, ranking);   // télémétrie : envoi de la partie au Google Sheet
   fx.confetti();
 }
 
