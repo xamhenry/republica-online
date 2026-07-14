@@ -433,11 +433,11 @@ def plateau_pdf():
     c.setFillColor(HexColor('#241b12')); c.roundRect(W-118*mm, 12*mm, 110*mm, 42*mm, 4*mm, stroke=0, fill=1)
     c.setFillColor(GOLD); c.setFont(FB, 10); c.drawString(W-113*mm, 46*mm, 'BATAILLE (site contesté)')
     c.setFillColor(HexColor('#e8dcc0')); c.setFont(F, 8.5)
-    for i, ln in enumerate(['Chaque camp : unités présentes + 1d6 (félons d’abord).',
-                            'Égalité : le défenseur tient. Perdant : moitié des unités',
-                            'détruites (arrondi sup.), survivants en retraite adjacente.',
-                            'Vainqueur : un quart de pertes (arrondi inf.).',
-                            'Décompte final : majorité à 4 points sur 6 pour les félons.']):
+    for i, ln in enumerate(['Chaque camp : unités + 1d6 (félons d’abord). Plus haut total gagne.',
+                            'Égalité : le défenseur tient. LE PERDANT retire autant de',
+                            'cubes que l’ÉCART des totaux (au max tous) ; le vainqueur',
+                            'ne perd rien. Ses survivants reculent sur un site voisin ami.',
+                            'Décompte final : majorité à 4 points sur 6 (Château = 2).']):
         c.drawString(W-113*mm, 40*mm-i*5.2*mm, ln)
 
     c.save()

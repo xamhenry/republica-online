@@ -337,24 +337,24 @@ def diagram_battle(c):
     c.roundRect(2*mm, 4*mm, W-4*mm, H-6*mm, 3*mm, stroke=1, fill=1)
     # AVANT
     c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,6.5); c.drawString(8*mm,31*mm,'GARNISON contestée')
-    for i in range(3): _cube(c, 9*mm+i*3.2*mm, 24*mm, RED)
-    c.setFillColor(RED); c.setFont(FB,6); c.drawString(9*mm,19*mm,'3 félons')
-    for i in range(2): _cube(c, 9*mm+i*3.2*mm, 13*mm, BLUE)
-    c.setFillColor(BLUE); c.setFont(FB,6); c.drawString(9*mm,8*mm,'2 royaux')
+    for i in range(4): _cube(c, 9*mm+i*3.2*mm, 24*mm, RED)
+    c.setFillColor(RED); c.setFont(FB,6); c.drawString(9*mm,19*mm,'4 félons')
+    for i in range(3): _cube(c, 9*mm+i*3.2*mm, 13*mm, BLUE)
+    c.setFillColor(BLUE); c.setFont(FB,6); c.drawString(9*mm,8*mm,'3 royaux')
     # DÉS
-    _die(c, 52*mm, 25*mm, 5); c.setFillColor(RED); c.setFont(FB,6.5); c.drawString(60*mm,23.5*mm,'3 + 5 = 8')
-    _die(c, 52*mm, 12*mm, 4); c.setFillColor(BLUE); c.setFont(FB,6.5); c.drawString(60*mm,10.5*mm,'2 + 4 = 6')
+    _die(c, 52*mm, 25*mm, 5); c.setFillColor(RED); c.setFont(FB,6.5); c.drawString(60*mm,23.5*mm,'4 + 5 = 9')
+    _die(c, 52*mm, 12*mm, 4); c.setFillColor(BLUE); c.setFont(FB,6.5); c.drawString(60*mm,10.5*mm,'3 + 4 = 7')
     c.setFillColor(INK); c.setFont(FI if HAS_GI else F,6); c.drawString(46*mm,32*mm,'chacun lance 1d6')
     # flèche
     c.setStrokeColor(GOLD); c.setLineWidth(1.6); c.line(88*mm,20*mm,102*mm,20*mm)
     c.setFillColor(GOLD); p=c.beginPath(); p.moveTo(102*mm,20*mm); p.lineTo(98*mm,22.5*mm); p.lineTo(98*mm,17.5*mm); p.close(); c.drawPath(p,fill=1,stroke=0)
     # APRÈS
-    c.setFillColor(HexColor('#3e8e6b')); c.setFont(FB,6.5); c.drawString(106*mm,31*mm,'FÉLONS l’emportent (8 > 6)')
+    c.setFillColor(HexColor('#3e8e6b')); c.setFont(FB,6.5); c.drawString(106*mm,31*mm,'FÉLONS l’emportent (9 > 7)')
     c.setFillColor(INK); c.setFont(F,6)
-    for i,t in enumerate(['Royaux (perdant) : moitié détruite',
-                          '(arrondi sup.) : 1 tué, 1 survivant recule.',
-                          'Félons (vainqueur) : un quart (arrondi inf.) : 0 perte.',
-                          'La Garnison passe aux félons (3 unités).']):
+    for i,t in enumerate(['Écart 9 - 7 = 2 : le perdant (royaux)',
+                          'retire 2 cubes. Il en reste 1, qui recule',
+                          'sur un site voisin ami. Félons : 0 perte.',
+                          'La Garnison passe aux félons (4 unités).']):
         c.drawString(106*mm,25.5*mm-i*4.4*mm,t)
 
 def build():
@@ -522,7 +522,7 @@ def build():
         '<b>Pouvoirs</b> — un site est « tenu » si un seul camp y a des unités : Garnison = +1 unité de renfort sur place · Cathédrale = retirez 1 unité ennemie du plus gros groupe adverse · Trésor Royal = un baron du camp peut payer 2 écus de poche pour poser 1 unité sur le Trésor · Port = pendant les mouvements, les unités partant du Port peuvent aller sur N’IMPORTE QUEL site.',
         '<b>Mouvements</b> — félons d’abord : chaque unité peut se déplacer vers un site adjacent (routes du plateau). Une unité arrivée ne rebouge plus cette manche.',
         '<b>Frappes</b> — une fois par révolte : le Maître des Engins (trébuchet) et/ou l’Amiral (nef) peuvent frapper n’importe quel site occupé par l’ennemi et y détruire jusqu’à 2 unités. Rendez le jeton une fois utilisé.',
-        '<b>Batailles</b> — sur chaque site où les deux camps sont présents : dé rouge + unités félonnes contre dé bleu + unités royales. Égalité : le camp qui contrôlait le site tient. Le perdant détruit la moitié de ses unités (arrondi supérieur), les survivants reculent vers un site adjacent ami (sinon anéantis). Le vainqueur perd un quart (arrondi inférieur). Mettez à jour les marqueurs de contrôle.',
+        '<b>Batailles</b> — sur chaque site où les deux camps sont présents : chaque camp fait <b>ses unités + 1 dé</b> (dé rouge félon, dé bleu royal). Le plus grand total gagne (égalité : le camp qui contrôlait le site tient). <b>Le perdant retire autant de cubes que l’ÉCART entre les deux totaux</b> (au maximum tous ses cubes) ; le vainqueur ne perd rien. Les cubes qui restent au perdant reculent vers un site adjacent ami (sinon anéantis). Mettez à jour les marqueurs de contrôle.',
     ]:
         st.append(LI(tx))
     st.append(Spacer(1, 2*mm))
