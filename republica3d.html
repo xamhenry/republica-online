@@ -371,12 +371,12 @@
   <div class="rules">
     <b>Les charges de la cour</b> (4 à 7 notables ; attribuées au hasard, redistribuées après chaque insurrection réussie) :<br>
     👑 <b>L'Empereur</b> — répartit les fonds de l'État comme il l'entend (le non-alloué file dans sa poche). Garde impériale : 3 unités. Toujours fidèle à son propre trône.<br>
-    ⚔️ <b>Le Connétable</b> — la force brute : 4 unités, le ban impérial. Son camp pèse lourd dans une révolte.<br>
-    🪨 <b>Maître des Engins</b> — 2 unités, et un tir de <b>canon à vapeur</b> par révolte : il pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
-    🗡 <b>Maître des Assassins</b> — 2 unités, et surtout <b>un assassinat gratuit chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
-    📜 <b>Le Chancelier</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier.<br>
-    ⚓ <b>L'Amiral de France</b> <i>(à 6+)</i> — 2 unités, et une salve de <b>cuirassé</b> par révolte : elle bombarde le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
-    🎖 <b>Capitaine des Routiers</b> <i>(à 7)</i> — 3 unités de soudards. Deux armées dans un régime, c'est une de trop…
+    ⚔️ <b>Le Maréchal</b> — la force brute : 4 unités, l'armée impériale. Son camp pèse lourd dans une insurrection.<br>
+    🪨 <b>L'Ingénieur</b> — 2 unités, et un tir de <b>canon à vapeur</b> par insurrection : il pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
+    🕵️ <b>Le Préfet de Police</b> — 2 unités, et surtout <b>un mouchard qui élimine gratuitement chaque nuit</b>, sans carte. L'homme qu'on ne veut pas contrarier.<br>
+    📜 <b>Le Ministre d'État</b> — 1 unité seulement, mais <b>+1 voix à chaque vote</b> et pioche une carte de plus par tour. Le manœuvrier <i>(retiré à 4 joueurs)</i>.<br>
+    ⚓ <b>L'Amiral</b> <i>(à 6+)</i> — 2 unités, et une salve de <b>cuirassé « La Gloire »</b> par insurrection : elle bombarde le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
+    🎖 <b>Le Colonel de la Garde</b> <i>(à 7)</i> — 3 unités de vétérans. Deux armées dans un régime, c'est une de trop…
   </div>
   <p>Vous jouez contre 4 notables IA aux personnalités bien trempées. Ils négocient mal, trahissent bien.</p>
   <div style="margin:4px 0 10px;">
@@ -473,107 +473,107 @@ const CARD_CATS = {
 
 const CARD_TYPES = [
   // ---- VOTE ----
-  { id:'fraude',    cat:'vote', name:'Faux sceaux',              phase:'vote',  desc:'+2 voix lors d\'un vote de la cassette.' },
-  { id:'ambassade', cat:'vote', name:'Soutien du Pape',          phase:'vote',  desc:'+3 voix. Rome veille sur ses intérêts.' },
-  { id:'syndicat',  cat:'vote', name:'Guildes achetées',         phase:'vote',  desc:'+2 voix. Les corporations votent bien.' },
-  { id:'eveque',    cat:'vote', name:'Bénédiction de l\'Évêque', phase:'vote',  desc:'+2 voix. Dieu est avec vous (moyennant don).' },
-  { id:'scandale',  cat:'vote', name:'Libelle infamant',         phase:'vote',  desc:'L\'Empereur perd 2 voix sur ce vote.' },
-  { id:'dossier',   cat:'vote', name:'Lettre compromettante',    phase:'vote',  desc:'Forcez un notable à voter comme vous.' },
+  { id:'fraude',    cat:'vote', name:'Faux en écriture',         phase:'vote',  desc:'+2 voix lors d\'un vote de la cassette.' },
+  { id:'ambassade', cat:'vote', name:'Appui du Sénat',           phase:'vote',  desc:'+3 voix. Les sénateurs nommés votent bien.' },
+  { id:'syndicat',  cat:'vote', name:'Patronat acheté',          phase:'vote',  desc:'+2 voix. Les maîtres de forges votent bien.' },
+  { id:'eveque',    cat:'vote', name:'Bénédiction de l\'Évêque', phase:'vote',  desc:'+2 voix. L\'Église soutient l\'Empire (moyennant don).' },
+  { id:'scandale',  cat:'vote', name:'Caricature de presse',     phase:'vote',  desc:'L\'Empereur perd 2 voix sur ce vote.' },
+  { id:'dossier',   cat:'vote', name:'Dossier de police',        phase:'vote',  desc:'Forcez un notable à voter comme vous.' },
   // ---- ARGENT ----
   { id:'potdevin',  cat:'argent', name:'Pot-de-vin',             phase:'vote',  desc:'+2 francs dans votre poche, immédiatement.' },
-  { id:'racket',    cat:'argent', name:'Péage sauvage',          phase:'vote',  desc:'+3 francs dans votre poche. Le marché « participe ».' },
-  { id:'detour',    cat:'argent', name:'Détournement de la cassette', phase:'vote', desc:'Prenez 2 francs de la poche de l\'Empereur.' },
-  { id:'offshore',  cat:'argent', name:'Courrier templier',      phase:'nuit',  desc:'Déposez votre poche au coffre depuis n\'importe quelle planque.' },
-  { id:'valise',    cat:'argent', name:'Coffre scellé',          phase:'passif',desc:'Si vous êtes tué, votre poche n\'est pas pillée.' },
+  { id:'racket',    cat:'argent', name:'Rente sur les Halles',   phase:'vote',  desc:'+3 francs dans votre poche. Le marché « participe ».' },
+  { id:'detour',    cat:'argent', name:'Détournement de fonds',  phase:'vote', desc:'Prenez 2 francs de la poche de l\'Empereur.' },
+  { id:'offshore',  cat:'argent', name:'Virement suisse',        phase:'nuit',  desc:'Déposez votre poche en banque depuis n\'importe quelle planque.' },
+  { id:'valise',    cat:'argent', name:'Coffre-fort scellé',     phase:'passif',desc:'Si vous êtes tué, votre poche n\'est pas pillée.' },
   // ---- NUIT (attaques) ----
-  { id:'assassin',  cat:'nuit', name:'Spadassin',                phase:'nuit',  desc:'Tentez d\'éliminer un notable(devinez sa planque).' },
-  { id:'bombe',     cat:'nuit', name:'Baril de poudre',          phase:'nuit',  desc:'Tue et DÉTRUIT tout l\'argent de la cible. Brutal et mal vu.' },
+  { id:'assassin',  cat:'nuit', name:'Homme de main',            phase:'nuit',  desc:'Tentez d\'éliminer un notable (devinez sa planque).' },
+  { id:'bombe',     cat:'nuit', name:'Machine infernale',        phase:'nuit',  desc:'Tue et DÉTRUIT tout l\'argent de la cible. Brutal et mal vu.' },
   { id:'poison',    cat:'nuit', name:'Empoisonneuse',            phase:'nuit',  desc:'Ignore les gardes du corps, mais échoue une fois sur deux.' },
-  { id:'espion',    cat:'nuit', name:'Espion à la cour',         phase:'nuit',  desc:'La planque exacte de la cible est connue : attaque à coup sûr (sauf Monastère).' },
+  { id:'espion',    cat:'nuit', name:'Mouchard',                 phase:'nuit',  desc:'La planque exacte de la cible est connue : attaque à coup sûr (sauf Ambassade).' },
   // ---- PASSIF (protections) ----
   { id:'garde',     cat:'passif', name:'Garde du corps',         phase:'passif',desc:'Annule automatiquement le prochain assassinat contre vous.' },
   { id:'doublure',  cat:'passif', name:'Sosie',                  phase:'passif',desc:'Un sosie dort à votre place : 50% de survivre à un assassinat.' },
-  { id:'passeport', cat:'passif', name:'Sauf-conduit',           phase:'passif',desc:'Échappez au peloton (une fois).' },
-  // ---- NOUVELLES (façon grands classiques) ----
-  { id:'cigare',    cat:'nuit', name:'Coffret piégé',            phase:'nuit',  desc:'Livré à domicile : ne fonctionne que si la cible dort à son Manoir. Boum.' },
-  { id:'embuscade', cat:'nuit', name:'Embuscade aux Templiers',  phase:'nuit',  desc:'Vos hommes guettent le coffre : ne touche que si la cible va chez les Templiers.' },
-  { id:'cheque',    cat:'argent', name:'Or des Lombards',        phase:'vote',  desc:'+4 francs dans votre poche. Un banquier de Florence vous veut du bien.' },
+  { id:'passeport', cat:'passif', name:'Passeport diplomatique', phase:'passif',desc:'Échappez au peloton (une fois).' },
+  // ---- NOUVELLES ----
+  { id:'cigare',    cat:'nuit', name:'Colis piégé',              phase:'nuit',  desc:'Livré à domicile : ne fonctionne que si la cible dort à son Hôtel particulier. Boum.' },
+  { id:'embuscade', cat:'nuit', name:'Guet-apens à la Banque',   phase:'nuit',  desc:'Vos hommes guettent le coffre : ne touche que si la cible va à la Banque.' },
+  { id:'cheque',    cat:'argent', name:'Emprunt Pereire',        phase:'vote',  desc:'+4 francs dans votre poche. Le Crédit Mobilier vous ouvre un crédit.' },
   { id:'chantage',  cat:'argent', name:'Chantage',               phase:'vote',  desc:'Le notable le plus riche vous verse 2 francs de sa poche. Les lettres restent au coffre.' },
-  { id:'cousinage', cat:'vote', name:'Cousinage',                phase:'vote',  desc:'+2 voix. La famille, c\'est sacré.' },
-  { id:'sabotage',  cat:'coup', name:'Sabotage des arsenaux',    phase:'coup',  desc:'+2 de force : les armes ennemies s\'enrayent mystérieusement.' },
+  { id:'cousinage', cat:'vote', name:'Népotisme',                phase:'vote',  desc:'+2 voix. La famille impériale, c\'est sacré.' },
+  { id:'sabotage',  cat:'coup', name:'Sabotage de l\'arsenal',   phase:'coup',  desc:'+2 de force : les fusils ennemis s\'enrayent mystérieusement.' },
   // ---- COUP ----
-  { id:'mercenaires',cat:'coup', name:'Routiers',                phase:'coup',  desc:'+3 de force pendant une révolte.' },
-  { id:'foule',     cat:'coup', name:'Foule en colère',          phase:'coup',  desc:'+2 de force pendant une révolte.' },
-  { id:'garnison',  cat:'coup', name:'Garnison retournée',       phase:'coup',  desc:'+3 de force : une garnison change de camp.' },
-  { id:'cia',       cat:'coup', name:'Or des Anglais',           phase:'coup',  desc:'+4 de force… mais tout le monde saura qui vous paie (rancunes +1).' },
+  { id:'mercenaires',cat:'coup', name:'Mercenaires',             phase:'coup',  desc:'+3 de force pendant une insurrection.' },
+  { id:'foule',     cat:'coup', name:'Émeutiers',                phase:'coup',  desc:'+2 de force pendant une insurrection.' },
+  { id:'garnison',  cat:'coup', name:'Régiment rallié',          phase:'coup',  desc:'+3 de force : une caserne change de camp.' },
+  { id:'cia',       cat:'coup', name:'Or de la Prusse',          phase:'coup',  desc:'+4 de force… mais tout le monde saura qui vous paie (rancunes +1).' },
   { id:'barricades',cat:'coup', name:'Barricades',               phase:'coup',  desc:'+2 de force. Le peuple des faubourgs vous couvre.' },
 ];
 const COUP_CARD_POWER = { mercenaires:3, foule:2, garnison:3, cia:4, barricades:2, sabotage:2 };
 
 const EVENTS = [
-  { id:'secheresse', text:'🌾 Famine ! La cassette du prochain tour est réduite de 3 francs.', fx:(g)=>{ g.aidPenalty += 3; } },
-  { id:'fmi',        text:'💰 Les banquiers lombards font crédit : +4 francs de cassette au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
-  { id:'greve',      text:'✊ Jacquerie ! Le climat est insurrectionnel : une révolte devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; g.coupTrigger = 'jacquerie'; } },
-  { id:'purge',      text:'🕯 Les sergents de l\'Empereur fouillent les manoirs : tout notable resté à son Manoir perd 1 franc de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 franc dans la fouille.', 'red'); } }); } },
-  { id:'carnaval',   text:'🎪 Grande foire ! Le peuple oublie tout. Aucune révolte possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
-  { id:'audit',      text:'⛪ Légat du Pape : chaque notable avec plus de 6 francs en poche en donne 2 à l\'Église.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' se fait « suggérer » un don de 2 francs.', 'red'); } }); } },
-  { id:'don',        text:'🎁 Tribut d\'un vassal : l\'Empereur reçoit 2 francs en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 francs « anonymes ».','gold'); } } },
-  { id:'cyclone',    text:'☠️ Brigands sur les routes : la nuit prochaine, la commanderie des Templiers sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
-  { id:'tournoi',    text:'🏇 Grand tournoi ! Chaque notable mise 1 franc de poche ; le champion du jour rafle la bourse.', fx:(g)=>{
+  { id:'secheresse', text:'🍞 Crise du pain ! La cassette du prochain tour est réduite de 3 francs.', fx:(g)=>{ g.aidPenalty += 3; } },
+  { id:'fmi',        text:'📈 Spéculation à la Bourse : +4 francs de cassette au prochain tour.', fx:(g)=>{ g.aidPenalty -= 4; } },
+  { id:'greve',      text:'✊ Émeute ouvrière ! Le climat est insurrectionnel : une insurrection devient possible ce tour.', fx:(g)=>{ g.coupJustified = true; g.coupTrigger = 'jacquerie'; } },
+  { id:'purge',      text:'🔦 Rafle de police : tout notable resté à son Hôtel particulier perd 1 franc de poche.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.night==='residence' && p.pocket>0){ p.pocket=Math.max(0,p.pocket-1); log(p.name+' perd 1 franc dans la rafle.', 'red'); } }); } },
+  { id:'carnaval',   text:'🎡 Exposition Universelle ! Tout Paris s\'y presse. Aucune insurrection possible ce tour.', fx:(g)=>{ g.coupBlocked = true; } },
+  { id:'audit',      text:'📋 Contrôle fiscal : chaque notable avec plus de 6 francs en poche en verse 2 au Trésor.', fx:(g)=>{ g.players.forEach(p=>{ if(p.alive && p.pocket>6){ p.pocket-=2; log(p.name+' subit un redressement de 2 francs.', 'red'); } }); } },
+  { id:'don',        text:'🤝 Pot-de-vin d\'un industriel : l\'Empereur reçoit 2 francs en poche. Personne ne pose de questions.', fx:(g)=>{ const pr=g.players[g.presidentIdx]; if(pr.alive){ pr.pocket+=2; log(pr.name+' empoche 2 francs « anonymes ».','gold'); } } },
+  { id:'cyclone',    text:'🏦 Panique bancaire : la nuit prochaine, la Banque sera fermée.', fx:(g)=>{ g.bankClosed = true; } },
+  { id:'tournoi',    text:'🐎 Courses à Longchamp ! Chaque notable mise 1 franc de poche ; le gagnant rafle la mise.', fx:(g)=>{
       const joueurs = g.players.filter(p=>p.alive && p.pocket>0);
       if (joueurs.length < 2){ log('Trop peu de bourses pleines : le tournoi est annulé.'); return; }
       joueurs.forEach(p=> p.pocket--);
       const champ = pick(joueurs);
       champ.pocket += joueurs.length;
-      log('🏆 <b>'+champ.name+'</b> désarçonne tout le monde et rafle <b>'+joueurs.length+' francs</b> !', 'gold');
+      log('🏆 <b>'+champ.name+'</b> franchit la ligne en tête et rafle <b>'+joueurs.length+' francs</b> !', 'gold');
     } },
-  { id:'mariage',    text:'💍 Mariage princier : deux notables tirés au sort reçoivent 1 franc de dot chacun.', fx:(g)=>{
+  { id:'mariage',    text:'💃 Bal aux Tuileries : deux notables tirés au sort reçoivent 1 franc chacun.', fx:(g)=>{
       const vivants = g.players.filter(p=>p.alive);
       const a = pick(vivants); let b = pick(vivants); if (vivants.length>1) while (b===a) b = pick(vivants);
       a.pocket++; if (b!==a) b.pocket++;
-      log('💍 '+a.name+' et '+b.name+' célèbrent l\'union : +1 franc chacun.', 'gold');
+      log('💃 '+a.name+' et '+b.name+' valsent toute la nuit : +1 franc chacun.', 'gold');
     } },
-  { id:'peste',      text:'🤢 La peste rôde en ville : chaque notable défausse une carte au hasard (les serviteurs fuient).', fx:(g)=>{
+  { id:'peste',      text:'🤒 Épidémie de choléra : chaque notable défausse une carte au hasard (le personnel fuit Paris).', fx:(g)=>{
       g.players.forEach(p=>{ if (p.alive && p.hand.length){ const i = randInt(0, p.hand.length-1); log(p.name+' perd « '+p.hand[i].name+' ».'); p.hand.splice(i,1); } });
       renderHand();
     } },
-  { id:'comete',     text:'☄️ Une comète raye le ciel : mauvais présage pour la Cour, les rancunes s\'aiguisent.', fx:(g)=>{
+  { id:'comete',     text:'📰 Une du Charivari : la caricature vise la Cour, les rancunes s\'aiguisent.', fx:(g)=>{
       g.players.forEach(p=>{ if (p.alive && p.id!==g.presidentIdx) p.grudge[g.presidentIdx] += 0.5; });
     } },
-  { id:'fausse',     text:'🪙 Fausse monnaie dans le régime ! Tout notable avec 5 francs ou plus en poche en perd 1 (rogné).', fx:(g)=>{
+  { id:'fausse',     text:'🪙 Fausse monnaie en circulation ! Tout notable avec 5 francs ou plus en poche en perd 1 (rogné).', fx:(g)=>{
       g.players.forEach(p=>{ if (p.alive && p.pocket>=5){ p.pocket--; log(p.name+' se fait rogner 1 franc.', 'red'); } });
     } },
-  { id:'pelerinage', text:'🚶 Grand pèlerinage : la nuit prochaine, dormir au Monastère rapporte la bénédiction (+1 franc).', fx:(g)=>{ g.pilgrim = true; } },
-  { id:'moisson',    text:'🌾 Moisson généreuse : chaque notable vivant reçoit 1 franc en poche.', fx:(g)=>{
+  { id:'pelerinage', text:'🎩 Réception à l\'Ambassade : la nuit prochaine, y dormir rapporte une faveur (+1 franc).', fx:(g)=>{ g.pilgrim = true; } },
+  { id:'moisson',    text:'🏭 Prospérité industrielle : chaque notable vivant reçoit 1 franc en poche.', fx:(g)=>{
       g.players.forEach(p=>{ if (p.alive) p.pocket++; });
     } },
-  { id:'inquisition',text:'🕯 L\'Inquisition enquête : le notable à la plus grosse bourse est « invité » à donner 1 franc à l\'Église.', fx:(g)=>{
+  { id:'inquisition',text:'🕵️ Enquête de la Préfecture : le notable à la plus grosse bourse est « invité » à verser 1 franc.', fx:(g)=>{
       const riche = g.players.filter(p=>p.alive && p.pocket>0).sort((a,b)=>b.pocket-a.pocket)[0];
-      if (riche){ riche.pocket--; log(riche.name+' fait un don « spontané » de 1 franc.', 'red'); }
+      if (riche){ riche.pocket--; log(riche.name+' verse une « contribution spontanée » de 1 franc.', 'red'); }
     } },
-  { id:'troubadours',text:'🎶 Les troubadours chantent le notable le plus démuni : la quête lui rapporte 1 franc.', fx:(g)=>{
+  { id:'troubadours',text:'🎻 Souscription publique : le notable le plus démuni reçoit 1 franc de la collecte.', fx:(g)=>{
       const pauvre = g.players.filter(p=>p.alive).sort((a,b)=>(a.bank+a.pocket)-(b.bank+b.pocket))[0];
-      if (pauvre){ pauvre.pocket++; log(pauvre.name+' reçoit 1 franc de la quête.', 'gold'); }
+      if (pauvre){ pauvre.pocket++; log(pauvre.name+' reçoit 1 franc de la collecte.', 'gold'); }
     } },
-  { id:'brume',      text:'🌫 Brume épaisse sur le régime : la nuit prochaine, les assassins y voient mal (une attaque sur deux se perd).', fx:(g)=>{ g.brume = true; } },
+  { id:'brume',      text:'🌫 Brouillard sur Paris : la nuit prochaine, une attaque sur deux se perd dans la brume.', fx:(g)=>{ g.brume = true; } },
 ];
 
 // ---------------------------------------------------------------------
 // AMBITIONS SECRÈTES — une par baron, révélées et payées en fin de partie
 // ---------------------------------------------------------------------
 const AMBITIONS = [
-  { id:'regicide',  name:'Le Régicide',       bonus:4, desc:'Un Empereur meurt de votre main.', check:(p,g)=> p.stats.kingKills>=1 },
+  { id:'regicide',  name:'Le Conspirateur',   bonus:4, desc:'Un Empereur meurt de votre main.', check:(p,g)=> p.stats.kingKills>=1 },
   { id:'sanglant',  name:'La Main sanglante', bonus:4, desc:'Réussissez au moins 2 assassinats.', check:(p,g)=> p.stats.kills>=2 },
   { id:'eminence',  name:'L\'Éminence grise', bonus:3, desc:'Ne soyez jamais Empereur de toute la partie, et survivez au dernier tour.', check:(p,g)=> p.alive && !p.stats.startedKing && p.stats.becameKing===0 },
-  { id:'croise',    name:'Le Croisé',         bonus:3, desc:'Votre camp tient la Cathédrale à la fin d\'une révolte.', check:(p,g)=> p.stats.cathedraleWin>=1 },
-  { id:'fidele',    name:'Le Loyal',          bonus:3, desc:'Traversez au moins une révolte sans jamais rejoindre les insurgés.', check:(p,g)=> p.stats.loyalJoined>=1 && p.stats.rebelJoined===0 },
-  { id:'felon',     name:'Le Grand Félon',    bonus:3, desc:'Gagnez une révolte dans le camp des insurgés.', check:(p,g)=> p.stats.wonAsRebel>=1 },
+  { id:'croise',    name:'Le Dévot',          bonus:3, desc:'Votre camp tient Notre-Dame à la fin d\'une insurrection.', check:(p,g)=> p.stats.cathedraleWin>=1 },
+  { id:'fidele',    name:'Le Bonapartiste',   bonus:3, desc:'Traversez au moins une insurrection sans jamais rejoindre les insurgés.', check:(p,g)=> p.stats.loyalJoined>=1 && p.stats.rebelJoined===0 },
+  { id:'felon',     name:'Le Communard',      bonus:3, desc:'Gagnez une insurrection dans le camp des insurgés.', check:(p,g)=> p.stats.wonAsRebel>=1 },
   { id:'usurpateur',name:'L\'Usurpateur',     bonus:3, desc:'Finissez la partie sur le trône sans l\'avoir commencé.', check:(p,g)=> p.alive && !p.stats.startedKing && g.presidentIdx===p.id },
   { id:'prudent',   name:'L\'Insaisissable',  bonus:3, desc:'Qu\'aucun assassin ne soit jamais envoyé contre vous de toute la partie.', check:(p,g)=> p.stats.targeted===0 },
   { id:'discret',   name:'L\'Increvable',     bonus:2, desc:'Ne mourez jamais, pas même une fois.', check:(p,g)=> p.stats.deaths===0 },
-  { id:'courtisan', name:'Le Courtisan',      bonus:2, desc:'Passez au moins 3 nuits chez la Favorite.', check:(p,g)=> p.stats.nightsFavorite>=3 },
-  { id:'moine',     name:'Le Pénitent',       bonus:2, desc:'Passez au moins 2 nuits au Monastère.', check:(p,g)=> p.stats.nightsMonastere>=2 },
-  { id:'templier',  name:'Le Templier',       bonus:2, desc:'Finissez avec 0 franc en poche et au moins 6 francs au coffre.', check:(p,g)=> p.pocket===0 && p.bank>=6 },
+  { id:'courtisan', name:'Le Viveur',         bonus:2, desc:'Passez au moins 3 nuits chez la Cocotte.', check:(p,g)=> p.stats.nightsFavorite>=3 },
+  { id:'moine',     name:'Le Diplomate',      bonus:2, desc:'Passez au moins 2 nuits à l\'Ambassade.', check:(p,g)=> p.stats.nightsMonastere>=2 },
+  { id:'templier',  name:'Le Rentier',        bonus:2, desc:'Finissez avec 0 franc en poche et au moins 6 francs en banque.', check:(p,g)=> p.pocket===0 && p.bank>=6 },
 ];
 
 // ---------------------------------------------------------------------
@@ -2292,8 +2292,8 @@ function endGame(){
   // 🏅 titres d'honneur (+1 franc chacun, au détenteur du record)
   const TITLES = [
     ['⚔️ Le Sanguinaire', p=> p.stats ? p.stats.kills : 0],
-    ['🛡 Le Vétéran des révoltes', p=> p.stats ? p.stats.rebelJoined + p.stats.loyalJoined : 0],
-    ['🌙 Le Noctambule', p=> p.stats ? p.stats.nightsFavorite : 0],
+    ['🛡 Le Vétéran des barricades', p=> p.stats ? p.stats.rebelJoined + p.stats.loyalJoined : 0],
+    ['🌙 Le Noceur', p=> p.stats ? p.stats.nightsFavorite : 0],
     ['💰 Le Grippe-sou', p=> p.pocket],
   ];
   let titleHtml = '';
