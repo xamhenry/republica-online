@@ -369,7 +369,7 @@
     <b>Le pouvoir des sites :</b> contrôler un lieu en fin de manche rapporte — <b>Garnison</b> : 1 renfort par manche · <b>Port</b> : vos troupes y embarquent vers n'importe quel site · <b>Cathédrale</b> : le prêche fait déserter 1 ennemi par manche · <b>Trésor Royal</b> : recrutez 1 routier pour 2 francs de poche.
   </div>
   <div class="rules">
-    <b>Les 5 charges de la cour</b> (attribuées au hasard, redistribuées après chaque révolte réussie) :<br>
+    <b>Les charges de la cour</b> (4 à 7 notables ; attribuées au hasard, redistribuées après chaque insurrection réussie) :<br>
     👑 <b>L'Empereur</b> — répartit les fonds de l'État comme il l'entend (le non-alloué file dans sa poche). Garde impériale : 3 unités. Toujours fidèle à son propre trône.<br>
     ⚔️ <b>Le Connétable</b> — la force brute : 4 unités, le ban impérial. Son camp pèse lourd dans une révolte.<br>
     🪨 <b>Maître des Engins</b> — 2 unités, et un tir de <b>canon à vapeur</b> par révolte : il pilonne le site de son choix (jusqu'à 2 unités ennemies détruites).<br>
@@ -388,11 +388,12 @@
     <div>
       <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">NOMBRE DE NOTABLES</div>
       <div style="display:flex; gap:8px;">
+        <button class="mbtn alt selopt sel-count" data-count="4" style="border:2px solid transparent;">4</button>
         <button class="mbtn alt selopt sel-count selected-opt" data-count="5" style="border:2px solid #ffd166;">5</button>
         <button class="mbtn alt selopt sel-count" data-count="6" style="border:2px solid transparent;">6</button>
         <button class="mbtn alt selopt sel-count" data-count="7" style="border:2px solid transparent;">7</button>
       </div>
-      <div style="font-size:10px; color:#667; margin-top:4px;">6 = + Amiral ⚓ · 7 = + Routiers 🎖</div>
+      <div style="font-size:10px; color:#667; margin-top:4px;">4 = sans le Ministre d'État · 6 = + Amiral ⚓ · 7 = + Colonel 🎖</div>
     </div>
     <div>
       <div style="font-size:12px; color:#8fa3c7; letter-spacing:2px; margin-bottom:6px;">DIFFICULTÉ DES IA</div>
@@ -4032,7 +4033,7 @@ document.getElementById('replayBtn').onclick = ()=>{
   document.getElementById('endScreen').classList.add('hidden');
   document.getElementById('log').innerHTML = '';
   const humans = [ ...NET.lobby.filter(p=>p.id===NET.myPeerId), ...NET.lobby.filter(p=>p.id!==NET.myPeerId) ];
-  const count = Math.max(5, Math.min(7, humans.length));
+  const count = Math.max(4, Math.min(7, humans.length));
   NET.send({ t:'start', config:{ count } });
   hostStart(humans, count, 'normal');
 };
@@ -4047,7 +4048,7 @@ function showEndButtons(){
 document.getElementById('lobbyStart').onclick = ()=>{
   if (!NET.isHost) return;
   const humans = [ ...NET.lobby.filter(p=>p.id===NET.myPeerId), ...NET.lobby.filter(p=>p.id!==NET.myPeerId) ];
-  const count = Math.max(5, Math.min(7, humans.length));
+  const count = Math.max(4, Math.min(7, humans.length));
   NET.send({ t:'start', config:{ count } });
   hostStart(humans, count, 'normal');
 };
