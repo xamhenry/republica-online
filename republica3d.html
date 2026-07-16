@@ -2197,12 +2197,16 @@ async function execution(winners, losers){
 // Renseignez STATS_URL avec l'URL de votre Web App Apps Script pour activer.
 // Seul l'hôte (ou le joueur solo) envoie : une ligne par partie.
 // ---------------------------------------------------------------------
-// L'URL du Google Sheet n'est PAS écrite dans le fichier (le dépôt est public).
-// Réglez-la UNE fois dans VOTRE navigateur, via la console (F12) :
-//   setStatsUrl('https://script.google.com/macros/s/…/exec')
-// Elle est mémorisée sur votre machine (localStorage) et n'est jamais partagée.
+// Stats TOUJOURS actives, sans manip : l'URL du Sheet est intégrée mais encodée
+// (base64) pour ne pas être scrapée automatiquement sur le dépôt public.
+// Priorité au réglage local : le champ 📊 du lobby (ou setStatsUrl) l'emporte,
+// permet d'en mettre une autre, ou de couper (champ vidé).
 let STATS_URL = '';
-try { STATS_URL = localStorage.getItem('statsUrl') || ''; } catch(e){}
+try {
+  const _def = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5anlHd3pVM3I2UzZqSE9DdXFwaDRDYl9wVzFRbjZtT05Vcnk2TGtuRXlXT0huTk5zS1ZKRDFxZFRjckpvekFTblFIQS9leGVj');
+  const _stored = localStorage.getItem('statsUrl');   // null si jamais réglé
+  STATS_URL = (_stored !== null) ? _stored : _def;
+} catch(e){}
 window.setStatsUrl = function(u){
   try { localStorage.setItem('statsUrl', u || ''); } catch(e){}
   STATS_URL = u || '';
