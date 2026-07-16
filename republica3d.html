@@ -354,6 +354,15 @@
     </div>
   </div>
   <button class="mbtn alt" id="lobbySolo" style="margin-top:6px;">🎮 Jouer en solo contre les IA</button>
+  <details style="margin-top:14px; max-width:460px; width:90%; font-size:11px; color:#8fa3c7;">
+    <summary style="cursor:pointer; letter-spacing:1px;">📊 Statistiques (hôte, facultatif)</summary>
+    <div style="margin-top:6px; text-align:center;">
+      <input id="statsUrlInput" placeholder="URL du Google Apps Script (…/exec)"
+        style="background:#10131a; border:1px solid #3a4358; border-radius:6px; color:#9ab; font-size:11px; padding:6px 10px; text-align:center; width:96%; outline:none;">
+      <div id="statsUrlMsg" style="margin-top:4px; min-height:14px; color:#7bed9f;"></div>
+      <div style="color:#667; margin-top:2px;">Collez-la une fois : elle est mémorisée sur cette machine, jamais partagée. Videz le champ pour couper.</div>
+    </div>
+  </details>
 </div>
 
 <div id="titleScreen" class="bigscreen hidden">
@@ -561,19 +570,20 @@ const EVENTS = [
 // ---------------------------------------------------------------------
 // AMBITIONS SECRÈTES — une par baron, révélées et payées en fin de partie
 // ---------------------------------------------------------------------
+// Objectifs vérifiables à la FIN (état visible / fait marquant) — aucun jeton à suivre.
 const AMBITIONS = [
-  { id:'regicide',  name:'Le Conspirateur',   bonus:4, desc:'Un Empereur meurt de votre main.', check:(p,g)=> p.stats.kingKills>=1 },
-  { id:'sanglant',  name:'La Main sanglante', bonus:4, desc:'Réussissez au moins 2 assassinats.', check:(p,g)=> p.stats.kills>=2 },
-  { id:'eminence',  name:'L\'Éminence grise', bonus:3, desc:'Ne soyez jamais Empereur de toute la partie, et survivez au dernier tour.', check:(p,g)=> p.alive && !p.stats.startedKing && p.stats.becameKing===0 },
-  { id:'croise',    name:'Le Dévot',          bonus:3, desc:'Votre camp tient Notre-Dame à la fin d\'une insurrection.', check:(p,g)=> p.stats.cathedraleWin>=1 },
-  { id:'fidele',    name:'Le Bonapartiste',   bonus:3, desc:'Traversez au moins une insurrection sans jamais rejoindre les insurgés.', check:(p,g)=> p.stats.loyalJoined>=1 && p.stats.rebelJoined===0 },
-  { id:'felon',     name:'Le Communard',      bonus:3, desc:'Gagnez une insurrection dans le camp des insurgés.', check:(p,g)=> p.stats.wonAsRebel>=1 },
-  { id:'usurpateur',name:'L\'Usurpateur',     bonus:3, desc:'Finissez la partie sur le trône sans l\'avoir commencé.', check:(p,g)=> p.alive && !p.stats.startedKing && g.presidentIdx===p.id },
-  { id:'prudent',   name:'L\'Insaisissable',  bonus:3, desc:'Qu\'aucun assassin ne soit jamais envoyé contre vous de toute la partie.', check:(p,g)=> p.stats.targeted===0 },
-  { id:'discret',   name:'L\'Increvable',     bonus:2, desc:'Ne mourez jamais, pas même une fois.', check:(p,g)=> p.stats.deaths===0 },
-  { id:'courtisan', name:'Le Viveur',         bonus:2, desc:'Passez au moins 3 nuits chez la Cocotte.', check:(p,g)=> p.stats.nightsFavorite>=3 },
-  { id:'moine',     name:'Le Diplomate',      bonus:2, desc:'Passez au moins 2 nuits à l\'Ambassade.', check:(p,g)=> p.stats.nightsMonastere>=2 },
-  { id:'templier',  name:'Le Rentier',        bonus:2, desc:'Finissez avec 0 franc en poche et au moins 6 francs en banque.', check:(p,g)=> p.pocket===0 && p.bank>=6 },
+  { id:'empereur',  name:'L\'Empereur',       bonus:4, desc:'Être sur le trône à la fin de la partie.', check:(p,g)=> g.presidentIdx===p.id },
+  { id:'regicide',  name:'Le Régicide',       bonus:4, desc:'Avoir tué un Empereur (de votre main, dans la partie).', check:(p,g)=> p.stats.kingKills>=1 },
+  { id:'insurge',   name:'L\'Insurgé',        bonus:3, desc:'Avoir gagné une insurrection dans le camp des insurgés.', check:(p,g)=> p.stats.wonAsRebel>=1 },
+  { id:'pilier',    name:'Le Pilier du régime',bonus:3, desc:'Avoir gagné une insurrection dans le camp impérial (défendu le trône).', check:(p,g)=> p.stats.wonAsLoyal>=1 },
+  { id:'rentier',   name:'Le Rentier',        bonus:3, desc:'Finir avec 0 franc en poche et au moins 6 francs en banque.', check:(p,g)=> p.pocket===0 && p.bank>=6 },
+  { id:'magot',     name:'Le Magot',          bonus:3, desc:'Avoir le plus de francs EN POCHE (non déposés) à la fin.', check:(p,g)=> p.pocket>0 && p.pocket===Math.max(...g.players.map(x=>x.pocket)) },
+  { id:'opposant',  name:'L\'Opposant',       bonus:3, desc:'Être vivant à la fin, mais pas sur le trône.', check:(p,g)=> p.alive && g.presidentIdx!==p.id },
+  { id:'immortel',  name:'L\'Immortel',       bonus:3, desc:'N\'être jamais mort ni déporté de toute la partie.', check:(p,g)=> p.stats.deaths===0 },
+  { id:'discret',   name:'Le Discret',        bonus:2, desc:'N\'avoir jamais été Empereur de toute la partie.', check:(p,g)=> !p.stats.startedKing && p.stats.becameKing===0 },
+  { id:'assassin',  name:'L\'Assassin',       bonus:2, desc:'Avoir tué au moins un notable dans la partie.', check:(p,g)=> p.stats.kills>=1 },
+  { id:'magnat',    name:'Le Magnat',         bonus:2, desc:'Finir avec au moins 10 francs en banque.', check:(p,g)=> p.bank>=10 },
+  { id:'revenant',  name:'Le Revenant',       bonus:2, desc:'Être mort au moins une fois, mais vivant à la fin.', check:(p,g)=> p.stats.deaths>=1 && p.alive },
 ];
 
 // ---------------------------------------------------------------------
@@ -630,7 +640,7 @@ function initPlayers(count){
   for (let i=ambDeck.length-1;i>0;i--){ const j=randInt(0,i); [ambDeck[i],ambDeck[j]]=[ambDeck[j],ambDeck[i]]; }
   G.players.forEach((p,i)=>{
     p.stats = { kills:0, kingKills:0, deaths:0, targeted:0, becameKing:0, startedKing:false,
-      rebelJoined:0, loyalJoined:0, wonAsRebel:0, cathedraleWin:0,
+      rebelJoined:0, loyalJoined:0, wonAsRebel:0, wonAsLoyal:0, cathedraleWin:0,
       nightsFavorite:0, nightsMonastere:0, nightsManoir:0, nightsTempliers:0,
       votesPour:0, votesContre:0, cardsPlayed:0 };
     p.ambition = ambDeck[i % ambDeck.length];
@@ -1720,6 +1730,7 @@ async function maybeCoup(){
   (owner.radio==='rebel' ? rebels : loyals).forEach(p=>{ if (p.alive) p.stats.cathedraleWin++; });
   const rebelsWin = rebelPts >= 4;
   if (rebelsWin) rebels.forEach(p=>{ if (p.alive) p.stats.wonAsRebel++; });
+  else loyals.forEach(p=>{ if (p.alive) p.stats.wonAsLoyal++; });
   statsRevolte({ declencheur: G.coupTrigger||'?', felonsGagnent: rebelsWin, pointsFelons: rebelPts,
     felons: rebels.length, impériaux: loyals.length });
   G.coupTrigger = null;
@@ -4004,6 +4015,14 @@ document.addEventListener('visibilitychange', ()=>{
 // ---------------------------------------------------------------------
 try{ document.getElementById('lobbyServer').value = localStorage.getItem('repServer') || ''; }catch(e){}
 try{ document.getElementById('lobbyName').value = localStorage.getItem('repName') || ''; }catch(e){}
+// champ stats (hôte) : mémorise l'URL du Sheet en localStorage, sans jamais la partager
+try{
+  const si = document.getElementById('statsUrlInput');
+  si.value = STATS_URL || '';
+  const setMsg = ()=>{ document.getElementById('statsUrlMsg').textContent = STATS_URL ? '✅ Stats activées sur cette machine.' : ''; };
+  setMsg();
+  si.addEventListener('change', ()=>{ setStatsUrl(si.value.trim()); setMsg(); });
+}catch(e){}
 function lobbyPrep(){
   const name = (document.getElementById('lobbyName').value||'').trim() || 'Monsieur';
   const url = (document.getElementById('lobbyServer').value||'').trim();

@@ -230,12 +230,11 @@ def diagram_player(c):
         _coin(c, 112*mm+dx*mm, y0+dy*mm)
     _label(c, 112*mm, y0+23*mm, 'POCHE (cachée)', 6)
     _label(c, 112*mm, y0-4*mm, 'derrière le paravent', 5.2, HexColor('#8a6a1a'), F)
-    # 6 jetons de trace
-    gl = [('☠',HexColor('#a63a3a')),('☾',HexColor('#8b7fd9')),('☦',HexColor('#4eb98f')),('♛',GOLD),('⚔',HexColor('#a63a3a')),('★',HexColor('#4eb98f'))]
-    for i,(g,r) in enumerate(gl):
-        _token(c, 145*mm+(i%3)*7*mm, y0+16*mm-(i//3)*7*mm, g, r)
-    _label(c, 142*mm, y0+23*mm, 'JETONS DE TRACE', 6)
-    _label(c, 142*mm, y0-4*mm, 'preuves publiques', 5.2, INK, F)
+    # 2 cartes de vote (POUR / CONTRE)
+    _card(c, 143*mm, y0, 13*mm, 19*mm, 'POUR', col=HexColor('#3e8e6b'), icon='✓')
+    _card(c, 158*mm, y0, 13*mm, 19*mm, 'CONTRE', col=HexColor('#a63a3a'), icon='✗')
+    _label(c, 143*mm, y0+23*mm, 'CARTES DE VOTE', 6)
+    _label(c, 143*mm, y0-4*mm, 'jouées face cachée', 5.2, INK, F)
 
 # ---- Schéma 3 : la nuit — poser une attaque ----
 def diagram_night(c):
@@ -388,7 +387,6 @@ def build():
         ['7',  'cartes AIDE DE JEU'],
         ['52', 'francs (40 × « 1 », 12 × « 5 »)'],
         ['40', 'unités (20 cubes rouges insurgés, 20 cubes bleus royaux)'],
-        ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ cocotte, ☦ ambassade, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ Notre-Dame tenue)'],
         ['14', 'cartes de VOTE : pour chaque joueur, 1 carte POUR + 1 carte CONTRE'],
         ['10', 'marqueurs de contrôle (5 rouges, 5 bleus)'],
         ['2',  'jetons de frappe (canon à vapeur, cuirassé) + 1 marqueur de tour'],
@@ -420,7 +418,7 @@ def build():
     st.append(Spacer(1, 2*mm))
     st.append(P('Votre zone de jeu — où poser chaque carte :', S_H2))
     st.append(Diagram(174*mm, 66*mm, diagram_player,
-        'Schéma 2 — Devant vous : Charge (avec le coffre visible), Ambition et Planque face cachées, main d’Action, poche cachée, et vos jetons de trace.'))
+        'Schéma 2 — Devant vous : Charge (avec le coffre visible), Ambition et Planque face cachées, main d’Action, poche cachée.'))
 
     # ---------- 4. TOUR DE JEU ----------
     st.append(P('4. Le tour de jeu — cinq phases', S_H1))
@@ -464,7 +462,7 @@ def build():
     st.append(P('Fin de tour', S_H2))
     st.append(P('Chacun pioche <b>1 carte ACTION</b> (2 pour le Ministre d’État, +1 pour qui a dormi à son Hôtel particulier). '
                 'Main limitée à 7 cartes (défaussez l’excédent). Les notables morts ce tour <b>reviennent</b> : '
-                '« un cousin reprend le fief » — même charge, poche vide, et ils posent un jeton † devant eux. '
+                '« un cousin reprend le fief » — même charge, poche vide. '
                 'Avancez le marqueur de tour.'))
 
     # ---------- 5. LA NUIT ----------
@@ -488,8 +486,8 @@ def build():
         '<b>Empoisonneuse</b> : lancez 1d6, échec sur 1-3.',
         '<b>Garde du corps</b> de la cible : l’attaque échoue (sauf poison), la carte est défaussée.',
         '<b>Sosie</b> : la cible lance 1d6, elle survit sur 4-6 ; la carte est défaussée dans tous les cas.',
-        '<b>Sinon la cible meurt</b> : couchez son pion. Elle pose un jeton †, l’attaquant prend un jeton ☠ (et c’est public : tout le monde a vu qui a joué la carte). Le tueur prend la poche de la cible — sauf Coffre scellé. Baril de poudre et Coffret piégé détruisent la poche au lieu de la voler.',
-        'Toute cible d’une attaque (réussie ou non) prend un jeton ◉ « ciblé ».',
+        '<b>Sinon la cible meurt</b> : couchez son pion. L’attaque est publique (tout le monde a vu la carte jouée). Le tueur prend la poche de la cible — sauf Coffre scellé. Baril de poudre et Coffret piégé détruisent la poche au lieu de la voler.',
+        'Une cible peut se protéger (Garde du corps, Sosie) — voir ci-dessus.',
         'Si le <b>Roi</b> meurt : l’insurrection gronde pour ce tour.',
     ]:
         st.append(LI(tx))
@@ -501,15 +499,14 @@ def build():
         '<b>Hôtel particulier</b> : vous piocherez 1 carte de plus en fin de tour.',
     ]:
         st.append(LI(tx))
-    st.append(P('Exemple — Isabeau pose sa Planque « Cocotte ». Montfort l’attaque au Spadassin avec une Filature '
-                '« Banque » : raté, elle n’y était pas. Isabeau prend quand même son jeton ◉… et saura qu’on lui en veut.', S_EX))
+    st.append(P('Exemple — la Castiglione pose sa Planque « Cocotte ». Morny l’attaque avec un Homme de main et une '
+                'Filature « Banque » : raté, elle n’y était pas. Mais elle a bien vu qu’on la visait… et saura qu’on lui en veut.', S_EX))
 
     # ---------- 6. LA RÉVOLTE ----------
     st.append(P('6. L’insurrection des notables', S_H1))
     st.append(P('A. Les camps', S_H2))
     st.append(P('L’Empereur est toujours <b>impérial</b>. En partant de sa gauche, chacun annonce son camp : '
-                '<b>insurgé</b> (rouge) ou <b>impérial</b> (bleu) — et prend aussitôt le <b>jeton de camp</b> '
-                'correspondant (⚔ insurgé ou ⚑ impérial), qui restera devant lui. Chacun peut alors jouer des '
+                '<b>insurgé</b> (rouge) ou <b>impérial</b> (bleu). Chacun peut alors jouer des '
                 'cartes RÉVOLTE de sa main : elles ajoutent des unités à déployer. Si personne n’est insurgé, '
                 'le calme revient. Si personne ne défend, l’Empire tombe sans combat (voir E).'))
     st.append(P('B. Manche 1 — le déploiement', S_H2))
@@ -534,11 +531,9 @@ def build():
     st.append(Diagram(174*mm, 42*mm, diagram_battle,
         'Schéma 5 — Exemple de bataille résolue aux dés (chaque camp : ses unités + 1d6, insurgés d’abord).'))
     st.append(P('D. Le décompte', S_H2))
-    st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>le Palais 2</b> (6 points en tout). '
-                'Les insurgés l’emportent avec <b>4 points ou plus</b>. Distribuez alors les traces de l’insurrection : '
-                'chaque membre du <b>camp vainqueur</b> prend un jeton ★ de sa couleur, et chaque membre du camp '
-                'qui <b>tient Notre-Dame</b> prend un jeton ✠.'))
-    st.append(P('E. Courment et peloton', S_H2))
+    st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>les Tuileries 2</b> (6 points en tout). '
+                'Les insurgés l’emportent avec <b>4 points ou plus</b>.'))
+    st.append(P('E. Accession au trône et peloton', S_H2))
     st.append(P('<b>Félons vainqueurs</b> : le insurgé à la plus grosse armée de charge (Maréchal 4 > Garde 3 > '
                 'Engins / Assassins / Amiral 2 > Ministre d’État 1 ; égalité : le plus riche au coffre) prend la couronne, '
                 'pose un jeton ♛, échange sa carte Charge contre L’Empereur et <b>redistribue les charges libérées</b> '
@@ -548,51 +543,31 @@ def build():
                 'reviennent au tour suivant (le cousin).'))
 
     # ---------- 7. AMBITIONS SANS MAÎTRE DU JEU ----------
-    st.append(P('7. Ambitions secrètes — jouer sans maître du jeu', S_H1))
-    st.append(P('Comment prouver qu’une ambition est accomplie alors que personne n’arbitre ? '
-                'Par trois garde-fous, conçus pour que la table s’arbitre elle-même :', S_BODY))
-    st.append(P('1. Tout est public', S_H2))
-    st.append(P('Aucune ambition ne dépend d’une information restée cachée : les planques sont révélées '
-                'chaque nuit, les attaques et leurs auteurs se voient sur la table, les couronnements, morts '
-                'et camps de insurrection se jouent devant tout le monde. La seule exception, « Le Templier », '
-                'se vérifie au moment du décompte final, quand toutes les poches sont montrées.'))
-    st.append(P('2. Les jetons de trace', S_H2))
-    st.append(P('<b>Chaque événement laisse une trace matérielle, prise au moment où il se produit, devant '
-                'tout le monde</b> — c’est un réflexe systématique de TOUS les joueurs, pas un choix :'))
-    for tx in [
-        '☠ à chaque assassinat que vous réussissez ;',
-        '◉ à chaque fois qu’une attaque vous vise (même ratée) ;',
-        '† à chaque fois que vous mourez (dague ou peloton) ;',
-        '♛ à chaque fois que vous prenez la couronne ;',
-        '☾ chaque nuit passée chez la Cocotte (avec votre franc) ;',
-        '☦ chaque nuit passée à l’Ambassade ;',
-        '⚔ ou ⚑ à chaque insurrection, en annonçant votre camp ;',
-        '★ (rouge ou bleue) si votre camp gagne l’insurrection ; ✠ si votre camp tient Notre-Dame à la fin.',
-    ]:
-        st.append(LI(tx))
-    st.append(P('Prendre un jeton ne trahit PAS votre ambition : tout le monde prend toujours tous ses jetons — '
-                'c’est la chronique publique de la partie, pas un aveu. Au décompte, vos jetons font preuve : '
-                '« 3 jetons ☾, mon ambition était Le Courtisan, +2 francs. » Personne n’a rien à retenir de tête.', S_NOTE))
-    st.append(P('3. La vérification collective', S_H2))
-    st.append(P('À la révélation finale, chacun lit son ambition à voix haute et montre ses preuves — chaque '
-                'ambition a la sienne, aucune ne repose sur la mémoire seule. Tricher exigerait de prendre un '
-                'jeton au vu de tous pour un événement qui n’a pas eu lieu : impossible discrètement. Et les '
-                'jetons se recoupent entre eux (chaque ☠ correspond au † de quelqu’un, chaque ★ à une insurrection '
-                'que toute la table a jouée). En cas de litige, la table tranche à la majorité.'))
+    st.append(P('7. Objectifs secrets — vérifiés sans arbitre', S_H1))
+    st.append(P('Chacun a tiré un objectif secret en début de partie. Comment le prouver à la fin, sans '
+                'maître du jeu ? Parce que chaque objectif se vérifie de deux façons seulement — <b>sans jamais '
+                'rien noter ni distribuer de jetons pendant la partie</b> :', S_BODY))
+    st.append(P('1. D’un coup d’œil, à la fin', S_H2))
+    st.append(P('La plupart se lisent directement sur la table au décompte : <b>qui est sur le trône</b>, '
+                'l’<b>argent</b> (poche et banque, montrés à ce moment), les <b>pions encore debout</b>. Rien à suivre.'))
+    st.append(P('2. Un seul fait marquant', S_H2))
+    st.append(P('Les autres tiennent à un <b>événement rare et spectaculaire que toute la table a vu</b> — un '
+                'Empereur assassiné, une insurrection gagnée. Ça ne s’oublie pas ; en cas de doute, la table '
+                'tranche à la majorité. Fini les jetons de trace : on regarde, on se souvient, on tranche.', S_NOTE))
     tab_amb = [
-        ['Ambition', 'Sa preuve au décompte'],
-        ['Le Régicide (+4)', 'un jeton ☠ pris lors d’une nuit où l’Empereur est mort — l’attaque et sa carte étaient visibles de tous'],
-        ['La Main sanglante (+4)', 'au moins 2 jetons ☠'],
-        ['L’Éminence grise (+3)', 'AUCUN jeton ♛, pas la couronne de départ, et votre pion debout'],
-        ['Le Croisé (+3)', 'un jeton ✠'],
-        ['Le Loyal (+3)', 'au moins un jeton ⚑ et AUCUN jeton ⚔'],
-        ['Le Grand Félon (+3)', 'une ★ rouge (victoire dans le camp insurgé)'],
-        ['L’Usurpateur (+3)', 'la couronne devant vous à la fin, un jeton ♛, sans être l’Empereur de départ (la carte Charge initiale fait foi)'],
-        ['L’Insaisissable (+3)', 'AUCUN jeton ◉'],
-        ['L’Increvable (+2)', 'AUCUN jeton †'],
-        ['Le Courtisan (+2)', 'au moins 3 jetons ☾'],
-        ['Le Pénitent (+2)', 'au moins 2 jetons ☦'],
-        ['Le Templier (+2)', 'montrez votre poche : 0 franc — et 6+ francs sur votre coffre (visible depuis toujours)'],
+        ['Objectif secret', 'Comment on vérifie, à la fin'],
+        ['L’Empereur (+4)', 'vous êtes sur le trône'],
+        ['Le Régicide (+4)', 'vous avez tué un Empereur (une nuit que tout le monde a vue)'],
+        ['L’Insurgé (+3)', 'vous avez gagné une insurrection dans le camp insurgé'],
+        ['Le Pilier du régime (+3)', 'vous avez gagné une insurrection dans le camp impérial'],
+        ['Le Rentier (+3)', 'poche à 0, et 6 francs ou plus en banque (montrés au décompte)'],
+        ['Le Magot (+3)', 'la plus grosse poche de la table (montrée au décompte)'],
+        ['L’Opposant (+3)', 'votre pion est debout, mais vous n’êtes pas sur le trône'],
+        ['L’Immortel (+3)', 'vous n’êtes jamais mort ni déporté'],
+        ['Le Discret (+2)', 'vous n’avez jamais été Empereur'],
+        ['L’Assassin (+2)', 'vous avez tué au moins un notable'],
+        ['Le Magnat (+2)', '10 francs ou plus en banque'],
+        ['Le Revenant (+2)', 'mort au moins une fois, mais debout à la fin'],
     ]
     t2 = Table([[Paragraph(sym_wrap('<b>'+a+'</b>'), S_BODY), Paragraph(sym_wrap(b), S_BODY)] for a, b in tab_amb],
                colWidths=[46*mm, 126*mm])
@@ -607,7 +582,7 @@ def build():
     st.append(P('8. Fin de partie et décompte', S_H1))
     for tx in [
         'Après le 8e tour, chacun révèle son ambition et la prouve : si elle est accomplie, il ajoute son bonus À SON COFFRE.',
-        'Titres d’honneur (+1 franc au coffre chacun, record strict — en cas d’égalité, personne) : ⚔ le Sanguinaire (le plus de ☠) · ⚑ le Vétéran (le plus de jetons ⚔ et ⚑ cumulés) · ☾ le Noctambule (le plus de ☾) · ⚜ le Grippe-sou (la plus grosse poche finale).',
+        'Titre d’honneur (facultatif, +1 franc) : ⚜ le Grippe-sou — la plus grosse poche à la fin (record strict ; égalité : personne). Un seul, visible au décompte, rien à suivre.',
         'Le notable au coffre le plus garni l’emporte. Égalité : la plus grosse poche départage.',
     ]:
         st.append(LI(tx))

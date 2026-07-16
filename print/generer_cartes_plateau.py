@@ -106,18 +106,18 @@ EVENTS = [
     ('Brouillard sur Paris','La nuit prochaine, chaque attaque échoue sur 1-3 (1d6), avant toute autre résolution.'),
 ]
 AMBITIONS = [
-    ('Le Conspirateur',4,'Un Empereur meurt de votre main (attaque de nuit réussie contre l’Empereur).'),
-    ('La Main sanglante',4,'Réussissez au moins 2 assassinats dans la partie.'),
-    ('L’Éminence grise',3,'Ne soyez jamais Empereur de toute la partie, et soyez vivant à la fin.'),
-    ('Le Dévot',3,'Votre camp tient Notre-Dame à la fin d’une insurrection.'),
-    ('Le Bonapartiste',3,'Traversez au moins une insurrection sans jamais rejoindre les insurgés.'),
-    ('Le Communard',3,'Gagnez une insurrection dans le camp des insurgés.'),
-    ('L’Usurpateur',3,'Finissez la partie sur le trône sans l’avoir commencé.'),
-    ('L’Insaisissable',3,'Qu’aucune attaque ne soit jamais dirigée contre vous de toute la partie.'),
-    ('L’Increvable',2,'Ne mourez jamais, pas même une fois.'),
-    ('Le Viveur',2,'Passez au moins 3 nuits chez la Cocotte.'),
-    ('Le Diplomate',2,'Passez au moins 2 nuits à l’Ambassade.'),
-    ('Le Rentier',2,'Finissez avec 0 franc en poche et au moins 6 francs en banque.'),
+    ('L’Empereur',4,'Être sur le trône à la fin de la partie.'),
+    ('Le Régicide',4,'Avoir tué un Empereur (attaque de nuit réussie contre l’Empereur).'),
+    ('L’Insurgé',3,'Avoir gagné une insurrection dans le camp des insurgés.'),
+    ('Le Pilier du régime',3,'Avoir gagné une insurrection dans le camp impérial.'),
+    ('Le Rentier',3,'Finir avec 0 franc en poche et au moins 6 francs en banque.'),
+    ('Le Magot',3,'Avoir le plus de francs en poche (non déposés) à la fin.'),
+    ('L’Opposant',3,'Être vivant à la fin, mais pas sur le trône.'),
+    ('L’Immortel',3,'N’être jamais mort ni déporté de toute la partie.'),
+    ('Le Discret',2,'N’avoir jamais été Empereur de toute la partie.'),
+    ('L’Assassin',2,'Avoir tué au moins un notable dans la partie.'),
+    ('Le Magnat',2,'Finir avec au moins 10 francs en banque.'),
+    ('Le Revenant',2,'Être mort au moins une fois, mais vivant à la fin.'),
 ]
 CHARGES = [
     ('L’Empereur','♛','3 unités','Répartit la cassette impériale (le non-alloué file dans sa poche). Toujours impérial pendant une insurrection. Garde le trône.'),
@@ -456,9 +456,8 @@ def plateau_pdf():
 
 # ---------------- jetons (écus, unités, traces d'ambition…) ----------------
 def tokens_pdf():
-    """Chaque événement public laisse une TRACE : le jeton se prend devant tout le
-    monde au moment où il se produit. À la révélation des ambitions, les jetons
-    posés devant soi font preuve — pas besoin de maître du jeu."""
+    """Jetons de jeu : francs, unités (si pas de cubes bois), marqueurs de contrôle
+    des sites, frappes uniques et marqueur de tour."""
     path = os.path.join(HERE, 'jetons-royaume.pdf')
     c = canvas.Canvas(path, pagesize=A4)
     c.setTitle('ROUAGES & COMPLOTS — jetons à découper')
@@ -472,7 +471,7 @@ def tokens_pdf():
         c.setFillColor(INK); c.setFont(FB, 13)
         c.drawString(14*mm, PAGE_H-14*mm, 'ROUAGES & COMPLOTS — planche de jetons (à coller sur carton avant découpe)')
         c.setFillColor(HexColor('#666666')); c.setFont(F, 8)
-        c.drawString(14*mm, PAGE_H-19*mm, 'Jetons de TRACE : à prendre publiquement au moment de l’événement — ils prouvent vos ambitions au décompte.')
+        c.drawString(14*mm, PAGE_H-19*mm, 'Découpez et collez sur carton. Les cubes rouges/bleus peuvent être remplacés par des cubes en bois.')
 
     def next_pos():
         i = state['i']
@@ -515,20 +514,7 @@ def tokens_pdf():
     circle_token(PARCH, INK, '⚒', SY, 11, INK, 'CANON')
     circle_token(PARCH, INK, '⚓', SY, 11, INK, 'CUIRASSÉ')
     circle_token(PARCH, GOLD, '♛', SY, 11, GOLD, 'TOUR')
-    # jetons de TRACE (preuves d'ambition)
-    for _ in range(10): circle_token(dark, HexColor('#a63a3a'), '☠', SY, 11, HexColor('#e8dcc0'), 'ASSASSINAT')
-    for _ in range(12): circle_token(dark, HexColor('#c9962b'), '◉', SY, 11, HexColor('#e8c25a'), 'CIBLÉ')
-    for _ in range(16): circle_token(dark, HexColor('#8b7fd9'), '☾', SY, 11, HexColor('#cfc4f3'), 'COCOTTE')
-    for _ in range(12): circle_token(dark, HexColor('#4eb98f'), '☦', SY, 11, HexColor('#c8ead9'), 'AMBASSADE')
-    for _ in range(8):  circle_token(dark, GOLD, '♛', SY, 11, HexColor('#e8c25a'), 'RÈGNE')
-    for _ in range(10): circle_token(dark, HexColor('#888888'), '†', FB, 12, HexColor('#dddddd'), 'MORT')
-    # camps de révolte : pris publiquement au moment où l'on annonce son camp
-    for _ in range(14): circle_token(dark, HexColor('#a63a3a'), '⚔', SY, 10, HexColor('#f3b5b5'), 'INSURGÉ')
-    for _ in range(14): circle_token(dark, HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#b5cdf3'), 'IMPÉRIAL')
-    # victoire de révolte (couleur du camp vainqueur) & Cathédrale tenue en fin de révolte
-    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', SY, 11, HexColor('#f3b5b5'), 'VICT. INS.')
-    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', SY, 11, HexColor('#b5cdf3'), 'VICT. IMP.')
-    for _ in range(8):  circle_token(dark, HexColor('#5b3a6b'), '✠', SY, 10, HexColor('#d9c9f0'), 'NOTRE-DAME')
+    # (plus de jetons de TRACE : les objectifs se vérifient à la fin, sans comptage)
     c.showPage()
     c.save()
     print('OK', path)
