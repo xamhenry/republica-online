@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ROYAUME — livret de règles imprimable (A4). Sortie : livret-regles-royaume.pdf"""
+"""ROUAGES & COMPLOTS — livret de règles imprimable (A4). Sortie : livret-regles-royaume.pdf"""
 import os
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -55,15 +55,15 @@ def cover(c, doc):
     c.setLineWidth(0.7); c.rect(15*mm, 15*mm, W-30*mm, H-30*mm, stroke=1, fill=0)
     c.setFillColor(GOLD)
     c.setFont(SY, 54); c.drawCentredString(W/2, H-72*mm, '⚜')
-    c.setFont(FB, 44); c.drawCentredString(W/2, H-95*mm, 'R O Y A U M E')
+    c.setFont(FB, 30); c.drawCentredString(W/2, H-95*mm, 'ROUAGES & COMPLOTS')
     c.setFillColor(HexColor('#c9b78a')); c.setFont(FI, 14)
-    c.drawCentredString(W/2, H-107*mm, 'Couronne, trahisons & révoltes')
+    c.drawCentredString(W/2, H-107*mm, 'Vapeur, corruption & insurrections')
     c.setFont(F, 11)
-    for i, ln in enumerate(['5 à 7 barons félons  ·  45 à 60 minutes  ·  dès 12 ans',
-                            '', 'La taille royale arrive à la cour. Le Roi la partage,',
+    for i, ln in enumerate(['4 à 7 notables ambitieux  ·  45 à 60 minutes  ·  dès 12 ans',
+                            '', 'La cassette impériale arrive à la cour. L’Empereur la partage,',
                             'le Conseil vote, la nuit les dagues sortent…',
-                            'et quand la Couronne vacille, les bannières se lèvent.',
-                            '', 'Seul l’or à l’abri chez les Templiers fera de vous le vainqueur.']):
+                            'et quand l’Empire vacille, les bannières se lèvent.',
+                            '', 'Seul l’or à l’abri chez la Banque fera de vous le vainqueur.']):
         c.drawCentredString(W/2, H-130*mm - i*7*mm, ln)
     c.setFont(SY, 22)
     c.drawCentredString(W/2-30*mm, 45*mm, '⚔'); c.drawCentredString(W/2, 45*mm, '♛'); c.drawCentredString(W/2+30*mm, 45*mm, '☠')
@@ -78,7 +78,7 @@ def normal_page(c, doc):
     c.setStrokeColor(GOLD); c.setLineWidth(0.8)
     c.line(16*mm, H-14*mm, W-16*mm, H-14*mm)
     c.setFillColor(HexColor('#8a7a5a')); c.setFont(FB, 8)
-    c.drawString(16*mm, H-12*mm, 'ROYAUME — livret de règles')
+    c.drawString(16*mm, H-12*mm, 'ROUAGES & COMPLOTS — livret de règles')
     c.line(16*mm, 13*mm, W-16*mm, 13*mm)
     c.setFont(F, 8); c.drawCentredString(W/2, 8*mm, '— ' + str(doc.page) + ' —')
     c.restoreState()
@@ -160,45 +160,45 @@ def diagram_setup(c):
     c.setFillColor(HexColor('#7ba05b')); c.setStrokeColor(HexColor('#5f7d43')); c.setLineWidth(1.2)
     c.roundRect(cx-30*mm, cy-19*mm, 60*mm, 38*mm, 3*mm, stroke=1, fill=1)
     c.setFillColor(HexColor('#255')); c.setFillColor(HexColor('#1f5f7a'))
-    for (dx,dy,nm) in [(-19,10,'Cathédrale'),(19,10,'Trésor'),(-19,-10,'Garnison'),(19,-10,'Port')]:
+    for (dx,dy,nm) in [(-19,10,'Notre-Dame'),(19,10,'Banque de France'),(-19,-10,'Caserne'),(19,-10,'La Gare')]:
         c.setFillColor(HexColor('#efe4c8')); c.setStrokeColor(INK); c.setLineWidth(0.5)
         c.circle(cx+dx*mm, cy+dy*mm, 5*mm, stroke=1, fill=1)
         c.setFillColor(INK); c.setFont(F, 4.2); c.drawCentredString(cx+dx*mm, cy+dy*mm-1, nm)
     c.setFillColor(HexColor('#7a1f1f')); c.setStrokeColor(GOLD); c.setLineWidth(0.8)
     c.circle(cx, cy, 6.5*mm, stroke=1, fill=1)
     c.setFillColor(GOLD); c.setFont(SY, 8); c.drawCentredString(cx, cy+1.5*mm, '♛')
-    c.setFillColor(HexColor('#f3e9d2')); c.setFont(FB, 4.6); c.drawCentredString(cx, cy-3.5*mm, 'CHÂTEAU')
+    c.setFillColor(HexColor('#f3e9d2')); c.setFont(FB, 4.6); c.drawCentredString(cx, cy-3.5*mm, 'TUILERIES')
     c.setFillColor(HexColor('#1a3a1a')); c.setFont(FB, 6); c.drawCentredString(cx, cy+15*mm, 'PLATEAU')
     # pioches en haut
     cw, ch = 13*mm, 18*mm
-    _pile(c, 20*mm, 68*mm, cw, ch, 'Pioche TAILLE', CATS_taille := HexColor('#8a6a1a'))
+    _pile(c, 20*mm, 68*mm, cw, ch, 'Pioche CASSETTE', CATS_taille := HexColor('#8a6a1a'))
     _pile(c, 44*mm, 68*mm, cw, ch, 'Pioche ACTION', GOLD)
     _pile(c, 110*mm, 68*mm, cw, ch, 'Pioche ÉVÉNEMENT', HexColor('#8a5a2b'))
-    # réserve d'écus
+    # réserve de francs
     c.setFillColor(HexColor('#f6eed2')); c.setStrokeColor(HexColor('#8a6a1a')); c.setLineWidth(0.9)
     c.roundRect(134*mm, 68*mm, 20*mm, 18*mm, 2*mm, stroke=1, fill=1)
     for (dx,dy) in [(6,12),(11,12),(8,8),(13,8),(6,5),(11,5)]:
         _coin(c, 134*mm+dx*mm, 68*mm+dy*mm)
-    _wrapc(c, 144*mm, 66*mm, 26*mm, 'Réserve d’écus + unités', FB, 5.4, INK)
+    _wrapc(c, 144*mm, 66*mm, 26*mm, 'Réserve de francs + unités', FB, 5.4, INK)
     # 5 zones joueurs autour
-    def baron(x, y, n, king=False):
+    def notable(x, y, n, king=False):
         c.setFillColor(HexColor('#f6eed2')); c.setStrokeColor(HexColor('#b9a97e')); c.setLineWidth(0.8)
         c.roundRect(x, y, 30*mm, 15*mm, 2*mm, stroke=1, fill=1)
         _card(c, x+1.5*mm, y+2*mm, 7*mm, 10*mm, 'Charge', col=HexColor('#7a1f1f'), icon='♛' if king else '')
-        # coffre (écus sur la charge)
+        # coffre (francs sur la charge)
         _coin(c, x+3*mm, y+13.5*mm); _coin(c, x+6*mm, y+13.5*mm)
         _card(c, x+10*mm, y+2*mm, 7*mm, 10*mm, '', face='down')   # ambition
         _card(c, x+18.5*mm, y+3.5*mm, 9*mm, 7*mm, 'main', col=INK)
         c.setFillColor(HexColor('#7a1f1f') if king else INK); c.setFont(FB, 5)
-        c.drawString(x+1.5*mm, y+16*mm, ('LE ROI' if king else 'Baron '+str(n)))
-    baron(8*mm,   40*mm, 1, king=True)
-    baron(8*mm,   16*mm, 2)
-    baron(72*mm,  9*mm, 3)
-    baron(136*mm, 40*mm, 4)
-    baron(136*mm, 16*mm, 5)
-    c.setFillColor(HexColor('#8a7a5a')); c.setFont(F, 5); c.drawCentredString(W/2, 11*mm, '(6-7 joueurs : deux barons de plus autour de la table)')
+        c.drawString(x+1.5*mm, y+16*mm, ('L’EMPEREUR' if king else 'Notable '+str(n)))
+    notable(8*mm,   40*mm, 1, king=True)
+    notable(8*mm,   16*mm, 2)
+    notable(72*mm,  9*mm, 3)
+    notable(136*mm, 40*mm, 4)
+    notable(136*mm, 16*mm, 5)
+    c.setFillColor(HexColor('#8a7a5a')); c.setFont(F, 5); c.drawCentredString(W/2, 11*mm, '(6-7 joueurs : deux notables de plus autour de la table)')
 
-# ---- Schéma 2 : la zone de jeu d’un baron ----
+# ---- Schéma 2 : la zone de jeu d’un notable ----
 def diagram_player(c):
     W, H = 174*mm, 62*mm
     c.setFillColor(HexColor('#f6eed6')); c.setStrokeColor(HexColor('#d8c9a5')); c.setLineWidth(1)
@@ -209,7 +209,7 @@ def diagram_player(c):
     for (dx,dy) in [(3,3),(7,3),(11,3),(5,7),(9,7)]:
         _coin(c, 8*mm+dx*mm, y0+dy*mm)
     _label(c, 8*mm, y0+25*mm, 'Charge + COFFRE', 6)
-    _label(c, 8*mm, y0-4*mm, 'écus déposés = visibles', 5.2, HexColor('#3e8e6b'), F)
+    _label(c, 8*mm, y0-4*mm, 'francs déposés = visibles', 5.2, HexColor('#3e8e6b'), F)
     # 2 Ambition face down
     _card(c, 30*mm, y0, 15*mm, 21*mm, '', face='down')
     _label(c, 30*mm, y0+23*mm, 'AMBITION', 6)
@@ -223,7 +223,7 @@ def diagram_player(c):
         _card(c, 72*mm+i*7*mm, y0+i*0.0, 14*mm, 20*mm, '' , col=INK, face='down')
     _label(c, 72*mm, y0+23*mm, 'MAIN (cartes Action)', 6)
     _label(c, 72*mm, y0-4*mm, 'cachée des autres', 5.2, INK, F)
-    # 5 écus de poche (derrière paravent)
+    # 5 francs de poche (derrière paravent)
     c.setFillColor(HexColor('#e9dcbc')); c.setStrokeColor(INK); c.setLineWidth(0.8); c.setDash(2,2)
     c.roundRect(112*mm, y0, 24*mm, 21*mm, 2*mm, stroke=1, fill=1); c.setDash()
     for (dx,dy) in [(5,5),(10,5),(15,5),(19,5),(7,11),(13,11)]:
@@ -277,16 +277,16 @@ def _die(c, x, y, pips, s=8*mm):
 
 RED = HexColor('#c0392b'); BLUE = HexColor('#2f6fbe')
 
-# ---- Schéma 4 : la révolte — déploiement, routes, mouvements ----
+# ---- Schéma 4 : l’insurrection — déploiement, routes, mouvements ----
 def diagram_revolt(c):
     W, H = 174*mm, 84*mm
     c.setFillColor(HexColor('#eef3e6')); c.setStrokeColor(HexColor('#c9d6b8')); c.setLineWidth(1)
     c.roundRect(2*mm, 5*mm, W-4*mm, H-7*mm, 3*mm, stroke=1, fill=1)
-    S = {'chateau':(52,45,'Château','♛','#7a1f1f',True),
-         'cathedrale':(24,66,'Cathédrale','☦','#5b3a6b',False),
-         'tresor':(80,66,'Trésor','⚜','#8a6a1a',False),
-         'garnison':(24,23,'Garnison','⚔','#3e6b3e',False),
-         'port':(80,23,'Port','⚓','#3f6fae',False)}
+    S = {'chateau':(52,45,'Palais','♛','#7a1f1f',True),
+         'cathedrale':(24,66,'Notre-Dame','☦','#5b3a6b',False),
+         'tresor':(80,66,'Banque de France','⚜','#8a6a1a',False),
+         'garnison':(24,23,'Caserne','⚔','#3e6b3e',False),
+         'port':(80,23,'La Gare','⚓','#3f6fae',False)}
     def pos(k): return (S[k][0]*mm, S[k][1]*mm)
     routes = [('chateau','cathedrale'),('chateau','tresor'),('chateau','garnison'),('chateau','port'),
               ('cathedrale','tresor'),('tresor','port'),('port','garnison'),('garnison','cathedrale')]
@@ -304,7 +304,7 @@ def diagram_revolt(c):
         c.setFillColor(HexColor(col)); c.setFont(SY,8); c.drawCentredString(x,y+r-4*mm,ic)
         c.setFont(FB,5.2); c.drawCentredString(x,y+r-8.3*mm,nm+(' ×2 pts' if big else ''))
     cubes('chateau',0,3); cubes('cathedrale',2,0); cubes('garnison',2,0); cubes('tresor',0,1); cubes('port',1,0)
-    # flèche de mouvement Garnison -> Château (assaut félon)
+    # flèche de mouvement Caserne -> Palais (assaut insurgé)
     (gx,gy),(cx,cy) = pos('garnison'), pos('chateau')
     import math
     ang = math.atan2(cy-gy, cx-gx); sx,sy = gx+11*mm*math.cos(ang), gy+11*mm*math.sin(ang)
@@ -318,13 +318,13 @@ def diagram_revolt(c):
     # légende à droite
     lx = 100*mm
     c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,74*mm,'LÉGENDE')
-    _cube(c, lx+2*mm, 67*mm, RED); c.setFillColor(INK); c.setFont(F,6.4); c.drawString(lx+6*mm,65.6*mm,'unité félonne (rouge)')
-    _cube(c, lx+2*mm, 60*mm, BLUE); c.setFillColor(INK); c.drawString(lx+6*mm,58.6*mm,'unité royale (bleu)')
+    _cube(c, lx+2*mm, 67*mm, RED); c.setFillColor(INK); c.setFont(F,6.4); c.drawString(lx+6*mm,65.6*mm,'unité insurgée (rouge)')
+    _cube(c, lx+2*mm, 60*mm, BLUE); c.setFillColor(INK); c.drawString(lx+6*mm,58.6*mm,'unité impériale (bleu)')
     c.setStrokeColor(RED); c.setLineWidth(1.6); c.setDash(3,2); c.line(lx,52*mm,lx+4*mm,52*mm); c.setDash()
     c.setFillColor(INK); c.drawString(lx+6*mm,50.6*mm,'mouvement vers un site adjacent')
     c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,42*mm,'DÉCOMPTE')
     c.setFillColor(INK); c.setFont(F,6.4)
-    for i,t in enumerate(['Chaque site tenu = 1 point.','Le Château = 2 points.',
+    for i,t in enumerate(['Chaque site tenu = 1 point.','Le Palais = 2 points.',
                           'Total : 6 points.','Félons vainqueurs à 4 points ou +.']):
         c.drawString(lx,36*mm-i*4.4*mm,'• '+t)
     c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,7); c.drawString(lx,15.5*mm,'ORDRE D’UNE MANCHE')
@@ -338,7 +338,7 @@ def diagram_battle(c):
     # AVANT
     c.setFillColor(HexColor('#7a1f1f')); c.setFont(FB,6.5); c.drawString(8*mm,31*mm,'GARNISON contestée')
     for i in range(4): _cube(c, 9*mm+i*3.2*mm, 24*mm, RED)
-    c.setFillColor(RED); c.setFont(FB,6); c.drawString(9*mm,19*mm,'4 félons')
+    c.setFillColor(RED); c.setFont(FB,6); c.drawString(9*mm,19*mm,'4 insurgés')
     for i in range(3): _cube(c, 9*mm+i*3.2*mm, 13*mm, BLUE)
     c.setFillColor(BLUE); c.setFont(FB,6); c.drawString(9*mm,8*mm,'3 royaux')
     # DÉS
@@ -349,17 +349,17 @@ def diagram_battle(c):
     c.setStrokeColor(GOLD); c.setLineWidth(1.6); c.line(88*mm,20*mm,102*mm,20*mm)
     c.setFillColor(GOLD); p=c.beginPath(); p.moveTo(102*mm,20*mm); p.lineTo(98*mm,22.5*mm); p.lineTo(98*mm,17.5*mm); p.close(); c.drawPath(p,fill=1,stroke=0)
     # APRÈS
-    c.setFillColor(HexColor('#3e8e6b')); c.setFont(FB,6.5); c.drawString(106*mm,31*mm,'FÉLONS l’emportent (9 > 7)')
+    c.setFillColor(HexColor('#3e8e6b')); c.setFont(FB,6.5); c.drawString(106*mm,31*mm,'INSURGÉS l’emportent (9 > 7)')
     c.setFillColor(INK); c.setFont(F,6)
     for i,t in enumerate(['Écart 9 - 7 = 2 : le perdant (royaux)',
                           'retire 2 cubes. Il en reste 1, qui recule',
                           'sur un site voisin ami. Félons : 0 perte.',
-                          'La Garnison passe aux félons (4 unités).']):
+                          'La Caserne passe aux insurgés (4 unités).']):
         c.drawString(106*mm,25.5*mm-i*4.4*mm,t)
 
 def build():
     path = os.path.join(HERE, 'livret-regles-royaume.pdf')
-    doc = BaseDocTemplate(path, pagesize=A4, title='ROYAUME — Livret de règles')
+    doc = BaseDocTemplate(path, pagesize=A4, title='ROUAGES & COMPLOTS — Livret de règles')
     fr = Frame(18*mm, 18*mm, A4[0]-36*mm, A4[1]-36*mm, id='f')
     doc.addPageTemplates([PageTemplate(id='cover', frames=[fr], onPage=cover),
                           PageTemplate(id='page', frames=[fr], onPage=normal_page)])
@@ -370,53 +370,53 @@ def build():
 
     # ---------- 1. BUT & MATÉRIEL ----------
     st.append(P('1. Le but du jeu', S_H1))
-    st.append(P('Vous êtes un baron du royaume. Pendant <b>8 tours</b> (les huit levées de la taille royale), '
+    st.append(P('Vous êtes un notable du régime. Pendant <b>8 tours</b> (les huit levées de la cassette impériale), '
                 'vous allez voter, comploter, dormir d’un œil et, quand il le faudra, sortir les bannières. '
-                'À la fin, seul compte <b>l’or déposé à votre coffre chez les Templiers</b> : le baron le plus riche '
+                'À la fin, seul compte <b>l’or déposé à votre coffre chez la Banque</b> : le notable le plus riche '
                 'au coffre l’emporte. L’or en poche ne vaut rien tant qu’il n’est pas déposé — et il se vole '
                 'sur les cadavres. Chacun poursuit de plus une <b>ambition secrète</b> qui rapportera de l’or '
                 'au décompte final.'))
     st.append(P('2. Le matériel', S_H1))
     mat = [
-        ['1', 'plateau (île du royaume, 5 sites, piste des tours)'],
+        ['1', 'plateau (plan de la capitale, 5 sites, piste des tours)'],
         ['87', 'cartes ACTION (29 différentes × 3 exemplaires)'],
         ['18', 'cartes ÉVÉNEMENT'],
         ['12', 'cartes AMBITION secrète'],
-        ['7',  'cartes CHARGE (Roi, Connétable, Maître des Engins, Maître des Assassins, Chancelier, Amiral de France, Capitaine des Routiers)'],
-        ['18', 'cartes TAILLE (le revenu royal — valeurs 7 à 15)'],
+        ['7',  'cartes CHARGE (Empereur, Maréchal, L’Ingénieur, Le Préfet de Police, Ministre d’État, Amiral, Colonel de la Garde)'],
+        ['18', 'cartes CASSETTE (le revenu impérial — valeurs 7 à 15)'],
         ['56', 'cartes LIEU : pour chaque joueur, 4 cartes PLANQUE + 4 cartes FILATURE'],
         ['7',  'cartes AIDE DE JEU'],
-        ['52', 'écus (40 × « 1 », 12 × « 5 »)'],
-        ['40', 'unités (20 cubes rouges félons, 20 cubes bleus royaux)'],
-        ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ favorite, ☦ monastère, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ cathédrale)'],
+        ['52', 'francs (40 × « 1 », 12 × « 5 »)'],
+        ['40', 'unités (20 cubes rouges insurgés, 20 cubes bleus royaux)'],
+        ['112', 'jetons de TRACE (☠ assassinat, ◉ ciblé, ☾ cocotte, ☦ ambassade, ♛ règne, † mort, ⚔/⚑ camps, ★ victoires, ✠ Notre-Dame tenue)'],
         ['14', 'cartes de VOTE : pour chaque joueur, 1 carte POUR + 1 carte CONTRE'],
         ['10', 'marqueurs de contrôle (5 rouges, 5 bleus)'],
-        ['2',  'jetons de frappe (trébuchet, nef de guerre) + 1 marqueur de tour'],
-        ['2',  'dés à six faces (1 rouge félon, 1 bleu royal)'],
-        ['7',  'pions barons (une couleur par joueur)'],
+        ['2',  'jetons de frappe (canon à vapeur, cuirassé) + 1 marqueur de tour'],
+        ['2',  'dés à six faces (1 rouge insurgé, 1 bleu impérial)'],
+        ['7',  'pions notables (une couleur par joueur)'],
     ]
-    t = Table([[Paragraph('<b>'+a+'</b>', S_BODY), Paragraph(b, S_BODY)] for a, b in mat],
+    t = Table([[Paragraph('<b>'+a+'</b>', S_BODY), Paragraph(sym_wrap(b), S_BODY)] for a, b in mat],
               colWidths=[14*mm, 158*mm])
     t.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),
                            ('ROWBACKGROUNDS',(0,0),(-1,-1),[HexColor('#f3e9d2'), HexColor('#ece0c4')]),
                            ('TOPPADDING',(0,0),(-1,-1),2.5),('BOTTOMPADDING',(0,0),(-1,-1),2.5)]))
     st.append(t)
-    st.append(P('Chaque joueur cache ses <b>écus de poche</b> dans sa main ou derrière un paravent. '
-                'Son <b>coffre</b> (écus déposés chez les Templiers) reste visible de tous, posé sur sa carte Charge.', S_NOTE))
+    st.append(P('Chaque joueur cache ses <b>francs de poche</b> dans sa main ou derrière un paravent. '
+                'Son <b>coffre</b> (francs déposés chez la Banque) reste visible de tous, posé sur sa carte Charge.', S_NOTE))
 
     # ---------- 3. MISE EN PLACE ----------
     st.append(P('3. Mise en place', S_H1))
     for tx in [
-        'Placez le plateau au centre. Mélangez séparément la pioche ACTION, la pile ÉVÉNEMENT et la pioche TAILLE, toutes face cachée. Marqueur de tour sur la case 1.',
-        'À 5 joueurs, retirez l’Amiral de France et le Capitaine des Routiers ; à 6, retirez seulement le Capitaine. Mélangez les cartes CHARGE et distribuez-en une à chacun, face visible. Celui qui reçoit <b>Le Roi</b> prend la couronne.',
-        'Chacun reçoit ses 8 cartes LIEU (4 Planque, 4 Filature), ses <b>2 cartes de vote</b> (POUR / CONTRE), une aide de jeu, et pioche <b>2 cartes ACTION</b> (3 pour le Chancelier).',
+        'Placez le plateau au centre. Mélangez séparément la pioche ACTION, la pile ÉVÉNEMENT et la pioche CASSETTE, toutes face cachée. Marqueur de tour sur la case 1.',
+        'Gardez autant de cartes CHARGE que de joueurs : <b>à 4</b>, retirez le Ministre d’État, l’Amiral et le Colonel de la Garde ; <b>à 5</b>, retirez l’Amiral et le Colonel ; <b>à 6</b>, retirez seulement le Colonel ; <b>à 7</b>, gardez tout. Distribuez-en une à chacun, face visible. Celui qui reçoit <b>L’Empereur</b> monte sur le trône.',
+        'Chacun reçoit ses 8 cartes LIEU (4 Planque, 4 Filature), ses <b>2 cartes de vote</b> (POUR / CONTRE), une aide de jeu, et pioche <b>2 cartes ACTION</b> (3 pour le Ministre d’État).',
         'Mélangez les AMBITIONS et distribuez-en une à chacun, <b>face cachée</b>. Regardez-la, ne la montrez à personne.',
-        'Le Maître des Engins prend le jeton trébuchet, l’Amiral le jeton nef.',
+        'L’Ingénieur prend le jeton canon à vapeur, l’Amiral le jeton cuirassé.',
     ]:
         st.append(LI(tx))
     st.append(Spacer(1, 3*mm))
     st.append(Diagram(174*mm, 96*mm, diagram_setup,
-        'Schéma 1 — La table en début de partie (exemple à 5 barons).'))
+        'Schéma 1 — La table en début de partie (exemple à 5 notables).'))
     st.append(Spacer(1, 2*mm))
     st.append(P('Votre zone de jeu — où poser chaque carte :', S_H2))
     st.append(Diagram(174*mm, 66*mm, diagram_player,
@@ -424,56 +424,56 @@ def build():
 
     # ---------- 4. TOUR DE JEU ----------
     st.append(P('4. Le tour de jeu — cinq phases', S_H1))
-    st.append(P('① La taille royale', S_H2))
-    st.append(P('Le Roi <b>pioche une carte TAILLE</b> et la regarde sans la montrer : c’est le revenu du royaume '
+    st.append(P('① La cassette impériale', S_H2))
+    st.append(P('L’Empereur <b>pioche une carte CASSETTE</b> et la regarde sans la montrer : c’est le revenu du régime '
                 'ce tour (un nombre entre 7 et 15). Il la garde <b>face cachée</b> devant lui et propose à voix '
                 'haute une répartition : « tant pour untel, tant pour untel… ». Il n’annonce pas le total — '
-                'les barons votent sans savoir combien le Roi garde pour lui. <i>Ce qui n’est pas donné file dans '
+                'les notables votent sans savoir combien l’Empereur garde pour lui. <i>Ce qui n’est pas donné file dans '
                 'sa poche.</i>'))
     st.append(P('② Le vote du Conseil', S_H2))
-    st.append(P('Chacun peut d’abord jouer, face visible, ses <b>cartes bonus</b> de la main (VOTE ou ÉCUS ; '
-                'elles se défaussent) — Fraude, Soutien du Pape, etc. ajoutent des voix. Puis chaque baron prend '
+    st.append(P('Chacun peut d’abord jouer, face visible, ses <b>cartes bonus</b> de la main (VOTE ou FRANCS ; '
+                'elles se défaussent) — Faux en écriture, Appui du Sénat, etc. ajoutent des voix. Puis chaque notable prend '
                 'sa carte <b>POUR</b> ou sa carte <b>CONTRE</b> et la pose <b>face cachée</b> devant lui.'))
     st.append(P('Quand tout le monde est prêt, on <b>retourne toutes les cartes en même temps</b>. Les votes sont '
                 '<b>visibles de tous</b> — mais comme chacun s’est engagé en aveugle, impossible de suivre le '
-                'mouvement à la dernière seconde. Voix : 1 par baron vivant, <b>2 pour le Chancelier</b>, plus les '
-                'cartes bonus. Le Roi vote aussi. Plus de POUR que de CONTRE = <b>adopté</b>.', S_NOTE))
-    st.append(P('<b>Adopté</b> : chacun prend les écus promis (en poche), le Roi prend discrètement le reste '
-                '(valeur de la carte moins les dons) et <b>glisse la carte TAILLE face cachée devant lui</b>, '
-                'dans sa réserve royale — <i>sans la montrer</i>. Le total reste secret : nul ne sait vraiment '
-                'combien le Roi s’est engraissé. <b>Rejeté</b> : toute la taille retourne à la réserve (le Roi ne '
-                'garde rien), la carte va à la défausse, et il lance 1d6 — sur <b>4-6</b>, la révolte gronde '
+                'mouvement à la dernière seconde. Voix : 1 par notable vivant, <b>2 pour le Ministre d’État</b>, plus les '
+                'cartes bonus. L’Empereur vote aussi. Plus de POUR que de CONTRE = <b>adopté</b>.', S_NOTE))
+    st.append(P('<b>Adopté</b> : chacun prend les francs promis (en poche), l’Empereur prend discrètement le reste '
+                '(valeur de la carte moins les dons) et <b>glisse la carte CASSETTE face cachée devant lui</b>, '
+                'dans sa réserve impériale — <i>sans la montrer</i>. Le total reste secret : nul ne sait vraiment '
+                'combien l’Empereur s’est engraissé. <b>Rejeté</b> : toute la cassette retourne à la réserve (l’Empereur ne '
+                'garde rien), la carte va à la défausse, et il lance 1d6 — sur <b>4-6</b>, l’insurrection gronde '
                 '(voir phase ⑤).'))
-    st.append(P('Pourquoi une carte plutôt qu’un dé ? Parce qu’un dé secret ne laisse aucune trace : le Roi '
+    st.append(P('Pourquoi une carte plutôt qu’un dé ? Parce qu’un dé secret ne laisse aucune trace : l’Empereur '
                 'pourrait annoncer n’importe quel total. La carte, elle, est un <b>engagement matériel</b> — un '
                 'objet unique, choisi avant la proposition, posé face cachée et impossible à changer après coup. '
                 'Le total reste caché (le bluff est intact), mais la table garde un recours : à tout moment, un '
-                '<b>vote à la majorité exige l’audit</b> — le Roi retourne sa carte, et l’on vérifie au moins qu’il '
-                'n’a pas promis plus d’écus que la carte n’en contenait. Un Roi pris en flagrant délit rend le '
+                '<b>vote à la majorité exige l’audit</b> — l’Empereur retourne sa carte, et l’on vérifie au moins qu’il '
+                'n’a pas promis plus de francs que la carte n’en contenait. Un Empereur pris en flagrant délit rend le '
                 'surplus et récolte les rancunes. Simple garde-fou de confiance entre amis, pas un contrôle '
                 'fiscal : à vous de vous surveiller.', S_NOTE))
     st.append(P('③ La nuit', S_H2))
     st.append(P('Voir le chapitre 5 — c’est le cœur du jeu : planques, dagues et coffres.'))
-    st.append(P('④ Le héraut', S_H2))
+    st.append(P('④ Le crieur', S_H2))
     st.append(P('Révélez la première carte ÉVÉNEMENT et appliquez-la immédiatement. '
-                '(« Jacquerie » fait gronder la révolte ; « Grande foire » l’annule pour ce tour.)'))
-    st.append(P('⑤ La révolte (si elle gronde)', S_H2))
-    st.append(P('Si la révolte a été déclenchée ce tour — vote rejeté malheureux, Roi assassiné cette nuit, '
-                'ou Jacquerie — et qu’aucune Grande foire ne l’annule : jouez la révolte (chapitre 6). '
+                '(« Jacquerie » fait gronder l’insurrection ; « Grande foire » l’annule pour ce tour.)'))
+    st.append(P('⑤ L’insurrection (si elle gronde)', S_H2))
+    st.append(P('Si l’insurrection a été déclenchée ce tour — vote rejeté malheureux, Roi assassiné cette nuit, '
+                'ou Jacquerie — et qu’aucune Grande foire ne l’annule : jouez l’insurrection (chapitre 6). '
                 'Sinon, passez.'))
     st.append(P('Fin de tour', S_H2))
-    st.append(P('Chacun pioche <b>1 carte ACTION</b> (2 pour le Chancelier, +1 pour qui a dormi à son Manoir). '
-                'Main limitée à 7 cartes (défaussez l’excédent). Les barons morts ce tour <b>reviennent</b> : '
+    st.append(P('Chacun pioche <b>1 carte ACTION</b> (2 pour le Ministre d’État, +1 pour qui a dormi à son Hôtel particulier). '
+                'Main limitée à 7 cartes (défaussez l’excédent). Les notables morts ce tour <b>reviennent</b> : '
                 '« un cousin reprend le fief » — même charge, poche vide, et ils posent un jeton † devant eux. '
                 'Avancez le marqueur de tour.'))
 
     # ---------- 5. LA NUIT ----------
     st.append(P('5. La nuit', S_H1))
     st.append(P('A. Choix simultanés', S_H2))
-    st.append(P('Chaque baron pose devant lui une carte <b>PLANQUE face cachée</b> : Manoir, Templiers, '
-                'Favorite ou Monastère. Ceux qui veulent attaquer posent EN MÊME TEMPS, face cachée sur leur cible : '
+    st.append(P('Chaque notable pose devant lui une carte <b>PLANQUE face cachée</b> : Hôtel particulier, Banque, '
+                'Cocotte ou Ambassade. Ceux qui veulent attaquer posent EN MÊME TEMPS, face cachée sur leur cible : '
                 'une carte d’attaque de leur main (Spadassin, Baril de poudre…) et une carte <b>FILATURE</b> '
-                '(le lieu où ils pensent trouver la cible). Le Maître des Assassins peut attaquer sans carte '
+                '(le lieu où ils pensent trouver la cible). Le Préfet de Police peut attaquer sans carte '
                 'd’attaque (son privilège, une fois par nuit) — il pose seulement sa Filature.'))
     st.append(Spacer(1, 2*mm))
     st.append(Diagram(174*mm, 48*mm, diagram_night,
@@ -481,70 +481,70 @@ def build():
     st.append(Spacer(1, 2*mm))
     st.append(P('B. Révélation', S_H2))
     st.append(P('Toutes les planques se révèlent en même temps. Puis chaque attaque se résout, dans le sens '
-                'horaire en partant du Roi :'))
+                'horaire en partant de l’Empereur :'))
     for tx in [
-        '<b>Filature ratée</b> (le lieu deviné n’est pas la planque de la cible) : rien ne se passe. L’Espion à la cour ignore la Filature : il touche toujours (sauf Monastère).',
-        '<b>Monastère</b> : intouchable, l’attaque échoue toujours.',
+        '<b>Filature ratée</b> (le lieu deviné n’est pas la planque de la cible) : rien ne se passe. L’Espion à la cour ignore la Filature : il touche toujours (sauf Ambassade).',
+        '<b>Ambassade</b> : intouchable, l’attaque échoue toujours.',
         '<b>Empoisonneuse</b> : lancez 1d6, échec sur 1-3.',
         '<b>Garde du corps</b> de la cible : l’attaque échoue (sauf poison), la carte est défaussée.',
         '<b>Sosie</b> : la cible lance 1d6, elle survit sur 4-6 ; la carte est défaussée dans tous les cas.',
         '<b>Sinon la cible meurt</b> : couchez son pion. Elle pose un jeton †, l’attaquant prend un jeton ☠ (et c’est public : tout le monde a vu qui a joué la carte). Le tueur prend la poche de la cible — sauf Coffre scellé. Baril de poudre et Coffret piégé détruisent la poche au lieu de la voler.',
         'Toute cible d’une attaque (réussie ou non) prend un jeton ◉ « ciblé ».',
-        'Si le <b>Roi</b> meurt : la révolte gronde pour ce tour.',
+        'Si le <b>Roi</b> meurt : l’insurrection gronde pour ce tour.',
     ]:
         st.append(LI(tx))
     st.append(P('C. Dépôts et petits matins', S_H2))
     for tx in [
-        '<b>Templiers</b> : déposez toute votre poche sur votre coffre (visible, définitif, imprenable).',
-        '<b>Favorite</b> : prenez 1 écu de la réserve et un jeton ☾.',
-        '<b>Monastère</b> : prenez un jeton ☦ (et l’écu du Pèlerinage si l’événement est actif).',
-        '<b>Manoir</b> : vous piocherez 1 carte de plus en fin de tour.',
+        '<b>Banque</b> : déposez toute votre poche sur votre coffre (visible, définitif, imprenable).',
+        '<b>Cocotte</b> : prenez 1 franc de la réserve et un jeton ☾.',
+        '<b>Ambassade</b> : prenez un jeton ☦ (et l’écu du Pèlerinage si l’événement est actif).',
+        '<b>Hôtel particulier</b> : vous piocherez 1 carte de plus en fin de tour.',
     ]:
         st.append(LI(tx))
-    st.append(P('Exemple — Isabeau pose sa Planque « Favorite ». Montfort l’attaque au Spadassin avec une Filature '
-                '« Templiers » : raté, elle n’y était pas. Isabeau prend quand même son jeton ◉… et saura qu’on lui en veut.', S_EX))
+    st.append(P('Exemple — Isabeau pose sa Planque « Cocotte ». Montfort l’attaque au Spadassin avec une Filature '
+                '« Banque » : raté, elle n’y était pas. Isabeau prend quand même son jeton ◉… et saura qu’on lui en veut.', S_EX))
 
     # ---------- 6. LA RÉVOLTE ----------
-    st.append(P('6. La révolte des barons', S_H1))
+    st.append(P('6. L’insurrection des notables', S_H1))
     st.append(P('A. Les camps', S_H2))
-    st.append(P('Le Roi est toujours <b>royal</b>. En partant de sa gauche, chacun annonce son camp : '
-                '<b>félon</b> (rouge) ou <b>royal</b> (bleu) — et prend aussitôt le <b>jeton de camp</b> '
-                'correspondant (⚔ félon ou ⚑ royal), qui restera devant lui. Chacun peut alors jouer des '
-                'cartes RÉVOLTE de sa main : elles ajoutent des unités à déployer. Si personne n’est félon, '
-                'le calme revient. Si personne ne défend, la Couronne tombe sans combat (voir E).'))
+    st.append(P('L’Empereur est toujours <b>impérial</b>. En partant de sa gauche, chacun annonce son camp : '
+                '<b>insurgé</b> (rouge) ou <b>impérial</b> (bleu) — et prend aussitôt le <b>jeton de camp</b> '
+                'correspondant (⚔ insurgé ou ⚑ impérial), qui restera devant lui. Chacun peut alors jouer des '
+                'cartes RÉVOLTE de sa main : elles ajoutent des unités à déployer. Si personne n’est insurgé, '
+                'le calme revient. Si personne ne défend, l’Empire tombe sans combat (voir E).'))
     st.append(P('B. Manche 1 — le déploiement', S_H2))
-    st.append(P('Chaque baron dispose d’unités égales à sa <b>charge</b> (Connétable 4, Routiers 3, Roi 3, '
-                'Engins / Assassins / Amiral 2, Chancelier 1) plus ses cartes RÉVOLTE jouées. En commençant par '
-                'le Roi puis dans le sens horaire, chacun pose TOUTES ses unités (cubes de la couleur de son camp) '
-                'sur les sites de son choix. <b>Le Château est interdit au déploiement félon</b> — il faudra le '
-                'prendre d’assaut. Posez un marqueur de contrôle bleu sur chaque site au début (le royaume tient la ville).'))
+    st.append(P('Chaque notable dispose d’unités égales à sa <b>charge</b> (Maréchal 4, Garde 3, Roi 3, '
+                'Engins / Assassins / Amiral 2, Ministre d’État 1) plus ses cartes RÉVOLTE jouées. En commençant par '
+                'l’Empereur puis dans le sens horaire, chacun pose TOUTES ses unités (cubes de la couleur de son camp) '
+                'sur les sites de son choix. <b>Le Palais est interdit au déploiement insurgé</b> — il faudra le '
+                'prendre d’assaut. Posez un marqueur de contrôle bleu sur chaque site au début (le régime tient la ville).'))
     st.append(Spacer(1, 2*mm))
     st.append(Diagram(174*mm, 86*mm, diagram_revolt,
-        'Schéma 4 — Une révolte en cours : cubes déployés, routes et mouvements (assaut félon sur le Château).'))
+        'Schéma 4 — Une insurrection en cours : cubes déployés, routes et mouvements (assaut insurgé sur le Palais).'))
     st.append(P('C. Manches 2 et 3', S_H2))
     st.append(P('Dans l’ordre : <b>pouvoirs des sites</b>, puis <b>mouvements</b>, puis <b>frappes</b>, puis <b>batailles</b>.'))
     for tx in [
-        '<b>Pouvoirs</b> — un site est « tenu » si un seul camp y a des unités : Garnison = +1 unité de renfort sur place · Cathédrale = retirez 1 unité ennemie du plus gros groupe adverse · Trésor Royal = un baron du camp peut payer 2 écus de poche pour poser 1 unité sur le Trésor · Port = pendant les mouvements, les unités partant du Port peuvent aller sur N’IMPORTE QUEL site.',
-        '<b>Mouvements</b> — félons d’abord : chaque unité peut se déplacer vers un site adjacent (routes du plateau). Une unité arrivée ne rebouge plus cette manche.',
-        '<b>Frappes</b> — une fois par révolte : le Maître des Engins (trébuchet) et/ou l’Amiral (nef) peuvent frapper n’importe quel site occupé par l’ennemi et y détruire jusqu’à 2 unités. Rendez le jeton une fois utilisé.',
-        '<b>Batailles</b> — sur chaque site où les deux camps sont présents : chaque camp fait <b>ses unités + 1 dé</b> (dé rouge félon, dé bleu royal). Le plus grand total gagne (égalité : le camp qui contrôlait le site tient). <b>Le perdant retire autant de cubes que l’ÉCART entre les deux totaux</b> (au maximum tous ses cubes) ; le vainqueur ne perd rien. Les cubes qui restent au perdant reculent vers un site adjacent ami (sinon anéantis). Mettez à jour les marqueurs de contrôle.',
+        '<b>Pouvoirs</b> — un site est « tenu » si un seul camp y a des unités : Caserne = +1 unité de renfort sur place · Notre-Dame = retirez 1 unité ennemie du plus gros groupe adverse · Banque de France = un notable du camp peut payer 2 francs de poche pour poser 1 unité sur la Banque de France · Gare = pendant les mouvements, les unités partant de la Gare peuvent aller sur N’IMPORTE QUEL site.',
+        '<b>Mouvements</b> — insurgés d’abord : chaque unité peut se déplacer vers un site adjacent (routes du plateau). Une unité arrivée ne rebouge plus cette manche.',
+        '<b>Frappes</b> — une fois par insurrection : l’Ingénieur (canon à vapeur) et/ou l’Amiral (cuirassé) peuvent frapper n’importe quel site occupé par l’ennemi et y détruire jusqu’à 2 unités. Rendez le jeton une fois utilisé.',
+        '<b>Batailles</b> — sur chaque site où les deux camps sont présents : chaque camp fait <b>ses unités + 1 dé</b> (dé rouge insurgé, dé bleu impérial). Le plus grand total gagne (égalité : le camp qui contrôlait le site tient). <b>Le perdant retire autant de cubes que l’ÉCART entre les deux totaux</b> (au maximum tous ses cubes) ; le vainqueur ne perd rien. Les cubes qui restent au perdant reculent vers un site adjacent ami (sinon anéantis). Mettez à jour les marqueurs de contrôle.',
     ]:
         st.append(LI(tx))
     st.append(Spacer(1, 2*mm))
     st.append(Diagram(174*mm, 42*mm, diagram_battle,
-        'Schéma 5 — Exemple de bataille résolue aux dés (chaque camp : ses unités + 1d6, félons d’abord).'))
+        'Schéma 5 — Exemple de bataille résolue aux dés (chaque camp : ses unités + 1d6, insurgés d’abord).'))
     st.append(P('D. Le décompte', S_H2))
-    st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>le Château 2</b> (6 points en tout). '
-                'Les félons l’emportent avec <b>4 points ou plus</b>. Distribuez alors les traces de la révolte : '
+    st.append(P('Après la manche 3 : chaque site contrôlé vaut 1 point, <b>le Palais 2</b> (6 points en tout). '
+                'Les insurgés l’emportent avec <b>4 points ou plus</b>. Distribuez alors les traces de l’insurrection : '
                 'chaque membre du <b>camp vainqueur</b> prend un jeton ★ de sa couleur, et chaque membre du camp '
-                'qui <b>tient la Cathédrale</b> prend un jeton ✠.'))
-    st.append(P('E. Couronnement et billot', S_H2))
-    st.append(P('<b>Félons vainqueurs</b> : le félon à la plus grosse armée de charge (Connétable 4 > Routiers 3 > '
-                'Engins / Assassins / Amiral 2 > Chancelier 1 ; égalité : le plus riche au coffre) prend la couronne, '
-                'pose un jeton ♛, échange sa carte Charge contre Le Roi et <b>redistribue les charges libérées</b> '
-                'comme il l’entend. Le nouveau Roi peut envoyer un vaincu au <b>billot</b> : le condamné pose un '
-                'jeton †, sa poche revient au Roi — sauf s’il joue un Sauf-conduit. <b>Royaux vainqueurs</b> : '
-                'le Roi garde sa couronne et peut envoyer un félon au billot, mêmes règles. Les exécutés et morts '
+                'qui <b>tient Notre-Dame</b> prend un jeton ✠.'))
+    st.append(P('E. Courment et peloton', S_H2))
+    st.append(P('<b>Félons vainqueurs</b> : le insurgé à la plus grosse armée de charge (Maréchal 4 > Garde 3 > '
+                'Engins / Assassins / Amiral 2 > Ministre d’État 1 ; égalité : le plus riche au coffre) prend la couronne, '
+                'pose un jeton ♛, échange sa carte Charge contre L’Empereur et <b>redistribue les charges libérées</b> '
+                'comme il l’entend. Le nouvel Empereur peut envoyer un vaincu au <b>peloton</b> : le condamné pose un '
+                'jeton †, sa poche revient à l’Empereur — sauf s’il joue un Sauf-conduit. <b>Royaux vainqueurs</b> : '
+                'l’Empereur garde sa couronne et peut envoyer un insurgé au peloton, mêmes règles. Les exécutés et morts '
                 'reviennent au tour suivant (le cousin).'))
 
     # ---------- 7. AMBITIONS SANS MAÎTRE DU JEU ----------
@@ -554,7 +554,7 @@ def build():
     st.append(P('1. Tout est public', S_H2))
     st.append(P('Aucune ambition ne dépend d’une information restée cachée : les planques sont révélées '
                 'chaque nuit, les attaques et leurs auteurs se voient sur la table, les couronnements, morts '
-                'et camps de révolte se jouent devant tout le monde. La seule exception, « Le Templier », '
+                'et camps de insurrection se jouent devant tout le monde. La seule exception, « Le Templier », '
                 'se vérifie au moment du décompte final, quand toutes les poches sont montrées.'))
     st.append(P('2. Les jetons de trace', S_H2))
     st.append(P('<b>Chaque événement laisse une trace matérielle, prise au moment où il se produit, devant '
@@ -562,37 +562,37 @@ def build():
     for tx in [
         '☠ à chaque assassinat que vous réussissez ;',
         '◉ à chaque fois qu’une attaque vous vise (même ratée) ;',
-        '† à chaque fois que vous mourez (dague ou billot) ;',
+        '† à chaque fois que vous mourez (dague ou peloton) ;',
         '♛ à chaque fois que vous prenez la couronne ;',
-        '☾ chaque nuit passée chez la Favorite (avec votre écu) ;',
-        '☦ chaque nuit passée au Monastère ;',
-        '⚔ ou ⚑ à chaque révolte, en annonçant votre camp ;',
-        '★ (rouge ou bleue) si votre camp gagne la révolte ; ✠ si votre camp tient la Cathédrale à la fin.',
+        '☾ chaque nuit passée chez la Cocotte (avec votre franc) ;',
+        '☦ chaque nuit passée à l’Ambassade ;',
+        '⚔ ou ⚑ à chaque insurrection, en annonçant votre camp ;',
+        '★ (rouge ou bleue) si votre camp gagne l’insurrection ; ✠ si votre camp tient Notre-Dame à la fin.',
     ]:
         st.append(LI(tx))
     st.append(P('Prendre un jeton ne trahit PAS votre ambition : tout le monde prend toujours tous ses jetons — '
                 'c’est la chronique publique de la partie, pas un aveu. Au décompte, vos jetons font preuve : '
-                '« 3 jetons ☾, mon ambition était Le Courtisan, +2 écus. » Personne n’a rien à retenir de tête.', S_NOTE))
+                '« 3 jetons ☾, mon ambition était Le Courtisan, +2 francs. » Personne n’a rien à retenir de tête.', S_NOTE))
     st.append(P('3. La vérification collective', S_H2))
     st.append(P('À la révélation finale, chacun lit son ambition à voix haute et montre ses preuves — chaque '
                 'ambition a la sienne, aucune ne repose sur la mémoire seule. Tricher exigerait de prendre un '
                 'jeton au vu de tous pour un événement qui n’a pas eu lieu : impossible discrètement. Et les '
-                'jetons se recoupent entre eux (chaque ☠ correspond au † de quelqu’un, chaque ★ à une révolte '
+                'jetons se recoupent entre eux (chaque ☠ correspond au † de quelqu’un, chaque ★ à une insurrection '
                 'que toute la table a jouée). En cas de litige, la table tranche à la majorité.'))
     tab_amb = [
         ['Ambition', 'Sa preuve au décompte'],
-        ['Le Régicide (+4)', 'un jeton ☠ pris lors d’une nuit où le Roi est mort — l’attaque et sa carte étaient visibles de tous'],
+        ['Le Régicide (+4)', 'un jeton ☠ pris lors d’une nuit où l’Empereur est mort — l’attaque et sa carte étaient visibles de tous'],
         ['La Main sanglante (+4)', 'au moins 2 jetons ☠'],
         ['L’Éminence grise (+3)', 'AUCUN jeton ♛, pas la couronne de départ, et votre pion debout'],
         ['Le Croisé (+3)', 'un jeton ✠'],
         ['Le Loyal (+3)', 'au moins un jeton ⚑ et AUCUN jeton ⚔'],
-        ['Le Grand Félon (+3)', 'une ★ rouge (victoire dans le camp félon)'],
-        ['L’Usurpateur (+3)', 'la couronne devant vous à la fin, un jeton ♛, sans être le Roi de départ (la carte Charge initiale fait foi)'],
+        ['Le Grand Félon (+3)', 'une ★ rouge (victoire dans le camp insurgé)'],
+        ['L’Usurpateur (+3)', 'la couronne devant vous à la fin, un jeton ♛, sans être l’Empereur de départ (la carte Charge initiale fait foi)'],
         ['L’Insaisissable (+3)', 'AUCUN jeton ◉'],
         ['L’Increvable (+2)', 'AUCUN jeton †'],
         ['Le Courtisan (+2)', 'au moins 3 jetons ☾'],
         ['Le Pénitent (+2)', 'au moins 2 jetons ☦'],
-        ['Le Templier (+2)', 'montrez votre poche : 0 écu — et 6+ écus sur votre coffre (visible depuis toujours)'],
+        ['Le Templier (+2)', 'montrez votre poche : 0 franc — et 6+ francs sur votre coffre (visible depuis toujours)'],
     ]
     t2 = Table([[Paragraph(sym_wrap('<b>'+a+'</b>'), S_BODY), Paragraph(sym_wrap(b), S_BODY)] for a, b in tab_amb],
                colWidths=[46*mm, 126*mm])
@@ -607,11 +607,11 @@ def build():
     st.append(P('8. Fin de partie et décompte', S_H1))
     for tx in [
         'Après le 8e tour, chacun révèle son ambition et la prouve : si elle est accomplie, il ajoute son bonus À SON COFFRE.',
-        'Titres d’honneur (+1 écu au coffre chacun, record strict — en cas d’égalité, personne) : ⚔ le Sanguinaire (le plus de ☠) · ⚑ le Vétéran (le plus de jetons ⚔ et ⚑ cumulés) · ☾ le Noctambule (le plus de ☾) · ⚜ le Grippe-sou (la plus grosse poche finale).',
-        'Le baron au coffre le plus garni l’emporte. Égalité : la plus grosse poche départage.',
+        'Titres d’honneur (+1 franc au coffre chacun, record strict — en cas d’égalité, personne) : ⚔ le Sanguinaire (le plus de ☠) · ⚑ le Vétéran (le plus de jetons ⚔ et ⚑ cumulés) · ☾ le Noctambule (le plus de ☾) · ⚜ le Grippe-sou (la plus grosse poche finale).',
+        'Le notable au coffre le plus garni l’emporte. Égalité : la plus grosse poche départage.',
     ]:
         st.append(LI(tx))
-    st.append(P('« On n’a jamais vu un royaume si bien géré », dira le chroniqueur. Il était payé pour.', S_EX))
+    st.append(P('« On n’a jamais vu un régime si bien géré », dira le chroniqueur. Il était payé pour.', S_EX))
 
     doc.build(st)
     print('OK', path)

@@ -38,117 +38,117 @@ INK    = HexColor('#2b2118')   # encre brune
 GOLD   = HexColor('#b8860b')
 CATS = {
     'vote':     ('VOTE',      HexColor('#3f6fae')),
-    'argent':   ('ÉCUS',      HexColor('#b8860b')),
+    'argent':   ('FRANCS',    HexColor('#b8860b')),
     'nuit':     ('NUIT',      HexColor('#6b5b95')),
     'passif':   ('PASSIF',    HexColor('#3e8e6b')),
-    'coup':     ('RÉVOLTE',   HexColor('#a63a3a')),
+    'coup':     ('INSURRECTION', HexColor('#a63a3a')),
     'event':    ('ÉVÉNEMENT', HexColor('#8a5a2b')),
     'ambition': ('AMBITION',  HexColor('#5b3a6b')),
     'charge':   ('CHARGE',    HexColor('#7a1f1f')),
-    'lieu':     ('LIEU',      HexColor('#4a6b3a')),
+    'lieu':     ('PLANQUE',   HexColor('#4a6b3a')),
     'pour':     ('VOTE',      HexColor('#3e8e6b')),
     'contre':   ('VOTE',      HexColor('#a63a3a')),
-    'taille':   ('TAILLE ROYALE', HexColor('#8a6a1a')),
+    'taille':   ('CASSETTE IMPÉRIALE', HexColor('#8a6a1a')),
     'aide':     ('AIDE DE JEU', HexColor('#555555')),
 }
 PLAYER_COLORS = ['#e0b34e','#d95f5f','#5f8fd9','#8b7fd9','#4eb98f','#d98b44','#d977a5']
 
 # ---------------- données ----------------
 ACTIONS = [  # (nom, cat, icône, description) — chaque carte en 3 exemplaires
-    ('Faux sceaux','vote','✉','+2 voix lors d’un vote de la taille.'),
-    ('Soutien du Pape','vote','☦','+3 voix. Rome veille sur ses intérêts.'),
-    ('Guildes achetées','vote','⚒','+2 voix. Les corporations votent bien.'),
-    ('Bénédiction de l’Évêque','vote','☦','+2 voix. Dieu est avec vous (moyennant don).'),
-    ('Libelle infamant','vote','✉','Le Roi perd 2 voix sur ce vote.'),
-    ('Lettre compromettante','vote','✉','Forcez un baron à voter comme vous.'),
-    ('Cousinage','vote','♛','+2 voix. La famille, c’est sacré.'),
-    ('Pot-de-vin','argent','⚜','+2 écus dans votre poche, immédiatement.'),
-    ('Péage sauvage','argent','⚜','+3 écus dans votre poche. Le marché « participe ».'),
-    ('Détournement de la taille','argent','⚜','Prenez 2 écus de la poche du Roi.'),
-    ('Courrier templier','argent','✉','La nuit : déposez votre poche au coffre depuis n’importe quelle planque.'),
-    ('Coffre scellé','argent','⛓','PASSIF — si vous êtes tué, votre poche n’est pas pillée.'),
-    ('Or des Lombards','argent','⚜','+4 écus dans votre poche. Un banquier de Florence vous veut du bien.'),
-    ('Chantage','argent','⚜','Le baron le plus riche (poche) vous verse 2 écus.'),
-    ('Spadassin','nuit','⚔','Attaque de nuit : désignez une cible et devinez sa planque.'),
-    ('Baril de poudre','nuit','☠','Attaque : tue et DÉTRUIT toute la poche de la cible. Très mal vu.'),
+    ('Faux en écriture','vote','✉','+2 voix lors d’un vote de la cassette.'),
+    ('Appui du Sénat','vote','⚜','+3 voix. Les sénateurs nommés votent bien.'),
+    ('Patronat acheté','vote','⚒','+2 voix. Les maîtres de forges votent bien.'),
+    ('Bénédiction de l’Évêque','vote','☦','+2 voix. L’Église soutient l’Empire (moyennant don).'),
+    ('Caricature de presse','vote','✒','L’Empereur perd 2 voix sur ce vote.'),
+    ('Dossier de police','vote','✉','Forcez un notable à voter comme vous.'),
+    ('Népotisme','vote','♛','+2 voix. La famille impériale, c’est sacré.'),
+    ('Pot-de-vin','argent','⚜','+2 francs dans votre poche, immédiatement.'),
+    ('Rente sur les Halles','argent','⚜','+3 francs dans votre poche. Le marché « participe ».'),
+    ('Détournement de fonds','argent','⚜','Prenez 2 francs de la poche de l’Empereur.'),
+    ('Virement suisse','argent','✉','La nuit : déposez votre poche en banque depuis n’importe quelle planque.'),
+    ('Coffre-fort scellé','argent','⛓','PASSIF — si vous êtes tué, votre poche n’est pas pillée.'),
+    ('Emprunt Pereire','argent','⚜','+4 francs dans votre poche. Le Crédit Mobilier vous ouvre un crédit.'),
+    ('Chantage','argent','⚜','Le notable le plus riche (poche) vous verse 2 francs.'),
+    ('Homme de main','nuit','⚔','Attaque de nuit : désignez une cible et devinez sa planque.'),
+    ('Machine infernale','nuit','☠','Attaque : tue et DÉTRUIT toute la poche de la cible. Très mal vu.'),
     ('Empoisonneuse','nuit','⚗','Attaque : ignore les gardes du corps, mais échoue sur 1-3 (1d6).'),
-    ('Espion à la cour','nuit','♞','Attaque : pas besoin de deviner, la planque de la cible est connue (sauf Monastère).'),
-    ('Coffret piégé','nuit','☠','Attaque : ne fonctionne que si la cible dort à son Manoir.'),
-    ('Embuscade aux Templiers','nuit','⚔','Attaque : ne touche que si la cible va chez les Templiers.'),
+    ('Mouchard','nuit','♞','Attaque : pas besoin de deviner, la planque de la cible est connue (sauf Ambassade).'),
+    ('Colis piégé','nuit','☠','Attaque : ne fonctionne que si la cible dort à son Hôtel particulier.'),
+    ('Guet-apens à la Banque','nuit','⚔','Attaque : ne touche que si la cible va à la Banque.'),
     ('Garde du corps','passif','⚕','Annule automatiquement la prochaine attaque contre vous (sauf poison). Défaussez-la ensuite.'),
     ('Sosie','passif','♟','Lors d’une attaque réussie : survivez sur 4-6 (1d6). Défaussez-la ensuite.'),
-    ('Sauf-conduit','passif','✉','Échappez au billot (une fois). Défaussez-la ensuite.'),
-    ('Routiers','coup','⚔','+3 unités à déployer pendant une révolte.'),
-    ('Foule en colère','coup','⚔','+2 unités à déployer pendant une révolte.'),
-    ('Garnison retournée','coup','⚔','+3 unités : une garnison change de camp.'),
-    ('Or des Anglais','coup','⚜','+4 unités… mais tous sauront qui vous paie (rancunes durables).'),
+    ('Passeport diplomatique','passif','✉','Échappez au peloton (une fois). Défaussez-la ensuite.'),
+    ('Mercenaires','coup','⚔','+3 unités à déployer pendant une insurrection.'),
+    ('Émeutiers','coup','⚔','+2 unités à déployer pendant une insurrection.'),
+    ('Régiment rallié','coup','⚔','+3 unités : une caserne change de camp.'),
+    ('Or de la Prusse','coup','⚜','+4 unités… mais tous sauront qui vous paie (rancunes durables).'),
     ('Barricades','coup','⚔','+2 unités. Le peuple des faubourgs vous couvre.'),
-    ('Sabotage des arsenaux','coup','⚒','+2 unités : les armes ennemies s’enrayent mystérieusement.'),
+    ('Sabotage de l’arsenal','coup','⚒','+2 unités : les fusils ennemis s’enrayent mystérieusement.'),
 ]
 EVENTS = [
-    ('Famine','La taille du prochain tour est réduite de 3 écus.'),
-    ('Crédit lombard','Les banquiers font crédit : +4 écus de taille au prochain tour.'),
-    ('Jacquerie','Le climat est insurrectionnel : une révolte devient possible ce tour.'),
-    ('Les sergents du Roi','Tout baron qui a dormi à son Manoir cette nuit perd 1 écu de poche.'),
-    ('Grande foire','Le peuple oublie tout : aucune révolte possible ce tour.'),
-    ('Légat du Pape','Chaque baron avec plus de 6 écus en poche en donne 2 à l’Église.'),
-    ('Tribut d’un vassal','Le Roi reçoit 2 écus en poche. Personne ne pose de questions.'),
-    ('Brigands','La nuit prochaine, la commanderie des Templiers est fermée (aucun dépôt).'),
-    ('Grand tournoi','Chaque baron mise 1 écu de poche (s’il peut). Lancez 1d6 chacun : le plus haut rafle la bourse.'),
-    ('Mariage princier','Les deux barons aux plus petits coffres reçoivent 1 écu de dot chacun.'),
-    ('Peste','Chaque baron défausse une carte de sa main, au hasard.'),
-    ('Comète','Mauvais présage : au prochain vote, le Roi ne compte aucune voix bonus de cartes.'),
-    ('Fausse monnaie','Tout baron avec 5 écus ou plus en poche en perd 1 (rogné).'),
-    ('Pèlerinage','La nuit prochaine, dormir au Monastère rapporte +1 écu.'),
-    ('Moisson généreuse','Chaque baron vivant reçoit 1 écu en poche.'),
-    ('Inquisition','Le baron à la plus grosse poche (montrez vos écus !) donne 1 écu à l’Église.'),
-    ('Troubadours','Le baron au plus petit total (poche + coffre) reçoit 1 écu de la quête.'),
-    ('Brume épaisse','La nuit prochaine, chaque attaque échoue sur 1-3 (1d6), avant toute autre résolution.'),
+    ('Crise du pain','La cassette du prochain tour est réduite de 3 francs.'),
+    ('Spéculation à la Bourse','Les banquiers font crédit : +4 francs de cassette au prochain tour.'),
+    ('Émeute ouvrière','Le climat est insurrectionnel : une insurrection devient possible ce tour.'),
+    ('Rafle de police','Tout notable qui a dormi à son Hôtel particulier cette nuit perd 1 franc de poche.'),
+    ('Exposition Universelle','Tout Paris s’y presse : aucune insurrection possible ce tour.'),
+    ('Contrôle fiscal','Chaque notable avec plus de 6 francs en poche en verse 2 au Trésor.'),
+    ('Pot-de-vin d’un industriel','L’Empereur reçoit 2 francs en poche. Personne ne pose de questions.'),
+    ('Panique bancaire','La nuit prochaine, la Banque est fermée (aucun dépôt).'),
+    ('Courses à Longchamp','Chaque notable mise 1 franc de poche (s’il peut). Lancez 1d6 chacun : le plus haut rafle la mise.'),
+    ('Bal aux Tuileries','Deux notables tirés au sort reçoivent 1 franc chacun.'),
+    ('Choléra','Chaque notable défausse une carte de sa main, au hasard.'),
+    ('Une du Charivari','Mauvais présage : au prochain vote, l’Empereur ne compte aucune voix bonus de cartes.'),
+    ('Fausse monnaie','Tout notable avec 5 francs ou plus en poche en perd 1 (rogné).'),
+    ('Réception à l’Ambassade','La nuit prochaine, dormir à l’Ambassade rapporte +1 franc.'),
+    ('Prospérité industrielle','Chaque notable vivant reçoit 1 franc en poche.'),
+    ('Enquête de la Préfecture','Le notable à la plus grosse poche (montrez vos francs !) verse 1 franc.'),
+    ('Souscription publique','Le notable au plus petit total (poche + banque) reçoit 1 franc de la collecte.'),
+    ('Brouillard sur Paris','La nuit prochaine, chaque attaque échoue sur 1-3 (1d6), avant toute autre résolution.'),
 ]
 AMBITIONS = [
-    ('Le Régicide',4,'Un Roi meurt de votre main (attaque de nuit réussie contre le Roi).'),
+    ('Le Conspirateur',4,'Un Empereur meurt de votre main (attaque de nuit réussie contre l’Empereur).'),
     ('La Main sanglante',4,'Réussissez au moins 2 assassinats dans la partie.'),
-    ('L’Éminence grise',3,'Ne soyez jamais Roi de toute la partie, et soyez vivant à la fin.'),
-    ('Le Croisé',3,'Votre camp tient la Cathédrale à la fin d’une révolte.'),
-    ('Le Loyal',3,'Traversez au moins une révolte sans jamais rejoindre les félons.'),
-    ('Le Grand Félon',3,'Gagnez une révolte dans le camp des félons.'),
+    ('L’Éminence grise',3,'Ne soyez jamais Empereur de toute la partie, et soyez vivant à la fin.'),
+    ('Le Dévot',3,'Votre camp tient Notre-Dame à la fin d’une insurrection.'),
+    ('Le Bonapartiste',3,'Traversez au moins une insurrection sans jamais rejoindre les insurgés.'),
+    ('Le Communard',3,'Gagnez une insurrection dans le camp des insurgés.'),
     ('L’Usurpateur',3,'Finissez la partie sur le trône sans l’avoir commencé.'),
     ('L’Insaisissable',3,'Qu’aucune attaque ne soit jamais dirigée contre vous de toute la partie.'),
     ('L’Increvable',2,'Ne mourez jamais, pas même une fois.'),
-    ('Le Courtisan',2,'Passez au moins 3 nuits chez la Favorite.'),
-    ('Le Pénitent',2,'Passez au moins 2 nuits au Monastère.'),
-    ('Le Templier',2,'Finissez avec 0 écu en poche et au moins 6 écus au coffre.'),
+    ('Le Viveur',2,'Passez au moins 3 nuits chez la Cocotte.'),
+    ('Le Diplomate',2,'Passez au moins 2 nuits à l’Ambassade.'),
+    ('Le Rentier',2,'Finissez avec 0 franc en poche et au moins 6 francs en banque.'),
 ]
 CHARGES = [
-    ('Le Roi','♛','3 unités','Répartit la taille royale (le non-alloué file dans sa poche). Toujours royal pendant une révolte. Garde la couronne.'),
-    ('Le Connétable','⚔','4 unités','Le ban royal : la plus grosse armée du royaume. Le plus gradé pour le trône.'),
-    ('Maître des Engins','⚒','2 unités','Une fois par révolte : le TRÉBUCHET frappe n’importe quel site occupé par l’ennemi et détruit jusqu’à 2 unités.'),
-    ('Maître des Assassins','☠','2 unités','Chaque nuit : une attaque gratuite (comme un Spadassin), sans carte.'),
-    ('Le Chancelier','✉','1 unité','+1 voix à chaque vote. Pioche 1 carte de plus à chaque fin de tour.'),
-    ('L’Amiral de France','⚓','2 unités','(6+ joueurs) Une fois par révolte : la NEF DE GUERRE frappe n’importe quel site ennemi et détruit jusqu’à 2 unités.'),
-    ('Capitaine des Routiers','⚔','3 unités','(7 joueurs) Une compagnie de soudards, fidèle au plus offrant.'),
+    ('L’Empereur','♛','3 unités','Répartit la cassette impériale (le non-alloué file dans sa poche). Toujours impérial pendant une insurrection. Garde le trône.'),
+    ('Le Maréchal','⚔','4 unités','L’armée impériale : la plus grosse force. Le plus gradé pour le trône.'),
+    ('L’Ingénieur','⚒','2 unités','Une fois par insurrection : le CANON À VAPEUR frappe n’importe quel site ennemi et détruit jusqu’à 2 unités.'),
+    ('Le Préfet de Police','☠','2 unités','Chaque nuit : un mouchard élimine une cible gratuitement, sans carte.'),
+    ('Le Ministre d’État','✉','1 unité','+1 voix à chaque vote. Pioche 1 carte de plus. (Retiré à 4 joueurs.)'),
+    ('L’Amiral','⚓','2 unités','(6+ joueurs) Une fois par insurrection : le CUIRASSÉ « La Gloire » frappe n’importe quel site ennemi et détruit jusqu’à 2 unités.'),
+    ('Le Colonel de la Garde','⚔','3 unités','(7 joueurs) La Garde impériale : 3 vétérans, fidèles au plus offrant.'),
 ]
 LIEUX = [
-    ('Manoir','⌂','Confort du logis : piochez 1 carte de plus en fin de tour. Mais tout le monde connaît l’adresse.'),
-    ('Templiers','⚜','Déposez toute votre poche au coffre (imprenable). Très prévisible : les tueurs adorent.'),
-    ('La Favorite','☾','Discret. Ses relations vous glissent +1 écu au petit matin.'),
-    ('Monastère','☦','Droit d’asile : intouchable cette nuit. Ni dépôt, ni bonus.'),
+    ('Hôtel particulier','⌂','Confort du logis : piochez 1 carte de plus en fin de tour. Mais tout le monde connaît l’adresse.'),
+    ('la Banque','⚜','Déposez toute votre poche au Crédit Mobilier (imprenable). Très prévisible : les tueurs adorent.'),
+    ('la Cocotte','☾','Discret. Ses relations vous glissent +1 franc au petit matin.'),
+    ('l’Ambassade','☦','Droit d’asile diplomatique : intouchable cette nuit. Ni dépôt, ni bonus.'),
 ]
-# Paquet TAILLE : remplace le dé 2d6+4 secret. Le Roi en tire une face cachée
-# (bluff pendant le vote), on la RÉVÈLE juste après le vote → le total est prouvé,
-# le Roi ne peut plus mentir sur ce qu’il garde. Distribution en cloche, moyenne ≈ 11.
+# Paquet CASSETTE : remplace le dé secret. L’Empereur en tire une face cachée
+# et la garde devant lui (le total reste secret — le bluff du budget).
+# Distribution en cloche, moyenne ≈ 11.
 TAILLE_VALUES = [7, 8, 8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 14, 15]
 AIDE_TXT = [
-    ('TOUR DE JEU', ['1. TAILLE — le Roi tire 1 carte Taille en secret et propose une répartition.',
-                     '2. VOTE — cartes vote, puis pouces levés/baissés simultanés. Le Roi garde la carte face cachée devant lui (total secret). Rejet : taille perdue, et sur 4-6 (1d6) la révolte gronde.',
+    ('TOUR DE JEU', ['1. CASSETTE — l’Empereur tire 1 carte Cassette en secret et propose une répartition.',
+                     '2. VOTE — jouez vos cartes bonus, puis chacun abat sa carte POUR/CONTRE (révélation simultanée, visible). L’Empereur garde sa carte Cassette face cachée. Rejet : cassette perdue, et sur 4-6 (1d6) l’insurrection gronde.',
                      '3. NUIT — chacun pose une carte Planque face cachée ; les attaquants posent cible + Filature. Révélation, résolution.',
-                     '4. HÉRAUT — révélez 1 carte Événement.',
-                     '5. RÉVOLTE — si elle gronde : camps, déploiement, 3 manches, batailles aux dés.']),
-    ('POUVOIRS DES SITES (manches 2-3)', ['Garnison : +1 unité de renfort.',
-                     'Cathédrale : 1 unité ennemie déserte.',
-                     'Trésor : 1 unité contre 2 écus de poche.',
-                     'Port : embarquement vers tout site.',
-                     'Château : vaut 2 points (majorité à 4/6).']),
+                     '4. LE MONITEUR — révélez 1 carte Événement.',
+                     '5. INSURRECTION — si elle gronde : camps, déploiement, 3 manches, batailles aux dés.']),
+    ('POUVOIRS DES SITES (manches 2-3)', ['Caserne : +1 unité de renfort.',
+                     'Notre-Dame : 1 unité ennemie déserte.',
+                     'Banque de France : 1 unité contre 2 francs de poche.',
+                     'Gare : embarquement vers tout site.',
+                     'Tuileries : valent 2 points (majorité à 4/6).']),
 ]
 
 # ---------------- utilitaires dessin ----------------
@@ -224,14 +224,14 @@ def draw_back(c, x, y, deck, col):
     c.roundRect(x+4*mm, y+4*mm, CW-8*mm, CH-8*mm, 2.5*mm, stroke=1, fill=0)
     c.setFillColor(GOLD); c.setFont(SY, 34)
     c.drawCentredString(x+CW/2, y+CH/2+2*mm, '⚜')
-    c.setFont(FB, 11); c.drawCentredString(x+CW/2, y+CH/2-9*mm, 'ROYAUME')
+    c.setFont(FB, 11); c.drawCentredString(x+CW/2, y+CH/2-9*mm, 'ROUAGES')
     c.setFillColor(col); c.setFont(FB, 7.5)
     c.drawCentredString(x+CW/2, y+9*mm, deck)
 
 def cards_pdf():
     path = os.path.join(HERE, 'cartes-royaume.pdf')
     c = canvas.Canvas(path, pagesize=A4)
-    c.setTitle('ROYAUME — planches de cartes')
+    c.setTitle('ROUAGES & COMPLOTS — planches de cartes')
 
     def emit(deck_label, deck_col, cards):
         """cards = liste de fonctions de dessin ; pages recto puis verso par page (duplex bord long)."""
@@ -245,7 +245,7 @@ def cards_pdf():
                 fn(c, x, y)
             cut_marks(c)
             c.setFillColor(HexColor('#888888')); c.setFont(F, 7)
-            c.drawCentredString(PAGE_W/2, 6*mm, 'ROYAUME — planche recto (' + deck_label + ') — impression recto/verso bord long')
+            c.drawCentredString(PAGE_W/2, 6*mm, 'ROUAGES & COMPLOTS — planche recto (' + deck_label + ') — impression recto/verso bord long')
             c.showPage()
             # verso (miroir horizontal des positions pour tomber en face au duplex)
             for k in range(len(batch)):
@@ -256,7 +256,7 @@ def cards_pdf():
                 draw_back(c, x, y, deck_label, deck_col)
             cut_marks(c)
             c.setFillColor(HexColor('#888888')); c.setFont(F, 7)
-            c.drawCentredString(PAGE_W/2, 6*mm, 'ROYAUME — planche verso (' + deck_label + ')')
+            c.drawCentredString(PAGE_W/2, 6*mm, 'ROUAGES & COMPLOTS — planche verso (' + deck_label + ')')
             c.showPage()
 
     # ---- 87 cartes Action (29 x 3) ----
@@ -307,7 +307,7 @@ def cards_pdf():
             'Abattez-la face cachée puis révélez : vous votez CONTRE la répartition.', corner='Joueur '+str(pi+1), edge=pc))
     emit('VOTE', GOLD, fns)
 
-    # ---- 18 cartes TAILLE (paquet du Roi, révélées après le vote) ----
+    # ---- 18 cartes CASSETTE (paquet de l’Empereur, gardées face cachée) ----
     def draw_taille(c, x, y, val):
         label, col = CATS['taille']
         c.setFillColor(PARCH); c.setStrokeColor(INK); c.setLineWidth(1.2)
@@ -321,16 +321,16 @@ def cards_pdf():
         c.drawCentredString(x+CW/2, y+CH-30*mm, '♛')
         c.setFillColor(INK); c.setFont(FB, 40)
         c.drawCentredString(x+CW/2, y+CH-56*mm, str(val))
-        c.setFont(F, 8); c.drawCentredString(x+CW/2, y+CH-63*mm, 'écus de taille')
+        c.setFont(F, 8); c.drawCentredString(x+CW/2, y+CH-63*mm, 'francs de cassette')
         c.setStrokeColor(GOLD); c.setLineWidth(0.8)
         c.line(x+10*mm, y+18*mm, x+CW-10*mm, y+18*mm)
         c.setFillColor(HexColor('#6b5b3a')); c.setFont(FI if HAS_GI else F, 6.4)
-        for i, ln in enumerate(['Tirée en secret par le Roi, gardée',
-                                'face cachée devant lui. Il garde',
-                                'ce total moins les dons annoncés.']):
+        for i, ln in enumerate(['Tirée en secret par l’Empereur,',
+                                'gardée face cachée devant lui.',
+                                'Il garde ce total moins les dons.']):
             c.drawCentredString(x+CW/2, y+13*mm-i*3*mm, ln)
     fns = [lambda c,x,y,v=v: draw_taille(c, x, y, v) for v in TAILLE_VALUES]
-    emit('TAILLE ROYALE', CATS['taille'][1], fns)
+    emit('CASSETTE IMPÉRIALE', CATS['taille'][1], fns)
 
     # ---- 7 Aides de jeu ----
     def draw_aide(c, x, y):
@@ -357,7 +357,7 @@ def plateau_pdf():
     path = os.path.join(HERE, 'plateau-royaume.pdf')
     W, H = landscape(A3)
     c = canvas.Canvas(path, pagesize=landscape(A3))
-    c.setTitle('ROYAUME — plateau')
+    c.setTitle('ROUAGES & COMPLOTS — plateau')
     # mer
     c.setFillColor(HexColor('#2a6ea0')); c.rect(0, 0, W, H, stroke=0, fill=1)
     c.setFillColor(HexColor('#35799e'))
@@ -382,11 +382,11 @@ def plateau_pdf():
 
     # sites (fractions reprises du jeu vidéo)
     S = {
-        'chateau':   (0.50, 0.50, 'CHÂTEAU ROYAL', '♛', 'Vaut 2 points — interdit au déploiement félon', '#7a1f1f'),
-        'cathedrale':(0.26, 0.72, 'CATHÉDRALE', '☦', 'Manches 2-3 : 1 unité ennemie déserte', '#5b3a6b'),
-        'tresor':    (0.74, 0.72, 'TRÉSOR ROYAL', '⚜', 'Manches 2-3 : 1 unité contre 2 écus', '#b8860b'),
-        'garnison':  (0.26, 0.28, 'GARNISON', '⚔', 'Manches 2-3 : +1 renfort', '#3e6b3e'),
-        'port':      (0.74, 0.28, 'PORT', '⚓', 'Manches 2-3 : embarquement vers tout site', '#3f6fae'),
+        'chateau':   (0.50, 0.50, 'LES TUILERIES', '♛', 'Valent 2 points — interdit au déploiement insurgé', '#7a1f1f'),
+        'cathedrale':(0.26, 0.72, 'NOTRE-DAME', '☦', 'Manches 2-3 : 1 unité ennemie déserte', '#5b3a6b'),
+        'tresor':    (0.74, 0.72, 'BANQUE DE FRANCE', '⚜', 'Manches 2-3 : 1 unité contre 2 francs', '#b8860b'),
+        'garnison':  (0.26, 0.28, 'CASERNE', '⚔', 'Manches 2-3 : +1 renfort', '#3e6b3e'),
+        'port':      (0.74, 0.28, 'LA GARE', '⚓', 'Manches 2-3 : embarquement vers tout site', '#3f6fae'),
     }
     def sp(k):
         fx, fy, *_ = S[k]
@@ -415,13 +415,13 @@ def plateau_pdf():
     # bandeau titre
     c.setFillColor(HexColor('#241b12')); c.roundRect(W-118*mm, H-30*mm, 110*mm, 22*mm, 4*mm, stroke=0, fill=1)
     c.setFillColor(GOLD); c.setFont(SY, 16); c.drawString(W-113*mm, H-22*mm, '⚜')
-    c.setFont(FB, 20); c.drawString(W-104*mm, H-22*mm, 'R O Y A U M E')
+    c.setFont(FB, 15); c.drawString(W-104*mm, H-22*mm, 'ROUAGES & COMPLOTS')
     c.setFillColor(HexColor('#c9b78a')); c.setFont(FI if HAS_GI else F, 9)
-    c.drawString(W-104*mm, H-27.5*mm, 'Couronne, trahisons & révoltes')
+    c.drawString(W-104*mm, H-27.5*mm, 'Vapeur, corruption & insurrections')
 
     # piste des tours
     c.setFillColor(HexColor('#241b12')); c.roundRect(W-118*mm, H-72*mm, 110*mm, 34*mm, 4*mm, stroke=0, fill=1)
-    c.setFillColor(HexColor('#c9b78a')); c.setFont(FB, 9); c.drawString(W-113*mm, H-46*mm, 'PISTE DES TOURS — 8 levées de la taille')
+    c.setFillColor(HexColor('#c9b78a')); c.setFont(FB, 9); c.drawString(W-113*mm, H-46*mm, 'PISTE DES TOURS — 8 levées de la cassette')
     for i in range(8):
         x = W-113*mm + i*13*mm
         c.setFillColor(PARCH); c.setStrokeColor(GOLD); c.setLineWidth(1)
@@ -444,11 +444,11 @@ def plateau_pdf():
     c.setFillColor(HexColor('#241b12')); c.roundRect(W-118*mm, 12*mm, 110*mm, 42*mm, 4*mm, stroke=0, fill=1)
     c.setFillColor(GOLD); c.setFont(FB, 10); c.drawString(W-113*mm, 46*mm, 'BATAILLE (site contesté)')
     c.setFillColor(HexColor('#e8dcc0')); c.setFont(F, 8.5)
-    for i, ln in enumerate(['Chaque camp : unités + 1d6 (félons d’abord). Plus haut total gagne.',
+    for i, ln in enumerate(['Chaque camp : unités + 1d6 (insurgés d’abord). Plus haut total gagne.',
                             'Égalité : le défenseur tient. LE PERDANT retire autant de',
                             'cubes que l’ÉCART des totaux (au max tous) ; le vainqueur',
                             'ne perd rien. Ses survivants reculent sur un site voisin ami.',
-                            'Décompte final : majorité à 4 points sur 6 (Château = 2).']):
+                            'Décompte final : majorité à 4 points sur 6 (Tuileries = 2).']):
         c.drawString(W-113*mm, 40*mm-i*5.2*mm, ln)
 
     c.save()
@@ -461,7 +461,7 @@ def tokens_pdf():
     posés devant soi font preuve — pas besoin de maître du jeu."""
     path = os.path.join(HERE, 'jetons-royaume.pdf')
     c = canvas.Canvas(path, pagesize=A4)
-    c.setTitle('ROYAUME — jetons à découper')
+    c.setTitle('ROUAGES & COMPLOTS — jetons à découper')
     D = 17*mm            # diamètre jeton
     GAP = 2.5*mm
     per_row = int((PAGE_W-24*mm)//(D+GAP))
@@ -470,7 +470,7 @@ def tokens_pdf():
 
     def title_page():
         c.setFillColor(INK); c.setFont(FB, 13)
-        c.drawString(14*mm, PAGE_H-14*mm, 'ROYAUME — planche de jetons (à coller sur carton avant découpe)')
+        c.drawString(14*mm, PAGE_H-14*mm, 'ROUAGES & COMPLOTS — planche de jetons (à coller sur carton avant découpe)')
         c.setFillColor(HexColor('#666666')); c.setFont(F, 8)
         c.drawString(14*mm, PAGE_H-19*mm, 'Jetons de TRACE : à prendre publiquement au moment de l’événement — ils prouvent vos ambitions au décompte.')
 
@@ -503,32 +503,32 @@ def tokens_pdf():
 
     dark = HexColor('#241b12')
     # écus
-    for _ in range(40): circle_token(HexColor('#e8c25a'), HexColor('#8a6a1a'), '1', FB, 10, dark, 'ÉCU')
-    for _ in range(12): circle_token(HexColor('#c9962b'), HexColor('#6b4f12'), '5', FB, 10, dark, 'ÉCUS')
+    for _ in range(40): circle_token(HexColor('#e8c25a'), HexColor('#8a6a1a'), '1', FB, 10, dark, 'FRANC')
+    for _ in range(12): circle_token(HexColor('#c9962b'), HexColor('#6b4f12'), '5', FB, 10, dark, 'FRANCS')
     # unités (cubes imprimables si pas de cubes en bois)
     for _ in range(20): square_token(HexColor('#c0392b'))
     for _ in range(20): square_token(HexColor('#2f6fbe'))
     # marqueurs de contrôle des sites
-    for _ in range(5):  circle_token(HexColor('#f3d5d5'), HexColor('#a63a3a'), '⚑', SY, 10, HexColor('#a63a3a'), 'FÉLONS')
-    for _ in range(5):  circle_token(HexColor('#d5e2f3'), HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#3f6fae'), 'ROYAUX')
+    for _ in range(5):  circle_token(HexColor('#f3d5d5'), HexColor('#a63a3a'), '⚑', SY, 10, HexColor('#a63a3a'), 'INSURGÉS')
+    for _ in range(5):  circle_token(HexColor('#d5e2f3'), HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#3f6fae'), 'IMPÉRIAUX')
     # frappes uniques & tour
-    circle_token(PARCH, INK, '⚒', SY, 11, INK, 'TRÉBUCHET')
-    circle_token(PARCH, INK, '⚓', SY, 11, INK, 'NEF')
+    circle_token(PARCH, INK, '⚒', SY, 11, INK, 'CANON')
+    circle_token(PARCH, INK, '⚓', SY, 11, INK, 'CUIRASSÉ')
     circle_token(PARCH, GOLD, '♛', SY, 11, GOLD, 'TOUR')
     # jetons de TRACE (preuves d'ambition)
     for _ in range(10): circle_token(dark, HexColor('#a63a3a'), '☠', SY, 11, HexColor('#e8dcc0'), 'ASSASSINAT')
     for _ in range(12): circle_token(dark, HexColor('#c9962b'), '◉', SY, 11, HexColor('#e8c25a'), 'CIBLÉ')
-    for _ in range(16): circle_token(dark, HexColor('#8b7fd9'), '☾', SY, 11, HexColor('#cfc4f3'), 'FAVORITE')
-    for _ in range(12): circle_token(dark, HexColor('#4eb98f'), '☦', SY, 11, HexColor('#c8ead9'), 'MONASTÈRE')
+    for _ in range(16): circle_token(dark, HexColor('#8b7fd9'), '☾', SY, 11, HexColor('#cfc4f3'), 'COCOTTE')
+    for _ in range(12): circle_token(dark, HexColor('#4eb98f'), '☦', SY, 11, HexColor('#c8ead9'), 'AMBASSADE')
     for _ in range(8):  circle_token(dark, GOLD, '♛', SY, 11, HexColor('#e8c25a'), 'RÈGNE')
     for _ in range(10): circle_token(dark, HexColor('#888888'), '†', FB, 12, HexColor('#dddddd'), 'MORT')
     # camps de révolte : pris publiquement au moment où l'on annonce son camp
-    for _ in range(14): circle_token(dark, HexColor('#a63a3a'), '⚔', SY, 10, HexColor('#f3b5b5'), 'FÉLON')
-    for _ in range(14): circle_token(dark, HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#b5cdf3'), 'ROYAL')
+    for _ in range(14): circle_token(dark, HexColor('#a63a3a'), '⚔', SY, 10, HexColor('#f3b5b5'), 'INSURGÉ')
+    for _ in range(14): circle_token(dark, HexColor('#3f6fae'), '⚑', SY, 10, HexColor('#b5cdf3'), 'IMPÉRIAL')
     # victoire de révolte (couleur du camp vainqueur) & Cathédrale tenue en fin de révolte
-    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', SY, 11, HexColor('#f3b5b5'), 'VICT. FÉLONNE')
-    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', SY, 11, HexColor('#b5cdf3'), 'VICT. ROYALE')
-    for _ in range(8):  circle_token(dark, HexColor('#5b3a6b'), '✠', SY, 10, HexColor('#d9c9f0'), 'CATHÉDRALE')
+    for _ in range(6):  circle_token(HexColor('#5a1f1f'), HexColor('#a63a3a'), '★', SY, 11, HexColor('#f3b5b5'), 'VICT. INS.')
+    for _ in range(6):  circle_token(HexColor('#1f2f5a'), HexColor('#3f6fae'), '★', SY, 11, HexColor('#b5cdf3'), 'VICT. IMP.')
+    for _ in range(8):  circle_token(dark, HexColor('#5b3a6b'), '✠', SY, 10, HexColor('#d9c9f0'), 'NOTRE-DAME')
     c.showPage()
     c.save()
     print('OK', path)
