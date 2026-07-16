@@ -2186,7 +2186,17 @@ async function execution(winners, losers){
 // Renseignez STATS_URL avec l'URL de votre Web App Apps Script pour activer.
 // Seul l'hôte (ou le joueur solo) envoie : une ligne par partie.
 // ---------------------------------------------------------------------
-const STATS_URL = 'https://script.google.com/macros/s/AKfycbyjyGwzU3r6S6jHOCuqph4Cb_pW1Qn6mONUry6LknEyWOHnNNsKVJD1qdTcrJozASnQHA/exec';   // ← collez ici l'URL de votre Google Apps Script (voir notice)
+// L'URL du Google Sheet n'est PAS écrite dans le fichier (le dépôt est public).
+// Réglez-la UNE fois dans VOTRE navigateur, via la console (F12) :
+//   setStatsUrl('https://script.google.com/macros/s/…/exec')
+// Elle est mémorisée sur votre machine (localStorage) et n'est jamais partagée.
+let STATS_URL = '';
+try { STATS_URL = localStorage.getItem('statsUrl') || ''; } catch(e){}
+window.setStatsUrl = function(u){
+  try { localStorage.setItem('statsUrl', u || ''); } catch(e){}
+  STATS_URL = u || '';
+  return u ? '✅ Stats activées sur cette machine.' : '⛔ Stats désactivées.';
+};
 const STATS = { t0:0, timeline:[], cur:null };
 function statsStart(){ STATS.t0 = Date.now(); STATS.timeline = []; STATS.cur = null; }
 function statsTurn(turn){ STATS.cur = { turn, taille:null, roiGarde:null, votePour:null, voteContre:null, vote:null, revolte:null }; STATS.timeline.push(STATS.cur); }
